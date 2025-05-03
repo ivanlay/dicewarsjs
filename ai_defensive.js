@@ -1,5 +1,17 @@
+/**
+ * Defensive AI strategy that focuses on safe attacks and territory protection
+ * This AI analyzes the board state to find attacks that won't leave territories vulnerable
+ */
 function ai_defensive(game) {
-    // function to analyze each area
+    /**
+     * Analyzes a territory to gather information about its neighbors
+     * @param {number} area_id - The territory to analyze
+     * @returns {Object} Information about the territory's neighbors including:
+     *   - Number of friendly and enemy neighbors
+     *   - Highest dice counts among friendly and enemy neighbors
+     *   - Second highest dice count among enemy neighbors
+     *   - Total number of neighbors
+     */
     function area_get_info( area_id ) {
         var friendly_neighbors = 0;
         var unfriendly_neighbors = 0;
@@ -11,7 +23,7 @@ function ai_defensive(game) {
         for ( i=0; i<game.AREA_MAX; i++ ) {
             if (i == area_id) continue;
 
-            // find adjacent regions
+            // Skip non-adjacent territories
             if ( ! game.adat[ area_id ].join[ i ] )
                 continue;
 
@@ -19,13 +31,13 @@ function ai_defensive(game) {
 
             if (game.adat[area_id].arm == game.adat[i].arm) {
                 friendly_neighbors += 1;
-
+                // Track highest dice count among friendly neighbors
                 if (highest_friendly_neighbor_dice < num_dice)
                     highest_friendly_neighbor_dice = num_dice;
             }
             else {
                 unfriendly_neighbors += 1;
-
+                // Track highest and second highest dice counts among enemy neighbors
                 if (highest_unfriendly_neighbor_dice < num_dice) {
                     second_highest_unfriendly_neighbor_dice = highest_unfriendly_neighbor_dice;
                     highest_unfriendly_neighbor_dice = num_dice;
@@ -47,56 +59,58 @@ function ai_defensive(game) {
         };
     }
 
-    // compute the area info once per move
+    // Pre-compute neighbor information for all territories to avoid redundant calculations
     var area_info = [...Array(game.AREA_MAX).keys()].map( area_get_info );
 
-    var pn = game.get_pn();
+    var pn = game.get_pn();  // Get current player number
 
     game.area_from = -1;
     game.area_to = -1;
 
-    // for all potential defenders
+    // Evaluate all potential attacks
     for ( i=0; i<game.AREA_MAX; i++ ) {
-        if ( game.adat[i].arm == pn ) continue;
+        if ( game.adat[i].arm == pn ) continue;  // Skip own territories
 
-        // for all potential attackers of game defender
+        // Check all potential attacking territories
         for ( j=0; j<game.AREA_MAX; j++ ) {
-            if ( game.adat[j].arm != pn ) continue;
-            if ( ! game.adat[i].join[j] ) continue;
+            if ( game.adat[j].arm != pn ) continue;  // Skip enemy territories
+            if ( ! game.adat[i].join[j] ) continue;  // Skip non-adjacent territories
 
-            // is the attacker actually in a position to attack?
+            // Skip if attacker doesn't have advantage (unless at max dice)
             if ( game.adat[i].dice >= game.adat[j].dice && game.adat[j].dice != 8 ) continue;
-            // does winning invite a strong counter attack?
+            
+            // Skip if winning would leave territory vulnerable to counter-attack
             if ( area_info[i].highest_friendly_neighbor_dice > game.adat[j].dice ) continue;
-            // does the attacker have something to defend from (and I have a meaningful connected area)?
+            
+            // Skip if we have a large territory to protect and no reinforcements
             if ( game.player[pn].area_tc > 4
                 && area_info[ j ].second_highest_unfriendly_neighbor_dice > 2
                 && game.player[pn].stock == 0 ) continue;
 
-            // check against previous attacker
+            // Compare with previous best attack
             if (game.area_from == -1) {
-                // no previous attacker, assign them
+                // First valid attack found
                 game.area_from = j;
                 game.area_to = i;
             } else {
-                if ( area_info[ game.area_from ].unfriendly_neighbors == 1) { // if it's the only way out
-                    if ( area_info[j].unfriendly_neighbors == 1 ) { // ...for both of them
-                        if ( game.adat[j].dice < game.adat[ game.area_from ].dice ) continue; // prefer larger dice
-                        else if ( adat[j].dice == game.adat[ game.area_from ] .dice)
-                            // then prefer the less connected region
+                // Prioritize attacks from territories with only one enemy neighbor
+                if ( area_info[ game.area_from ].unfriendly_neighbors == 1) {
+                    if ( area_info[j].unfriendly_neighbors == 1 ) {
+                        // If both have one enemy neighbor, prefer larger dice count
+                        if ( game.adat[j].dice < game.adat[ game.area_from ].dice ) continue;
+                        else if ( adat[j].dice == game.adat[ game.area_from ].dice)
+                            // If equal dice, prefer less connected territory
                             if ( area_info[j].num_neighbors < area_info[game.area_from].num_neighbors )
                                 continue
-
-                    } else continue; // let the other one out first
+                    } else continue; // Let the territory with one enemy neighbor attack first
                 }
                 game.area_from = j;
                 game.area_to = i;
             }
-
         }
     }
 
-    // only return 0 if I don't want to make a move
+    // Return 0 to end turn if no valid attack found
     if (game.area_from == -1)
         return 0;
 }

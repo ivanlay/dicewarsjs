@@ -1,9 +1,8 @@
-
 var canvas, stage;
 var builder;
 var touchdev = false;
 
-// イベント関数 (event function)
+// Event functions
 var timer_func = new Function();	timer_func = null;
 var click_func = new Function();	click_func = null;
 var move_func = new Function();		move_func = null;
@@ -11,30 +10,30 @@ var release_func = new Function();	release_func = null;
 var waitcount=0;
 var stat=0;
 
-// ゲームオブジェクト (game object)
+// Game object
 var game = new Game();
 
-// 表示位置 (display position)
-var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// オリジナルサイズ (original size)
+// Display position
+var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size
 var nume = 1;
 var deno = 1;
 var view_w,view_h;
-var cel_w,cel_h;	// カードの大きさと (the size of the card)
-var ypos_mes;		// メッセージ、戦闘ダイスの位置 (message, position of battle dice)
-var ypos_arm;		// 各軍のステータス表示位置 (status display position of each army)
-var dot;			// 1ドットの大きさ (size of 1 dot)
+var cel_w,cel_h;	// Card size
+var ypos_mes;		// Message, position of battle dice
+var ypos_arm;		// Status display position of each army
+var dot;			// Size of 1 dot
 
-// セル描画位置 (cell drawing position)
+// Cell drawing position
 var cpos_x = new Array();
 var cpos_y = new Array();
 
-// スプライト (sprite)
+// Sprite
 var spr = new Array();
 
-// スプライト番号 (sprite number)
+// Sprite number
 var sn_area = 0;
-var sn_from = 0;	// 攻撃元エリアのスプライト番号 (sprite number of attak area)
-var sn_to = 0;	// 攻撃先エリアのスプライト番号 (sprite number of attack destination area)
+var sn_from = 0;	// Sprite number of attack area
+var sn_to = 0;	// Sprite number of attack destination area
 var sn_dice = 0;
 var sn_info = 0;
 var sn_ban = 0;
@@ -48,36 +47,36 @@ var sn_pmax = 0;
 var sn_load = 0;
 var sn_mes = 0;
 var sn_btn = 0;
-var sn_max = 0;	// 最大数 (maximum number)
+var sn_max = 0;	// Maximum number
 
-var prio = new Array();		// エリアダイスの表示順 (the display order of area dice)
-var an2sn = new Array();	// エリア番号からダイススプライト番号を返す (returns the die sprite number from the area number)
+var prio = new Array();		// Display order of area dice
+var an2sn = new Array();	// Returns the die sprite number from the area number
 
-// ボタン (button)
+// Button
 var bmax = 0;
 var activebutton = -1;
 var btn_func = new Array();
 
-// バトルクラス (battle class)
+// Battle class
 var Battle = function(){
-	this.dn = 0;	// ダイス番号(止めるべき位置) (dice number (position to stop))
-	this.arm = 0;	// ダイス色 (dice color)
-	this.dmax = 0;	// ダイス数 (number of dice)
+	this.dn = 0;	// Dice number (position to stop)
+	this.arm = 0;	// Dice color
+	this.dmax = 0;	// Number of dice
 	this.deme = [0,0,0,0,0,0,0,0];
 	this.sum = 0;
-	this.fin = [0,0,0,0,0,0,0,0];	// 終了フラグ (end flag)
-	this.usedice = [0,1,2,3,4,5,6,7];	// 使うダイス (dice used)
+	this.fin = [0,0,0,0,0,0,0,0];	// End flag
+	this.usedice = [0,1,2,3,4,5,6,7];	// Dice used
 }
 var battle = new Array();
-var bturn = 0;	// バトル用ターン (battle turn)
+var bturn = 0;	// Battle turn
 
-// 履歴の再生用
+// For history replay
 var replay_c=0;
 
 // spectating
 var spectate_mode = false;
 
-// サウンド関係
+// Sound related
 var soundon = true;
 var manifest = [
 	{"src":"./sound/button.wav",	"id":"snd_button"},
@@ -90,12 +89,12 @@ var manifest = [
 	{"src":"./sound/success.wav",	"id":"snd_success"}
 ];
 
-// 縮尺に合わせてリサイズ
+// Resize according to scale
 function resize(n){
 	return n*nume/deno;
 }
 
-// 起動 Start-up
+// Start-up
 window.addEventListener("load", init);
 function init() {
 	var i,j,c,n;
@@ -107,11 +106,10 @@ function init() {
 	   createjs.Touch.enable(stage);
 	   touchdev = true;
 	}
-//	   touchdev = true;
 	if( touchdev ){
 		soundon = false;
 	}
-	// 表示位置 (display position)
+	// Display position
 	var iw = window.innerWidth;
 	var ih = window.innerHeight;
 	if( iw/org.view_w<ih/org.view_h ){
@@ -132,10 +130,10 @@ function init() {
 	dot = 1*nume/deno;
 	for( i=0; i<2; i++ ) battle[i] = new Battle();
 
-	// スプライト番号 (sprite number)
+	// Sprite number
 	var sn = 0;
 
-	// セルの位置 (cell position)
+	// Cell position
 	c=0;
 	for( i=0; i<game.YMAX; i++ ){
 		for( j=0; j<game.XMAX; j++ ){
@@ -146,7 +144,7 @@ function init() {
 		}
 	}
 	
-	// エリア描画 +2 (攻撃元と攻撃先) (area drawing +2 (attack source, destination))
+	// Area drawing +2 (attack source, destination)
 	sn_area = sn;
 	for( i=0; i<game.AREA_MAX+2; i++ ){
 		spr[sn] = new createjs.Shape();
@@ -155,10 +153,10 @@ function init() {
 		stage.addChild(spr[sn]);
 		sn++;
 	}
-	sn_from = sn_area + game.AREA_MAX;	// 攻撃元エリアのスプライト番号 (sprite number of attack area)
-	sn_to = sn_area + game.AREA_MAX+1;	// 攻撃先エリアのスプライト番号 (sprite number of attack destination)
+	sn_from = sn_area + game.AREA_MAX;	// Sprite number of attack area
+	sn_to = sn_area + game.AREA_MAX+1;	// Sprite number of attack destination
 	
-	// エリアダイス (area dice)
+	// Area dice
 	sn_dice = sn;
 	builder = new createjs.SpriteSheetBuilder();
 	var mc = new lib.areadice();
@@ -170,17 +168,17 @@ function init() {
 		stage.addChild(spr[sn]);
 		sn++;
 	}
-	// エリアダイス表示順 (area dice display order)
+	// Area dice display order
 	for( i=0; i<game.AREA_MAX; i++ ){
 		prio[i] = new Object();
 		prio[i].an = i;
-		prio[i].cpos = 0;	// 後で使う (to use later)
+		prio[i].cpos = 0;	// To use later
 	}
 	
-	// マップ以外のスプライト番号(一括で消すため) (sprite numbers other than map (to erase all at once))
+	// Sprite numbers other than map (to erase all at once)
 	sn_info = sn;
 	
-	// プレイヤー状態 (player state)
+	// Player state
 	sn_ban = sn;
 	spr[sn] = new lib.mc();
 	stage.addChild(spr[sn]);
@@ -210,7 +208,7 @@ function init() {
 		sn++;
 	}
 	
-	// バトルダイス (battle dice)
+	// Battle dice
 	sn_battle = sn;
 	spr[sn] = new createjs.Container();
 	spr[sn].y = ypos_mes;
@@ -241,7 +239,7 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// 供給ダイス (supply dice)
+	// Supply dice
 	sn_supply = sn;
 	spr[sn] = new createjs.Container();
 	spr[sn].y = ypos_mes;
@@ -284,14 +282,14 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// タイトル画面 (title screen)
+	// Title screen
 	sn_title = sn;
 	spr[sn] = new lib.mc();
 	spr[sn].scaleX = spr[sn].scaleY = nume/deno;
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// プレイヤー数設定 (player number setting)
+	// Player number setting
 	sn_pmax = sn;
 	spr[sn] = new createjs.Container();
 	for( i=0; i<7; i++ ){
@@ -306,13 +304,13 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// Loading用(web フォントを読んでおくため) (for loading (to read the web font))
+	// For loading (to read the web font)
 	sn_load = sn;
 	spr[sn] = new createjs.Text("Now loading...", Math.floor(24*nume/deno)+"px Anton", "#000000");
 	stage.addChild(spr[sn]);
 	sn++;
 
-	// 汎用メッセージ (generic message)
+	// Generic message
 	sn_mes = sn;
 	spr[sn] = new createjs.Text("Now loading...", Math.floor(30*nume/deno)+"px Roboto", "#000000");
 	spr[sn].textAlign = "center";
@@ -320,7 +318,7 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// ボタン (button)
+	// Button
 	var btxt = ["START","TOP PAGE","YES","NO","END TURN","TITLE","HISTORY","SPECTATE"];
 	bmax = btxt.length;
 	sn_btn = sn;
@@ -338,12 +336,12 @@ function init() {
 		spr[sn].scaleY = nume/deno;
 		spr[sn].visible = true;
 		sn++;
-		// ボタン (button)関数 (button function)
+		// Button function
 		btn_func[i] = new Function();
 		btn_func[i] = null;
 	}
 
-	// スプライト枚数 (sprite number)
+	// Sprite number
 	sn_max = sn;
 	for( i=0; i<sn_max; i++ ) spr[i].visible = false;
 	
@@ -354,7 +352,7 @@ function init() {
 	createjs.Ticker.setFPS(60);
 	
 	if( soundon ){
-		// PCの場合にはサウンド読み込む (in the case of a pc, load sound)
+		// In the case of a PC, load sound
 		var queue = new createjs.LoadQueue(false);
 		queue.installPlugin(createjs.Sound);
 		queue.loadManifest(manifest,true);
@@ -378,7 +376,7 @@ function handleComplete(event){
 }
 var instance = new Array();
 function startSound(soundid){
-	instance[soundid] = createjs.Sound.createInstance(soundid); // SoundJSのインスタンスを再生(idを指定)
+	instance[soundid] = createjs.Sound.createInstance(soundid); // Play SoundJS instance (specify id)
 }
 function playSound(soundid){
 	if( !soundon ) return;
@@ -387,20 +385,20 @@ function playSound(soundid){
 }
 
 ////////////////////////////////////////////////////
-// イベントリスナー群 (event listeners)
+// Event listeners
 ////////////////////////////////////////////////////
 
 function mouseDownListner(e) {
 	if( click_func != null ){ click_func(e); }
-	canvas.style.cursor="default";  // マウスカーソルの変更 (change mouse cursor)
+	canvas.style.cursor="default";  // Change mouse cursor
 }
 function mouseMoveListner(e) {
 	if( move_func != null ){ move_func(e); }
-	canvas.style.cursor="default";  // マウスカーソルの変更 (change mouse cursor)
+	canvas.style.cursor="default";  // Change mouse cursor
 }
 function mouseUpListner(e) {
 	if( release_func != null ){ release_func(e); }
-	canvas.style.cursor="default";  // マウスカーソルの変更 (change mouse cursor)
+	canvas.style.cursor="default";  // Change mouse cursor
 	if( activebutton>=0 ){
 		if( btn_func[activebutton] != null ){
 			playSound("snd_button");
@@ -414,7 +412,7 @@ function onTick() {
 	check_button();
 }
 
-// ボタン (button)
+// Button
 function check_button(){
 	var i,sn;
 	var n=-1;
@@ -456,7 +454,7 @@ function fake_loading(){
 }
 
 ////////////////////////////////////////////////////
-// タイトル画面 (title screen)
+// Title screen
 ////////////////////////////////////////////////////
 
 function start_title(){
@@ -483,7 +481,7 @@ function start_title(){
 		spr[sn_pmax].getChildByName("p"+i).color = (i==game.pmax-2)?"#aa0000":"#cccccc";
 	}
 	
-	// ボタン (button)
+	// Button
 	spr[sn_btn+0].x = resize(640);
 	spr[sn_btn+0].y = resize(390);
 	spr[sn_btn+0].visible = true;
@@ -519,7 +517,7 @@ function click_pmax(){
 }
 
 ////////////////////////////////////////////////////
-// マップ作成画面 (map creation screen)
+// Map creation screen
 ////////////////////////////////////////////////////
 
 function make_map(){
@@ -529,7 +527,7 @@ function make_map(){
 
 	game.make_map();
 	
-	// ダイスの表示順
+	// Dice display order
 	for( i=0; i<game.AREA_MAX; i++ ){
 		n = prio[i].an;
 		prio[i].cpos = game.adat[n].cpos;
@@ -547,12 +545,12 @@ function make_map(){
 		an2sn[n] = sn_dice+i;
 	}
 
-	// エリア塗り
+	// Area fill
 	for( i=0; i<game.AREA_MAX; i++ ){
 		draw_areashape(sn_area+i,i,0);
 	}
 	
-	// エリアダイス
+	// Area dice
 	for( i=0; i<game.AREA_MAX; i++ ){
 		draw_areadice(sn_dice+i,prio[i].an);
 	}
@@ -564,7 +562,7 @@ function make_map(){
 	spr[sn_mes].x = view_w*0.1;
 	spr[sn_mes].y = ypos_mes;
 
-	// ボタン (button)
+	// Button
 	spr[sn_btn+2].x = resize(500);
 	spr[sn_btn+2].y = ypos_mes;
 	spr[sn_btn+2].visible = true;
@@ -611,7 +609,7 @@ function draw_areashape( sn, area, paint_mode ){
 	var py=ay[d];
 	spr[sn].graphics.moveTo( cpos_x[c]+px, cpos_y[c]+py );
 	for( var i=0; i<100; i++ ){
-		// まず線を引く
+		// Draw the line first
 		var px=ax[d+1];
 		var py=ay[d+1];
 		spr[sn].graphics.lineTo(cpos_x[c]+px,cpos_y[c]+py);
@@ -622,7 +620,7 @@ function draw_areashape( sn, area, paint_mode ){
 	}
 }
 
-// エリアダイス
+// Area dice
 function draw_areadice(sn,area){
 	if( game.adat[area].size==0 ){
 		spr[sn].visible = false;
@@ -636,7 +634,7 @@ function draw_areadice(sn,area){
 }
 
 ////////////////////////////////////////////////////
-// プレイ開始
+// Start play
 ////////////////////////////////////////////////////
 
 function start_game(){
@@ -644,7 +642,7 @@ function start_game(){
 	start_player();
 }
 
-// プレイヤー状態
+// Player state
 function draw_player_data(){
 	var i;
 	var pnum = 0;
@@ -680,7 +678,7 @@ function draw_player_data(){
 }
 
 ////////////////////////////////////////////////////
-// 順番が来た
+// Turn started
 ////////////////////////////////////////////////////
 
 function start_player(){
@@ -704,7 +702,7 @@ function start_player(){
 }
 
 ////////////////////////////////////////////////////
-// プレイヤーの行動開始
+// Start player action
 ////////////////////////////////////////////////////
 
 function start_man(){
@@ -716,8 +714,8 @@ function start_man(){
 	spr[sn_mes].x = view_w*0.05;
 	spr[sn_mes].y = ypos_mes;
 	
-	// ボタン (button)
-	activebutton = -1;	// ボタンをクリックしてないのにendturnになるバグ対応
+	// Button
+	activebutton = -1;	// Bug fix for endturn triggering without button click
 	spr[sn_btn+4].x = view_w-100*nume/deno;
 	spr[sn_btn+4].y = ypos_mes;
 	spr[sn_btn+4].visible = true;
@@ -733,7 +731,7 @@ function start_man(){
 	releaese_func = null;	
 }
 
-// クリックしたエリアの取得
+// Get clicked area
 function clicked_area(){
 	var i,sn;
 	var ret = -1;
@@ -753,7 +751,7 @@ function clicked_area(){
 	return ret;
 }
 
-// 一回目
+// First click
 function first_click(){
 	var p = game.jun[game.ban];
 	var an = clicked_area();
@@ -772,13 +770,13 @@ function first_click(){
 	click_func = second_click;
 }
 
-// 二回目
+// Second click
 function second_click(){
 	var p = game.jun[game.ban];
 	var an = clicked_area();
 	if( an<0 ) return;
 	
-	// 同じエリアで選択解除	
+	// Deselect if same area is clicked	
 	if( an==game.area_from ){
 		start_man();
 		return;
@@ -793,7 +791,7 @@ function second_click(){
 	start_battle();
 }
 
-// 行動終了
+// End action
 function end_turn(){
 
 	spr[sn_btn+4].visible = false;
@@ -810,7 +808,7 @@ function end_turn(){
 }
 
 ////////////////////////////////////////////////////
-// COM思考
+// COM thinking
 ////////////////////////////////////////////////////
 
 function start_com(){
@@ -852,19 +850,19 @@ function com_to(){
 
 
 ////////////////////////////////////////////////////
-// 戦闘
+// Battle
 ////////////////////////////////////////////////////
 
 function start_battle(){
 	var i,j;
 	
-	spr[sn_btn+4].visible = false;	// END TURNボタン消す
+	spr[sn_btn+4].visible = false;	// Hide END TURN button
 	spr[sn_ban].visible = false;
 	for( i=0; i<8; i++ ){
 		spr[sn_player+i].visible = false;
 	}
 
-	// 戦闘シーンの変数	
+	// Battle scene variables	
 	var an = [game.area_from,game.area_to];
 	for( i=0; i<2; i++ ){
 		battle[i].arm = game.adat[an[i]].arm;
@@ -1027,7 +1025,7 @@ function after_battle(){
 	draw_areadice(an2sn[game.area_from],game.area_from);
 	draw_areadice(an2sn[game.area_to],game.area_to);
 	
-	// 履歴
+	// History
 	game.set_his(game.area_from,game.area_to,defeat);
 
 	if( game.player[game.user].area_tc==0 && !spectate_mode){
@@ -1053,7 +1051,7 @@ function after_battle(){
 }
 
 ////////////////////////////////////////////////////
-// ダイス補充の開始
+// Start dice supply
 ////////////////////////////////////////////////////
 
 function start_supply(){
@@ -1121,7 +1119,7 @@ function supply_dice(){
 			spr[sn_supply].getChildAt(i).visible = false;
 		}
 	}
-	// 履歴
+	// History
 	game.set_his(an,0,0);
 
 	stage.update();
@@ -1131,7 +1129,7 @@ function supply_dice(){
 
 
 ////////////////////////////////////////////////////
-// 次のプレイヤーへ
+// To next player
 ////////////////////////////////////////////////////
 
 function next_player(){
@@ -1186,7 +1184,7 @@ function gameover(){
 		o.y+=0.5;
 		if( o.y>-70 ) o.y=-70;
 		if( waitcount>=160 ){
-			// ボタン (button)
+			// Button
 			spr[sn_btn+5].x = view_w/2 - resize(200);
 			spr[sn_btn+5].y = view_h/2 + resize(70);
 			spr[sn_btn+5].visible = true;
@@ -1248,7 +1246,7 @@ function win(){
 }
 
 ////////////////////////////////////////////////////
-// 履歴
+// History
 ////////////////////////////////////////////////////
 
 function start_history(){
@@ -1270,7 +1268,7 @@ function start_history(){
 		draw_areadice(sn_dice+i,prio[i].an);
 	}
 	
-	// ボタン (button)
+	// Button
 	spr[sn_btn+5].x = view_w/2 - resize(100);
 	spr[sn_btn+5].y = view_h*0.88;
 	spr[sn_btn+5].visible = true;
@@ -1295,31 +1293,31 @@ function play_history(){
 	var an;
 	if( stat==0 ){
 		if( replay_c >= game.his_c ){
-			timer_func = null;	// 終了
+			timer_func = null;	// End
 		}else{
 			stat = ( game.his[replay_c].to==0 ) ? 1 : 2;
 		}
 	}else if( stat==1 ){
-		// 補給
+		// Supply
 		an = game.his[replay_c].from;
 		game.adat[an].dice++;
 		draw_areadice(an2sn[an],an);
 		stage.update();
 		replay_c++;
 		if( replay_c >= game.his_c ){
-			timer_func = null;	// 終了
+			timer_func = null;	// End
 		}else{
 			stat = ( game.his[replay_c].to==0 ) ? 1 : 2;
 		}
 	}else if( stat==2 ){
-		// 攻撃元
+		// Attack source
 		an = game.his[replay_c].from;
 		draw_areashape(sn_from,an,1);
 		stage.update();
 		waitcount=0;
 		stat++;
 	}else if( stat==3 ){
-		// 攻撃先
+		// Attack destination
 		if( waitcount>2 ){
 			an = game.his[replay_c].to;
 			draw_areashape(sn_to,an,1);
@@ -1328,7 +1326,7 @@ function play_history(){
 			stat++;
 		}
 	}else if( stat==4 ){
-		// 攻撃後
+		// After attack
 		if( waitcount>10 ){
 			var an0 = game.his[replay_c].from;
 			var an1 = game.his[replay_c].to;
@@ -1355,7 +1353,7 @@ function play_history(){
 }
 
 ////////////////////////////////////////////////////
-// リンク
+// Link
 ////////////////////////////////////////////////////
 
 function toppage(){
@@ -1375,7 +1373,7 @@ function start_spectate(){
 	for( i=0; i<8; i++ ) spr[sn_player+i].visible = false;
 	for( i=0; i<bmax; i++ ) spr[sn_btn+i].visible = false;
 	
-	// ボタン (button)
+	// Button
 	spr[sn_btn+5].x = view_w/2;
 	spr[sn_btn+5].y = view_h*0.88;
 	spr[sn_btn+5].visible = true;
@@ -1391,12 +1389,3 @@ function start_spectate(){
 	move_func = null;
 	releaese_func = null;
 }
-
-
-
-
-
-
-
-
-

@@ -1,9 +1,13 @@
+// Dice Wars - Area Dice Animation Library
+// This file contains the visual representation of dice for territories in the Dice Wars game.
+// Each territory displays between 1 and 8 dice (represented as 0-7 in code), with different colored 3D dice models.
+
 (function (lib, img, cjs, ss) {
 
 var p; // shortcut to reference prototypes
 lib.webFontTxtFilters = {}; 
 
-// library properties:
+// Library properties for the animation canvas
 lib.properties = {
 	width: 550,
 	height: 400,
@@ -14,11 +18,9 @@ lib.properties = {
 	manifest: []
 };
 
-
-
 lib.ssMetadata = [];
 
-
+// Check if a web font is available and update text filters accordingly
 lib.webfontAvailable = function(family) { 
 	lib.properties.webfonts[family] = true;
 	var txtFilters = lib.webFontTxtFilters && lib.webFontTxtFilters[family] || [];
@@ -26,6 +28,7 @@ lib.webfontAvailable = function(family) {
 		txtFilters[f].updateCache();
 	}
 };
+
 // symbols:
 
 
