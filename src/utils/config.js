@@ -22,7 +22,7 @@ export const DEFAULT_CONFIG = {
     null,                 // Player 0 (human)
     'ai_example',         // Player 1
     'ai_defensive',       // Player 2  
-    'ai_adaptive',        // Player 3 - Adaptive strategy
+    'ai_adaptive',        // Player 3
     'ai_default',         // Player 4
     'ai_default',         // Player 5
     'ai_default',         // Player 6

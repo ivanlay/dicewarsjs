@@ -382,7 +382,7 @@ function init() {
 	sn++;
 	
 	// Create game buttons
-	var btxt = ["START","TOP PAGE","YES","NO","END TURN","TITLE","HISTORY","SPECTATE"];
+	var btxt = ["START","AI vs AI","YES","NO","END TURN","TITLE","HISTORY","SPECTATE"];
 	bmax = btxt.length;  // Store total number of buttons
 	sn_btn = sn;         // Store starting index of button sprites
 	
@@ -494,7 +494,17 @@ function mouseUpListner(e) {
 	if( activebutton >= 0 ){
 		if( btn_func[activebutton] != null ){
 			playSound("snd_button");  // Play button sound
-			btn_func[activebutton](); // Call button's function
+			
+			// Special check for the TITLE button in spectator mode
+			if (activebutton === 5 && spectate_mode) {
+				// Ensure we're using the correct function
+				btn_func[5] = start_title;
+				// Reset spectator mode before going to title
+				spectate_mode = false;
+			}
+			
+			// Call the button's function
+			btn_func[activebutton]();
 		}
 	}
 }
@@ -606,7 +616,7 @@ function start_title(){
 	spr[sn_btn+0].x = resize(640);
 	spr[sn_btn+0].y = resize(390);
 	spr[sn_btn+0].visible = true;
-	btn_func[0] = make_map;
+	btn_func[0] = start_normal_game; // Call our new function for normal game mode
 	spr[sn_btn+1].x = resize(640);
 	spr[sn_btn+1].y = resize(490);
 	spr[sn_btn+1].visible = true;
@@ -635,6 +645,20 @@ function click_pmax(){
 		spr[sn_pmax].getChildByName("p"+i).color = (i==game.pmax-2)?"#aa0000":"#cccccc";
 	}
 	stage.update();
+}
+
+// Start a normal (human player) game
+function start_normal_game() {
+	// Ensure we're in normal mode, not spectator mode
+	spectate_mode = false;
+	
+	// Update GAME_CONFIG for normal mode (human is player 0)
+	if (typeof GAME_CONFIG !== 'undefined') {
+		GAME_CONFIG.humanPlayerIndex = 0; // Set human player to index 0
+	}
+	
+	// Create a new map
+	make_map();
 }
 
 ////////////////////////////////////////////////////
@@ -759,6 +783,28 @@ function draw_areadice(sn,area){
 ////////////////////////////////////////////////////
 
 function start_game(){
+	// Apply any GAME_CONFIG settings before starting the game
+	if (typeof GAME_CONFIG !== 'undefined') {
+		if (GAME_CONFIG.humanPlayerIndex === null) {
+			// Setting for AI vs AI mode
+			game.user = null;
+			spectate_mode = true;
+			
+			// Apply speed multiplier if configured
+			if (typeof GAME_CONFIG.spectatorSpeedMultiplier === 'number') {
+				window.gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier;
+			}
+		} else {
+			// Normal mode with human player
+			game.user = GAME_CONFIG.humanPlayerIndex || 0;
+			spectate_mode = false;
+		}
+	} else {
+		// If no GAME_CONFIG exists, ensure we're in normal mode
+		game.user = 0;
+		spectate_mode = false;
+	}
+	
 	game.start_game();
 	start_player();
 }
@@ -776,6 +822,16 @@ function draw_player_data(){
 			spr[sn_player+i].visible = true;
 			pnum++;
 		}
+	}
+	
+	// Add "AI vs AI MODE" indicator text when in spectator mode
+	if (spectate_mode) {
+		spr[sn_mes].visible = true;
+		spr[sn_mes].text = "AI vs AI MODE";
+		spr[sn_mes].color = "#aa0000";
+		spr[sn_mes].textAlign = "center";
+		spr[sn_mes].x = view_w/2;
+		spr[sn_mes].y = view_h*0.06; // Position near the top
 	}
 	
 	// Then position and update their displays
@@ -803,9 +859,14 @@ function draw_player_data(){
 		c++;
 	}
 	
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 }
 
@@ -817,6 +878,11 @@ function start_player(){
 	
 	for( var i=sn_info; i<sn_max; i++ ){
 		spr[i].visible = false;
+	}
+	
+	// Make sure all buttons are hidden initially
+	for( var i=0; i<bmax; i++ ){
+		spr[sn_btn+i].visible = false;
 	}
 
 	if ( !spectate_mode ) {
@@ -945,8 +1011,16 @@ function end_turn(){
 ////////////////////////////////////////////////////
 
 function start_com(){
-	// Make sure title button stays visible in spectator mode
+	// Hide all buttons first
+	for( var i=0; i<bmax; i++ ){
+		spr[sn_btn+i].visible = false;
+	}
+	
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Ensure TITLE button is properly positioned in the center bottom
+		spr[sn_btn+5].x = view_w/2;
+		spr[sn_btn+5].y = view_h*0.88;
 		spr[sn_btn+5].visible = true;
 		
 		// Show player data in spectator mode
@@ -978,9 +1052,14 @@ function com_from(){
 	
 	draw_areashape(sn_from,game.area_from,1);
 	
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 	
 	stage.update();
@@ -999,9 +1078,14 @@ function com_to(){
 
 	draw_areashape(sn_to,game.area_to,1);
 	
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 	
 	stage.update();
@@ -1103,9 +1187,14 @@ function battle_dice(){
 	// Apply speed multiplier in spectator mode
 	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
 	
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 	
 	for( i=0; i<8; i++ ){
@@ -1252,8 +1341,11 @@ function start_supply(){
 	spr[sn_to].visible = false;
 	spr[sn_btn+4].visible = false;
 
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Ensure TITLE button is properly positioned in the center bottom
+		spr[sn_btn+5].x = view_w/2;
+		spr[sn_btn+5].y = view_h*0.88;
 		spr[sn_btn+5].visible = true;
 		
 		// Show player data in spectator mode
@@ -1295,18 +1387,28 @@ function supply_waiting(){
 	
 	if( waitcount>0 ) return;
 	
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 	
 	timer_func = supply_dice;
 }
 
 function supply_dice(){
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 	
 	var pn = game.jun[game.ban];
@@ -1339,9 +1441,14 @@ function supply_dice(){
 	// History
 	game.set_his(an,0,0);
 
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 
 	stage.update();
@@ -1355,9 +1462,14 @@ function supply_dice(){
 ////////////////////////////////////////////////////
 
 function next_player(){
-	// Make sure title button stays visible in spectator mode
+	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
+		// Position the TITLE button in the top-left corner (but fully visible)
+		spr[sn_btn+5].x = resize(60);
+		spr[sn_btn+5].y = resize(25);
 		spr[sn_btn+5].visible = true;
+		// Make sure the button function is properly set
+		btn_func[5] = start_title;
 	}
 	
 	for( var i=0; i<game.pmax; i++ ){
@@ -1592,7 +1704,32 @@ function play_history(){
 ////////////////////////////////////////////////////
 
 function toppage(){
-	location.href="https://www.gamedesign.jp/";
+	// Set up AI vs AI mode
+	spectate_mode = true;
+	
+	// Set a default speed multiplier for better experience
+	window.gameSpeedMultiplier = 2;
+	
+	// Create or update GAME_CONFIG for AI vs AI mode
+	if (typeof GAME_CONFIG === 'undefined') {
+		// Create a global config object if it doesn't exist
+		window.GAME_CONFIG = {
+			humanPlayerIndex: null,
+			spectatorSpeedMultiplier: window.gameSpeedMultiplier
+		};
+	} else {
+		// Update existing config
+		GAME_CONFIG.humanPlayerIndex = null;
+		GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
+	}
+	
+	// Start a new game in spectator mode - use the proper function sequence
+	// First generate the map
+	make_map();
+	
+	// Then immediately accept it (auto-click YES)
+	// This bypasses the YES/NO prompt completely
+	start_game();
 }
 
 ////////////////////////////////////////////////////
@@ -1621,9 +1758,9 @@ function start_spectate(){
 		}
 	}
 	
-	// Button
-	spr[sn_btn+5].x = view_w/2;
-	spr[sn_btn+5].y = view_h*0.88;
+	// Button - position in top-left corner (but fully visible)
+	spr[sn_btn+5].x = resize(60);
+	spr[sn_btn+5].y = resize(25);
 	spr[sn_btn+5].visible = true;
 	btn_func[5] = start_title;
 
