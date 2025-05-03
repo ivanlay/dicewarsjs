@@ -7,7 +7,7 @@
  */
 
 import { AreaData, PlayerData, JoinData, HistoryData } from './models/index.js';
-import { ai_default, ai_defensive, ai_example } from './ai/index.js';
+import { ai_default, ai_defensive, ai_example, ai_adaptive } from './ai/index.js';
 
 /**
  * Game Class
@@ -22,19 +22,31 @@ import { ai_default, ai_defensive, ai_example } from './ai/index.js';
 export class Game {
   constructor() {
     /**
+     * AI registry - stores references to all available AI strategies
+     * This allows the configuration system to map string names to function references
+     */
+    this.aiRegistry = {
+      ai_default: ai_default,
+      ai_defensive: ai_defensive,
+      ai_example: ai_example,
+      ai_adaptive: ai_adaptive
+    };
+    
+    /**
      * AI strategy array
      * 
      * Maps player indices to their AI strategy functions:
      * - Index 0 (null): Human player (no AI)
-     * - Other indices: Different AI strategies imported from separate files
+     * - Other indices: Different AI strategies set by configuration
      * 
      * These functions are called during computer player turns to determine moves.
+     * This array will be populated by the configuration system.
      */
     this.ai = [
       null,            // Player 0 (human player)
       ai_example,      // Player 1 - Example basic AI
       ai_defensive,    // Player 2 - Defensive strategy
-      ai_defensive,    // Player 3 - Defensive strategy
+      ai_adaptive,     // Player 3 - Adaptive strategy
       ai_default,      // Player 4 - Default balanced AI
       ai_default,      // Player 5 - Default balanced AI
       ai_default,      // Player 6 - Default balanced AI

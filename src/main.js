@@ -21,10 +21,10 @@ let stat = 0;             // General state variable used in state machines
 // Main game object - contains all game logic and state
 const game = new Game();
 
-// Apply configuration if available
-if (typeof applyGameConfig === 'function') {
-    applyGameConfig(game);
-}
+// Import and apply configuration
+import { applyConfigToGame, loadConfig } from './utils/config.js';
+const config = loadConfig();
+applyConfigToGame(game, config);
 
 // Display position and scaling parameters
 const original_config = {

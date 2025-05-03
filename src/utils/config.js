@@ -22,7 +22,7 @@ export const DEFAULT_CONFIG = {
     null,                 // Player 0 (human)
     'ai_example',         // Player 1
     'ai_defensive',       // Player 2  
-    'ai_defensive',       // Player 3
+    'ai_adaptive',        // Player 3 - Adaptive strategy
     'ai_default',         // Player 4
     'ai_default',         // Player 5
     'ai_default',         // Player 6
@@ -145,10 +145,36 @@ export function applyConfigToGame(game, config = null) {
   game.YMAX = cfg.mapHeight;
   game.AREA_MAX = cfg.territoriesCount;
   
-  // AI configuration - convert string names to function references
+  // AI configuration - map string names to function references
   if (cfg.aiTypes && Array.isArray(cfg.aiTypes) && game.ai) {
-    // This will need to be updated to properly import AI functions dynamically
-    // For now, we assume the AI functions are already available
+    // Map AI type strings to actual functions
+    for (let i = 0; i < cfg.aiTypes.length && i < game.ai.length; i++) {
+      const aiType = cfg.aiTypes[i];
+      // Skip null entries (human players)
+      if (aiType === null) {
+        game.ai[i] = null;
+        continue;
+      }
+      
+      // Map string names to the imported AI functions
+      switch (aiType) {
+        case 'ai_default':
+          game.ai[i] = game.aiRegistry.ai_default;
+          break;
+        case 'ai_defensive':
+          game.ai[i] = game.aiRegistry.ai_defensive;
+          break;
+        case 'ai_example':
+          game.ai[i] = game.aiRegistry.ai_example;
+          break;
+        case 'ai_adaptive':
+          game.ai[i] = game.aiRegistry.ai_adaptive;
+          break;
+        default:
+          console.warn(`Unknown AI type: ${aiType}, using default AI`);
+          game.ai[i] = game.aiRegistry.ai_default;
+      }
+    }
   }
   
   return game;
