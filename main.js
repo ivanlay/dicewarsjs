@@ -1,124 +1,133 @@
-var canvas, stage;
-var builder;
-var touchdev = false;
+var canvas, stage;        // CreateJS canvas and stage objects
+var builder;              // CreateJS SpriteSheetBuilder for dice graphics
+var touchdev = false;     // Flag indicating touch device detection
 
-// Event functions
-var timer_func = new Function();	timer_func = null;
-var click_func = new Function();	click_func = null;
-var move_func = new Function();		move_func = null;
-var release_func = new Function();	release_func = null;
-var waitcount=0;
-var stat=0;
+// Event handler functions - set dynamically based on game state
+var timer_func = new Function();	timer_func = null;    // Called on each tick
+var click_func = new Function();	click_func = null;      // Called on mouse down
+var move_func = new Function();		move_func = null;       // Called on mouse move
+var release_func = new Function();	release_func = null;   // Called on mouse up
+var waitcount=0;          // Counter for timing/animation delays
+var stat=0;               // General state variable used in state machines
 
-// Game object
+// Main game object - contains all game logic and state
 var game = new Game();
 
-// Display position
-var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size
-var nume = 1;
-var deno = 1;
-var view_w,view_h;
-var cel_w,cel_h;	// Card size
-var ypos_mes;		// Message, position of battle dice
-var ypos_arm;		// Status display position of each army
-var dot;			// Size of 1 dot
+// Display position and scaling parameters
+var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size configuration
+var nume = 1;        // Numerator for scaling ratio (scales up)
+var deno = 1;        // Denominator for scaling ratio (scales down)
+var view_w,view_h;   // Actual display dimensions after scaling
+var cel_w,cel_h;	 // Cell size after scaling (hexagonal grid cells)
+var ypos_mes;		 // Y-position for messages and battle dice display
+var ypos_arm;		 // Y-position for player status indicators
+var dot;			 // Size of 1 dot after scaling (for line thickness)
 
-// Cell drawing position
-var cpos_x = new Array();
-var cpos_y = new Array();
+// Arrays storing the pixel positions of each hexagonal cell
+var cpos_x = new Array();  // X-coordinates of each cell
+var cpos_y = new Array();  // Y-coordinates of each cell
 
-// Sprite
+// Main array containing all sprite objects
 var spr = new Array();
 
-// Sprite number
-var sn_area = 0;
-var sn_from = 0;	// Sprite number of attack area
-var sn_to = 0;	// Sprite number of attack destination area
-var sn_dice = 0;
-var sn_info = 0;
-var sn_ban = 0;
-var sn_player = 0;
-var sn_battle = 0;
-var sn_supply = 0;
-var sn_gameover = 0;
-var sn_win = 0;
-var sn_title = 0;
-var sn_pmax = 0;
-var sn_load = 0;
-var sn_mes = 0;
-var sn_btn = 0;
-var sn_max = 0;	// Maximum number
+// Sprite indices - these are starting indices for different sprite categories
+var sn_area = 0;       // Area shapes (territories)
+var sn_from = 0;       // Highlight for attacking territory
+var sn_to = 0;         // Highlight for defending territory
+var sn_dice = 0;       // Dice display for each territory
+var sn_info = 0;       // First sprite index after map elements (UI elements start here)
+var sn_ban = 0;        // Current player indicator
+var sn_player = 0;     // Player status indicators
+var sn_battle = 0;     // Battle animation elements
+var sn_supply = 0;     // Reinforcement dice display
+var sn_gameover = 0;   // Game over screen
+var sn_win = 0;        // Victory screen
+var sn_title = 0;      // Title screen
+var sn_pmax = 0;       // Player count selection UI
+var sn_load = 0;       // Loading indicator
+var sn_mes = 0;        // Message display
+var sn_btn = 0;        // Button sprites
+var sn_max = 0;        // Total number of sprites
 
-var prio = new Array();		// Display order of area dice
-var an2sn = new Array();	// Returns the die sprite number from the area number
+// Area ordering and mapping arrays
+var prio = new Array();		// Display order of area dice (for proper z-ordering)
+var an2sn = new Array();	// Maps area numbers to sprite indices for quick lookup
 
-// Button
-var bmax = 0;
-var activebutton = -1;
-var btn_func = new Array();
+// Button system variables
+var bmax = 0;              // Total number of buttons
+var activebutton = -1;     // Index of currently active button (-1 if none)
+var btn_func = new Array(); // Array of button click handler functions
 
-// Battle class
+// Battle animation class - holds data for dice battle visualization
 var Battle = function(){
-	this.dn = 0;	// Dice number (position to stop)
-	this.arm = 0;	// Dice color
-	this.dmax = 0;	// Number of dice
-	this.deme = [0,0,0,0,0,0,0,0];
-	this.sum = 0;
-	this.fin = [0,0,0,0,0,0,0,0];	// End flag
-	this.usedice = [0,1,2,3,4,5,6,7];	// Dice used
+	this.dn = 0;	                // Dice number (position to stop)
+	this.arm = 0;	                // Player/army ID for dice color
+	this.dmax = 0;	                // Number of dice in the battle
+	this.deme = [0,0,0,0,0,0,0,0];  // Actual values rolled for each die
+	this.sum = 0;                    // Total sum of dice values
+	this.fin = [0,0,0,0,0,0,0,0];	// Animation finished flags for each die
+	this.usedice = [0,1,2,3,4,5,6,7]; // Dice indices to use (shuffled for animation)
 }
-var battle = new Array();
-var bturn = 0;	// Battle turn
+var battle = new Array();   // Array holding Battle instances for attacker and defender
+var bturn = 0;	            // Battle animation turn (0 for attacker, 1 for defender)
 
-// For history replay
-var replay_c=0;
+// History replay system
+var replay_c = 0;           // Current step in history replay
 
-// spectating
-var spectate_mode = false;
+// Game mode flags
+var spectate_mode = false;  // Flag for spectator mode (AI vs AI)
 
-// Sound related
-var soundon = true;
-var manifest = [
-	{"src":"./sound/button.wav",	"id":"snd_button"},
-	{"src":"./sound/clear.wav",		"id":"snd_clear"},
-	{"src":"./sound/click.wav",		"id":"snd_click"},
-	{"src":"./sound/dice.wav",		"id":"snd_dice"},
-	{"src":"./sound/fail.wav",		"id":"snd_fail"},
-	{"src":"./sound/myturn.wav",	"id":"snd_myturn"},
-	{"src":"./sound/over.wav",		"id":"snd_over"},
-	{"src":"./sound/success.wav",	"id":"snd_success"}
+// Sound system
+var soundon = true;         // Flag for sound enabled/disabled
+var manifest = [            // Sound file manifest for CreateJS sound system
+	{"src":"./sound/button.wav",	"id":"snd_button"},  // Button click
+	{"src":"./sound/clear.wav",		"id":"snd_clear"},   // Victory sound
+	{"src":"./sound/click.wav",		"id":"snd_click"},   // Area selection
+	{"src":"./sound/dice.wav",		"id":"snd_dice"},    // Dice roll
+	{"src":"./sound/fail.wav",		"id":"snd_fail"},    // Attack failed
+	{"src":"./sound/myturn.wav",	"id":"snd_myturn"},  // Player turn notification
+	{"src":"./sound/over.wav",		"id":"snd_over"},    // Game over
+	{"src":"./sound/success.wav",	"id":"snd_success"}  // Attack succeeded
 ];
 
-// Resize according to scale
+// Utility function to apply scaling ratio to any number
 function resize(n){
 	return n*nume/deno;
 }
 
-// Start-up
+// Application initialization on page load
 window.addEventListener("load", init);
 function init() {
 	var i,j,c,n;
 
+	// Set up CreateJS canvas and stage
 	canvas = document.getElementById("myCanvas");
 	stage = new createjs.Stage(canvas);
 	
+	// Enable touch support if available and disable sound on touch devices
 	if(createjs.Touch.isSupported() == true) {
 	   createjs.Touch.enable(stage);
 	   touchdev = true;
 	}
 	if( touchdev ){
-		soundon = false;
+		soundon = false;  // Disable sound on touch devices to prevent autoplay restrictions
 	}
-	// Display position
+	
+	// Calculate responsive scaling based on window dimensions
+	// Uses the smaller ratio to ensure the game fits completely within the window
 	var iw = window.innerWidth;
 	var ih = window.innerHeight;
-	if( iw/org.view_w<ih/org.view_h ){
+	if( iw/org.view_w < ih/org.view_h ){
+		// Width is the constraining factor
 		nume = iw;
 		deno = org.view_w;
 	}else{
+		// Height is the constraining factor
 		nume = ih;
 		deno = org.view_h;
 	}
+	
+	// Apply scaling to all display dimensions
 	view_w = Math.floor(org.view_w*nume/deno);
 	view_h = Math.floor(org.view_h*nume/deno);
 	stage.canvas.width = view_w;
@@ -128,128 +137,164 @@ function init() {
 	ypos_mes = org.ypos_mes*nume/deno;
 	ypos_arm = org.ypos_arm*nume/deno;
 	dot = 1*nume/deno;
+	
+	// Initialize battle objects for attacker and defender
 	for( i=0; i<2; i++ ) battle[i] = new Battle();
 
-	// Sprite number
+	// Current sprite index counter for initialization
 	var sn = 0;
 
-	// Cell position
+	// Calculate pixel positions for each hexagonal cell in the grid
 	c=0;
 	for( i=0; i<game.YMAX; i++ ){
 		for( j=0; j<game.XMAX; j++ ){
 			cpos_x[c] = j*cel_w;
+			// Offset every other row to create hexagonal grid pattern
 			if( i%2 ) cpos_x[c] += cel_w/2;
 			cpos_y[c] = i*cel_h;
-		c++;
+			c++;
 		}
 	}
 	
-	// Area drawing +2 (attack source, destination)
-	sn_area = sn;
+	// Create territory shape sprites - includes normal territories plus attack highlights
+	sn_area = sn;  // Store starting index of area shapes
 	for( i=0; i<game.AREA_MAX+2; i++ ){
 		spr[sn] = new createjs.Shape();
+		// Position the map in the center of the screen
 		spr[sn].x = view_w/2-game.XMAX*cel_w/2-cel_w/4;
-		spr[sn].y = 50*nume/deno;
+		spr[sn].y = 50*nume/deno;  // Top margin
 		stage.addChild(spr[sn]);
 		sn++;
 	}
-	sn_from = sn_area + game.AREA_MAX;	// Sprite number of attack area
-	sn_to = sn_area + game.AREA_MAX+1;	// Sprite number of attack destination
+	// Set indices for the attack highlight shapes (source and target)
+	sn_from = sn_area + game.AREA_MAX;	// Sprite for highlighting attacking territory
+	sn_to = sn_area + game.AREA_MAX+1;	// Sprite for highlighting defending territory
 	
-	// Area dice
-	sn_dice = sn;
+	// Create dice sprites for each territory
+	sn_dice = sn;  // Store starting index of dice sprites
+	
+	// Create spritesheet for dice graphics
 	builder = new createjs.SpriteSheetBuilder();
-	var mc = new lib.areadice();
-	var rect = new createjs.Rectangle(0,0,80,100);
-	builder.addMovieClip(mc, rect, nume/deno);
+	var mc = new lib.areadice();  // Reference to dice movieclip from the library
+	var rect = new createjs.Rectangle(0,0,80,100);  // Size of dice sprite
+	builder.addMovieClip(mc, rect, nume/deno);  // Add to builder with scaling
 	var spritesheet = builder.build();
+	
+	// Create sprites for each territory's dice
 	for( i=0; i<game.AREA_MAX; i++ ){
 		spr[sn] = new createjs.Sprite(spritesheet);
 		stage.addChild(spr[sn]);
 		sn++;
 	}
-	// Area dice display order
+	
+	// Initialize area display order array (for proper z-ordering of dice)
 	for( i=0; i<game.AREA_MAX; i++ ){
 		prio[i] = new Object();
-		prio[i].an = i;
-		prio[i].cpos = 0;	// To use later
+		prio[i].an = i;  // Area number
+		prio[i].cpos = 0;  // Center position (will be set later during map generation)
 	}
 	
-	// Sprite numbers other than map (to erase all at once)
+	// Store index where UI elements start (after map elements)
 	sn_info = sn;
 	
-	// Player state
+	// Create current player indicator sprite
 	sn_ban = sn;
-	spr[sn] = new lib.mc();
+	spr[sn] = new lib.mc();  // Current player indicator graphic
 	stage.addChild(spr[sn]);
 	spr[sn].scaleX = nume/deno;
 	spr[sn].scaleY = nume/deno;
 	sn++;
+	
+	// Create player status display sprites (one for each possible player)
 	sn_player = sn;
 	for( i=0; i<8; i++ ){
-		var pd = new lib.mc();
+		// Create player icon
+		var pd = new lib.mc();  // Player dice icon
 		pd.scaleX = pd.scaleY = 0.12;
 		pd.x = -22;
 		pd.y = 0;
+		
+		// Create container for player status elements
 		spr[sn] = new createjs.Container();
 		spr[sn].addChildAt(pd,0);
+		
+		// Add territory count text
 		var txt = new createjs.Text("", "32px Anton", "Black")
 		txt.textBaseline = "middle";
 		txt.x = 5;
 		spr[sn].addChildAt(txt,1);
+		
+		// Add reinforcement count text
 		var txt2 = new createjs.Text("", "16px Anton", "Black")
 		txt2.textBaseline = "middle";
 		txt2.x = 5;
 		txt2.y = 28;
 		spr[sn].addChildAt(txt2,2);
+		
+		// Add to stage and apply scaling
 		stage.addChild(spr[sn]);
 		spr[sn].scaleX = nume/deno;
 		spr[sn].scaleY = nume/deno;
 		sn++;
 	}
 	
-	// Battle dice
+	// Create battle animation container and elements
 	sn_battle = sn;
 	spr[sn] = new createjs.Container();
 	spr[sn].y = ypos_mes;
 	spr[sn].x = view_w/2;
 	spr[sn].scaleX = spr[sn].scaleY = nume/deno;
+	
+	// Semi-transparent white background for battle display
 	var bgshape = new createjs.Shape();
 	bgshape.graphics.beginFill("rgba(255,255,255,0.8)").drawRect(-org.view_w/2,-50,org.view_w,360);
 	spr[sn].addChild(bgshape);
+	
+	// Create dice shadows and dice for both attacker (i=0) and defender (i=1)
 	for( i=0; i<2; i++ ){
+		// Create shadow sprites for visual effect
 		for( j=0; j<8; j++ ){
-			var bs = new lib.mc();
+			var bs = new lib.mc();  // Dice shadow
 			bs.scaleX = bs.scaleY = 0.15;
-			bs.name = "s"+i+j;
+			bs.name = "s"+i+j;      // Name format: s[player][index]
 			spr[sn].addChild(bs);
 		}
+		
+		// Create dice sprites
 		for( j=0; j<8; j++ ){
-			var bd = new lib.mc();
+			var bd = new lib.mc();  // Actual dice
 			bd.scaleX = bd.scaleY = 0.15;
-			bd.name = "d"+i+j;
+			bd.name = "d"+i+j;      // Name format: d[player][index]
 			spr[sn].addChild(bd);
 		}
+		
+		// Create text to display total dice value
 		var txt = new createjs.Text("37", "80px Anton", "Black")
 		txt.textBaseline = "middle";
 		txt.textAlign = "center";
-		txt.name = "n"+i;
+		txt.name = "n"+i;          // Name format: n[player]
 		spr[sn].addChild(txt);
 	}
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// Supply dice
+	// Create reinforcement dice display (for supply phase)
 	sn_supply = sn;
 	spr[sn] = new createjs.Container();
 	spr[sn].y = ypos_mes;
 	spr[sn].x = view_w/2;
 	spr[sn].scaleX = spr[sn].scaleY = nume/deno;
+	
+	// Create sprites for each possible reinforcement die
 	for( i=0; i<game.STOCK_MAX; i++ ){
-		var sd = new lib.mc();
-		var w = 40;
-		sd.x = -(6.5*w)+Math.floor(i/4)*w -(i%4)*w*0.5;
-		sd.y = -w*0.7+Math.floor(i%4)*w/2;
+		var sd = new lib.mc();  // Dice sprite
+		var w = 40;             // Base spacing unit
+		
+		// Calculate position in a staggered grid pattern
+		sd.x = -(6.5*w)+Math.floor(i/4)*w -(i%4)*w*0.5;  // X position with offset by row
+		sd.y = -w*0.7+Math.floor(i%4)*w/2;               // Y position in rows
+		
+		// Initialize with blank dice
 		sd.gotoAndStop("d00");
 		sd.scaleX = sd.scaleY = 0.1;
 		spr[sn].addChildAt(sd,i);
@@ -257,46 +302,56 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 
-	// GAMEOVER
+	// Create Game Over screen
 	sn_gameover = sn;
 	spr[sn] = new createjs.Container();
-	spr[sn].x = view_w/2;
-	spr[sn].y = view_h/2;
+	spr[sn].x = view_w/2;  // Center horizontally
+	spr[sn].y = view_h/2;  // Center vertically
 	spr[sn].scaleX = spr[sn].scaleY = nume/deno;
+	
+	// Black semi-transparent background
 	var goshape = new createjs.Shape();
 	goshape.graphics.beginFill("#000000").drawRect(-org.view_w/2+10,-180,org.view_w-20,360);
-	goshape.name = "bg";
+	goshape.name = "bg";  // Named for animation access
 	spr[sn].addChild(goshape);
+	
+	// Game Over text
 	var gotext = new createjs.Text("G A M E O V E R", "80px Anton", "White")
 	gotext.textBaseline = "middle";
 	gotext.textAlign = "center";
-	gotext.name = "mes";
+	gotext.name = "mes";  // Named for animation access
 	spr[sn].addChild(gotext);
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// YOU WIN
+	// Create Victory screen
 	sn_win = sn;
-	spr[sn] = new lib.mc();
+	spr[sn] = new lib.mc();  // Uses movieclip from library
 	spr[sn].scaleX = spr[sn].scaleY = nume/deno;
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// Title screen
+	// Create title screen
 	sn_title = sn;
-	spr[sn] = new lib.mc();
+	spr[sn] = new lib.mc();  // Uses movieclip from library
 	spr[sn].scaleX = spr[sn].scaleY = nume/deno;
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// Player number setting
+	// Create player count selection UI
 	sn_pmax = sn;
 	spr[sn] = new createjs.Container();
+	
+	// Create text elements for each player count option (2-8 players)
 	for( i=0; i<7; i++ ){
 		var ptxt = new createjs.Text((i+2)+" players",Math.floor(32*nume/deno)+"px Anton", "#aaaaaa");
-		ptxt.name = "p"+i;
-		ptxt.x = view_w/2 -280*nume/deno + Math.floor(i%4)*(180*nume/deno);
-		ptxt.y = view_h*0.8 + Math.floor(i/4)*(60*nume/deno);
+		ptxt.name = "p"+i;  // Named for access during selection
+		
+		// Position in a grid pattern
+		ptxt.x = view_w/2 -280*nume/deno + Math.floor(i%4)*(180*nume/deno);  // Horizontal position by column
+		ptxt.y = view_h*0.8 + Math.floor(i/4)*(60*nume/deno);                // Vertical position by row
+		
+		// Centered text alignment
 		ptxt.textAlign = "center";
 		ptxt.textBaseline = "middle";
 		spr[sn].addChild(ptxt);
@@ -304,13 +359,13 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// For loading (to read the web font)
+	// Create loading text (also helps load the web font)
 	sn_load = sn;
 	spr[sn] = new createjs.Text("Now loading...", Math.floor(24*nume/deno)+"px Anton", "#000000");
 	stage.addChild(spr[sn]);
 	sn++;
 
-	// Generic message
+	// Create generic message display text
 	sn_mes = sn;
 	spr[sn] = new createjs.Text("Now loading...", Math.floor(30*nume/deno)+"px Roboto", "#000000");
 	spr[sn].textAlign = "center";
@@ -318,119 +373,165 @@ function init() {
 	stage.addChild(spr[sn]);
 	sn++;
 	
-	// Button
+	// Create game buttons
 	var btxt = ["START","TOP PAGE","YES","NO","END TURN","TITLE","HISTORY","SPECTATE"];
-	bmax = btxt.length;
-	sn_btn = sn;
+	bmax = btxt.length;  // Store total number of buttons
+	sn_btn = sn;         // Store starting index of button sprites
+	
+	// Create each button
 	for( i=0; i<bmax; i++ ){
-		var bt = new lib.mc();
+		// Create button container
 		spr[sn] = new createjs.Container();
-		bt.gotoAndStop("btn");
+		
+		// Add button background
+		var bt = new lib.mc();
+		bt.gotoAndStop("btn");  // Set to button graphic state
 		spr[sn].addChildAt(bt,0);
+		
+		// Add button text
 		var txt = new createjs.Text(btxt[i], "32px Anton", "Black")
 		txt.textAlign = "center";
 		txt.textBaseline = "middle";
 		spr[sn].addChildAt(txt,1);
+		
+		// Add to stage and apply scaling
 		stage.addChild(spr[sn]);
 		spr[sn].scaleX = nume/deno;
 		spr[sn].scaleY = nume/deno;
 		spr[sn].visible = true;
 		sn++;
-		// Button function
+		
+		// Initialize button click handler (will be set later)
 		btn_func[i] = new Function();
 		btn_func[i] = null;
 	}
 
-	// Sprite number
+	// Store total number of sprites and hide them all initially
 	sn_max = sn;
 	for( i=0; i<sn_max; i++ ) spr[i].visible = false;
 	
-	stage.addEventListener("stagemousedown", mouseDownListner );
-	stage.addEventListener("stagemousemove", mouseMoveListner );
-	stage.addEventListener("stagemouseup", mouseUpListner );
-	createjs.Ticker.addEventListener("tick", onTick);
-	createjs.Ticker.setFPS(60);
+	// Set up event listeners
+	stage.addEventListener("stagemousedown", mouseDownListner );  // Mouse down events
+	stage.addEventListener("stagemousemove", mouseMoveListner );  // Mouse move events
+	stage.addEventListener("stagemouseup", mouseUpListner );      // Mouse up events
+	createjs.Ticker.addEventListener("tick", onTick);             // Animation tick
+	createjs.Ticker.setFPS(60);                                   // Set frame rate
 	
+	// Initialize sound system if enabled
 	if( soundon ){
-		// In the case of a PC, load sound
+		// Create sound loading queue (for non-touch devices)
 		var queue = new createjs.LoadQueue(false);
 		queue.installPlugin(createjs.Sound);
 		queue.loadManifest(manifest,true);
-		queue.addEventListener("fileload",handleFileLoad);  
-		queue.addEventListener("complete",handleComplete);		
+		queue.addEventListener("fileload",handleFileLoad);    // Handle each loaded sound
+		queue.addEventListener("complete",handleComplete);    // Handle loading completion
 	}else{
+		// Skip sound loading and go directly to fake loading screen
 		waitcount = 60;
 		timer_func = fake_loading;
 	}
 }
 
+// Handle individual sound file loading completion
 function handleFileLoad(event){
 	var item = event.item;
 	if( item.type == createjs.LoadQueue.SOUND ){
-		startSound(item.id);
+		startSound(item.id);  // Create sound instance
 	}	
 }
+
+// Handle all sound files loading completion
 function handleComplete(event){
 	waitcount = 30;
-	timer_func = fake_loading;
+	timer_func = fake_loading;  // Start fake loading animation
 }
+
+// Array to store sound instances
 var instance = new Array();
+
+// Create instance of a sound for later playback
 function startSound(soundid){
-	instance[soundid] = createjs.Sound.createInstance(soundid); // Play SoundJS instance (specify id)
+	instance[soundid] = createjs.Sound.createInstance(soundid);
 }
+
+// Play a sound effect with the given ID
 function playSound(soundid){
-	if( !soundon ) return;
-	instance[soundid].setVolume(0.5);
-	instance[soundid].play();
+	if( !soundon ) return;  // Skip if sound is disabled
+	instance[soundid].setVolume(0.5);  // Set volume to 50%
+	instance[soundid].play();  // Play the sound
 }
 
 ////////////////////////////////////////////////////
-// Event listeners
+// Event listeners and main game loop
 ////////////////////////////////////////////////////
 
+// Handle mouse button press
 function mouseDownListner(e) {
-	if( click_func != null ){ click_func(e); }
-	canvas.style.cursor="default";  // Change mouse cursor
+	if( click_func != null ){ click_func(e); }  // Call current click handler if set
+	canvas.style.cursor="default";  // Reset mouse cursor
 }
+
+// Handle mouse movement
 function mouseMoveListner(e) {
-	if( move_func != null ){ move_func(e); }
-	canvas.style.cursor="default";  // Change mouse cursor
+	if( move_func != null ){ move_func(e); }  // Call current move handler if set
+	canvas.style.cursor="default";  // Reset mouse cursor
 }
+
+// Handle mouse button release
 function mouseUpListner(e) {
-	if( release_func != null ){ release_func(e); }
-	canvas.style.cursor="default";  // Change mouse cursor
-	if( activebutton>=0 ){
+	if( release_func != null ){ release_func(e); }  // Call current release handler if set
+	canvas.style.cursor="default";  // Reset mouse cursor
+	
+	// If a button is active when released, call its function
+	if( activebutton >= 0 ){
 		if( btn_func[activebutton] != null ){
-			playSound("snd_button");
-			btn_func[activebutton]();
+			playSound("snd_button");  // Play button sound
+			btn_func[activebutton](); // Call button's function
 		}
 	}
 }
 
+// Main game loop - called each tick
 function onTick() {
-	if( timer_func != null ){ timer_func(); }
-	check_button();
+	if( timer_func != null ){ timer_func(); }  // Call current timer handler if set
+	check_button_hover();  // Check for button hover state changes
 }
 
-// Button
-function check_button(){
+// Check which button the mouse is hovering over and update appearance
+function check_button_hover(){
 	var i,sn;
-	var n=-1;
+	var n = -1;  // No button hovered initially
+	
+	// Check each button for hover
 	for( i=0; i<bmax; i++ ){
 		sn = sn_btn+i;
-		if( !spr[sn].visible ) continue;
+		if( !spr[sn].visible ) continue;  // Skip invisible buttons
+		
+		// Convert mouse coordinates to button's local space
 		var pt = spr[sn].globalToLocal(stage.mouseX, stage.mouseY);
-		if( spr[sn].hitTest(pt.x,pt.y) ) n=i;
+		
+		// Check if point is within button bounds
+		if( spr[sn].hitTest(pt.x,pt.y) ) n = i;
 	}
+	
+	// If hover state hasn't changed, no need to update
 	if( activebutton == n ) return;
+	
+	// Update active button index
 	activebutton = n;
+	
+	// Update appearance of all buttons
 	for( var i=0; i<bmax; i++ ){
 		if( i==activebutton ){
+			// Pressed appearance for hovered button
 			spr[sn_btn+i].getChildAt(0).gotoAndStop("press");
 		}else{
+			// Normal appearance for non-hovered buttons
 			spr[sn_btn+i].getChildAt(0).gotoAndStop("btn");
 		}
 	}
+	
+	// Refresh display
 	stage.update();
 }
 
