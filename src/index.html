@@ -34,19 +34,17 @@
         }
     </style>
     
-    <!-- Scripts -->
+    <!-- CreateJS Library -->
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-    <script src="areadice.js"></script>
-    <script src="mc.js"></script>
-    <script src="ai_default.js"></script>
-    <script src="ai_defensive.js"></script>
-    <script src="ai_example.js"></script>
-    <script src="game.js"></script>
+    
+    <!-- Game Configuration (Optional) -->
     <script src="config.js"></script>
-    <script src="main.js"></script>
 </head>
 
 <body>
     <canvas id="myCanvas"></canvas>
+    
+    <!-- Main Script (Using ES modules) -->
+    <script type="module" src="main.js"></script>
 </body>
 </html>
