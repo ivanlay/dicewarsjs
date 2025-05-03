@@ -22,7 +22,7 @@ var GAME_CONFIG = {
     
     // Human player index (0-7, or null for all AI)
     // Set to null for AI vs AI spectator mode
-    humanPlayerIndex: null,
+    humanPlayerIndex: 0,
     
     // AI assignments for each player position
     // Use the AI_STRATEGIES constants to assign strategies
@@ -38,7 +38,11 @@ var GAME_CONFIG = {
     ],
     
     // Average dice per territory (affects initial dice distribution)
-    averageDicePerTerritory: 3
+    averageDicePerTerritory: 3,
+    
+    // Game speed multiplier (only affects spectator mode)
+    // Values: 1 = normal speed, 2 = 2x speed, 3 = 3x speed, etc.
+    spectatorSpeedMultiplier: 2
 };
 
 /**
@@ -64,6 +68,13 @@ function applyGameConfig(game) {
     if (game.user === null) {
         spectate_mode = true;
         
+        // Apply speed multiplier if configured (global variable)
+        if (typeof GAME_CONFIG.spectatorSpeedMultiplier === 'number') {
+            window.gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier;
+        } else {
+            window.gameSpeedMultiplier = 1;
+        }
+        
         // Ensure player 0 has an AI assigned if in spectator mode
         if (!game.ai[0]) {
             game.ai[0] = AI_STRATEGIES.DEFAULT;
@@ -71,5 +82,6 @@ function applyGameConfig(game) {
     } else {
         // If human player is assigned, make sure their AI is null
         game.ai[game.user] = null;
+        window.gameSpeedMultiplier = 1;
     }
 }

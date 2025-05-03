@@ -13,6 +13,11 @@ var stat=0;               // General state variable used in state machines
 // Main game object - contains all game logic and state
 var game = new Game();
 
+// Apply configuration if available
+if (typeof applyGameConfig === 'function') {
+    applyGameConfig(game);
+}
+
 // Display position and scaling parameters
 var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size configuration
 var nume = 1;        // Numerator for scaling ratio (scales up)
@@ -103,6 +108,9 @@ function init() {
 	// Set up CreateJS canvas and stage
 	canvas = document.getElementById("myCanvas");
 	stage = new createjs.Stage(canvas);
+	
+	// Clear the stage to fix any visual glitches
+	stage.removeAllChildren();
 	
 	// Enable touch support if available and disable sound on touch devices
 	if(createjs.Touch.isSupported() == true) {
@@ -563,7 +571,19 @@ function start_title(){
 	
 	for( i=0; i<sn_max; i++ ) spr[i].visible = false;
 
-	spectate_mode = false;
+	// Initialize game speed variables and update spectator mode from config
+	var gameSpeedMultiplier = 1;
+	
+	if (typeof GAME_CONFIG !== 'undefined' && GAME_CONFIG.humanPlayerIndex === null) {
+		spectate_mode = true;
+		
+		// Apply speed multiplier if configured
+		if (typeof GAME_CONFIG.spectatorSpeedMultiplier === 'number') {
+			gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier;
+		}
+	} else {
+		spectate_mode = false;
+	}
 	
 	spr[sn_title].visible = true;
 	spr[sn_title].x = 0;
@@ -747,6 +767,8 @@ function start_game(){
 function draw_player_data(){
 	var i;
 	var pnum = 0;
+	
+	// First count active players
 	for( i=0; i<8; i++ ){
 		spr[sn_player+i].visible = false;
 		var p = game.jun[i];
@@ -755,19 +777,23 @@ function draw_player_data(){
 			pnum++;
 		}
 	}
+	
+	// Then position and update their displays
 	var c=0;
 	for( i=0; i<8; i++ ){
 		var p = game.jun[i];
 		if( game.player[p].area_tc == 0 )continue;
 		var sn = sn_player+i;
-		w = 100*nume/deno;
+		var w = 100*nume/deno; // Explicitly declare with var to avoid global leakage
 		var ox = view_w/2-(pnum-1)*w/2+c*w;
-		spr[sn].x = ox;//-22*nume/deno;
+		spr[sn].x = ox;
 		spr[sn].y = ypos_arm;
 		spr[sn].getChildAt(0).gotoAndStop("d"+p+"0");
 		spr[sn].getChildAt(1).text = ""+game.player[p].area_tc;
 		spr[sn].getChildAt(2).text = "";
 		if( game.player[p].stock>0 ) spr[sn].getChildAt(2).text = ""+game.player[p].stock;
+		
+		// Show current player marker
 		if( i==game.ban ){
 			spr[sn_ban].x = ox;
 			spr[sn_ban].y = ypos_arm;
@@ -775,6 +801,11 @@ function draw_player_data(){
 			spr[sn_ban].visible = true;
 		}
 		c++;
+	}
+	
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
 	}
 }
 
@@ -790,14 +821,15 @@ function start_player(){
 
 	if ( !spectate_mode ) {
 		draw_player_data();
-	}else{
+	} else {
+		// In spectator mode, show both the title button and player info
 		spr[sn_btn+5].visible = true;
+		draw_player_data();
 	}
 	
-	if( game.jun[game.ban] == game.user ){
+	if( game.jun[game.ban] == game.user && !spectate_mode ){
 		start_man();
-	}else{
-//		start_man();
+	} else {
 		start_com();
 	}
 }
@@ -913,6 +945,13 @@ function end_turn(){
 ////////////////////////////////////////////////////
 
 function start_com(){
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+		
+		// Show player data in spectator mode
+		draw_player_data();
+	}
 	
 	var ret = game.com_thinking();
 	if( ret==0 ){
@@ -921,7 +960,9 @@ function start_com(){
 	}
 	stage.update();
 	
-	waitcount = 5;
+	// Reduce wait time in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	waitcount = Math.max(1, Math.floor(5/speedMultiplier));
 	timer_func = com_from;
 	click_func = null;
 	move_func = null;
@@ -929,21 +970,40 @@ function start_com(){
 }
 
 function com_from(){
-	waitcount--;
+	// Apply speed multiplier in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	waitcount -= speedMultiplier;
+	
 	if( waitcount>0 ) return;
 	
 	draw_areashape(sn_from,game.area_from,1);
+	
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+	
 	stage.update();
 	
-	waitcount = 5;
+	// Reduce wait time in spectator mode
+	waitcount = Math.max(1, Math.floor(5/speedMultiplier));
 	timer_func = com_to;
 }
 
 function com_to(){
-	waitcount--;
+	// Apply speed multiplier in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	waitcount -= speedMultiplier;
+	
 	if( waitcount>0 ) return;
 
 	draw_areashape(sn_to,game.area_to,1);
+	
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+	
 	stage.update();
 
 	start_battle();
@@ -961,6 +1021,15 @@ function start_battle(){
 	spr[sn_ban].visible = false;
 	for( i=0; i<8; i++ ){
 		spr[sn_player+i].visible = false;
+	}
+	
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+		
+		// Reduce battle animation length in spectator mode
+		var speedMultiplier = (window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+		waitcount = Math.max(1, Math.floor(15/speedMultiplier));
 	}
 
 	// Battle scene variables	
@@ -1030,6 +1099,15 @@ function battle_dice(){
 	var h = (bturn==0)?6:-6;
 	var f=false;
 	var soundflg = false;
+	
+	// Apply speed multiplier in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+	
 	for( i=0; i<8; i++ ){
 		if( battle[bturn].fin[i]>0 ) continue;
 		var o = spr[sn_battle].getChildByName("d"+bturn+i);
@@ -1086,7 +1164,9 @@ function battle_dice(){
 		spr[sn_battle].getChildByName("n"+bturn).text = ""+battle[bturn].sum;
 		bturn++;
 		if( bturn>=2 ){
-			waitcount=15;
+			// Reduce wait time in spectator mode
+			var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+			waitcount = Math.max(1, Math.floor(15/speedMultiplier));
 			timer_func = after_battle;
 		}
 	}
@@ -1097,14 +1177,25 @@ function battle_dice(){
 }
 
 function after_battle(){
-	waitcount--;
+	// Apply speed multiplier in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	waitcount -= speedMultiplier;
+	
 	if( waitcount>0 ) return;
 	spr[sn_battle].visible = false;
 	spr[sn_from].visible = false;
 	spr[sn_to].visible = false;
-	spr[sn_ban].visible = true;
-	for( i=0; i<8; i++ ){
-		spr[sn_player+i].visible = true;
+	
+	// Show player indicators and turn marker based on game mode
+	if (!spectate_mode) {
+		spr[sn_ban].visible = true;
+		for( i=0; i<8; i++ ){
+			spr[sn_player+i].visible = true;
+		}
+	} else {
+		// In spectator mode, show player data but ensure title button is visible
+		draw_player_data();
+		spr[sn_btn+5].visible = true;
 	}
 	
 	var arm0 = game.adat[game.area_from].arm;
@@ -1129,7 +1220,8 @@ function after_battle(){
 	// History
 	game.set_his(game.area_from,game.area_to,defeat);
 
-	if( game.player[game.user].area_tc==0 && !spectate_mode){
+	// Check if human player has lost (only in non-spectator mode)
+	if(!spectate_mode && game.user !== null && game.player[game.user].area_tc==0){
 		draw_player_data();
 		start_gameover();
 	}else{
@@ -1160,6 +1252,14 @@ function start_supply(){
 	spr[sn_to].visible = false;
 	spr[sn_btn+4].visible = false;
 
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+		
+		// Show player data in spectator mode
+		draw_player_data();
+	}
+
 	var pn = game.jun[game.ban];
 //	game.player[pn].stock = 64;
 	game.set_area_tc(pn);
@@ -1179,7 +1279,9 @@ function start_supply(){
 	}
 	stage.update();
 	
-	waitcount = 10;
+	// Reduce wait time in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	waitcount = Math.max(1, Math.floor(10/speedMultiplier));
 	timer_func = supply_waiting;
 	click_func = null;
 	move_func = null;
@@ -1187,12 +1289,26 @@ function start_supply(){
 }
 
 function supply_waiting(){
-	waitcount--;
+	// Apply speed multiplier in spectator mode
+	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	waitcount -= speedMultiplier;
+	
 	if( waitcount>0 ) return;
+	
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+	
 	timer_func = supply_dice;
 }
 
 function supply_dice(){
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+	
 	var pn = game.jun[game.ban];
 	var list = new Array();
 	c = 0;
@@ -1223,6 +1339,11 @@ function supply_dice(){
 	// History
 	game.set_his(an,0,0);
 
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+
 	stage.update();
 	
 	return;
@@ -1234,13 +1355,18 @@ function supply_dice(){
 ////////////////////////////////////////////////////
 
 function next_player(){
+	// Make sure title button stays visible in spectator mode
+	if (spectate_mode) {
+		spr[sn_btn+5].visible = true;
+	}
+	
 	for( var i=0; i<game.pmax; i++ ){
 		game.ban++;
 		if( game.ban >= game.pmax ) game.ban = 0;
 		var pn = game.jun[game.ban];
 		if( game.player[pn].area_tc ) break;
 	}
-	if( game.jun[game.ban] == game.user ) playSound("snd_myturn");
+	if( game.jun[game.ban] == game.user && !spectate_mode ) playSound("snd_myturn");
 
 	start_player();
 }
@@ -1250,6 +1376,14 @@ function next_player(){
 ////////////////////////////////////////////////////
 
 function start_gameover(){
+	// Clear any existing UI elements
+	for( var i=0; i<sn_max; i++ ) {
+		if (i !== sn_gameover) {
+			spr[i].visible = false;
+		}
+	}
+	
+	// Show game over UI
 	spr[sn_gameover].visible = false;
 	spr[sn_gameover].x = view_w/2;
 	spr[sn_gameover].y = view_h/2;
@@ -1468,11 +1602,24 @@ function toppage(){
 function start_spectate(){
 	var i;
 	
-	spr[sn_win].visible = false;
-	spr[sn_gameover].visible = false;
-	spr[sn_ban].visible = false;
-	for( i=0; i<8; i++ ) spr[sn_player+i].visible = false;
-	for( i=0; i<bmax; i++ ) spr[sn_btn+i].visible = false;
+	// Hide all UI elements first
+	for( i=0; i<sn_max; i++ ) {
+		spr[i].visible = false;
+	}
+	
+	// Show only the map elements
+	for( i=0; i<game.AREA_MAX; i++ ) {
+		if( game.adat[i].size > 0 ) {
+			spr[sn_area+i].visible = true;
+		}
+	}
+	
+	// Show dice for territories
+	for( i=0; i<game.AREA_MAX; i++ ) {
+		if( game.adat[i].size > 0 ) {
+			spr[an2sn[i]].visible = true;
+		}
+	}
 	
 	// Button
 	spr[sn_btn+5].x = view_w/2;
@@ -1481,6 +1628,9 @@ function start_spectate(){
 	btn_func[5] = start_title;
 
 	spectate_mode = true;
+	
+	// Show player data in spectator mode
+	draw_player_data();
 	
 	stage.update();
 	stat = 0;
