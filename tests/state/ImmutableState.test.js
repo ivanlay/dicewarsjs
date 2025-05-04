@@ -408,7 +408,7 @@ describe('Immutable State Management', () => {
       let directState = { currentTurn: { attackCount: 0 } };
       const directUpdateTime = measurePerformance(i => {
         directState = {
-          ...directState, 
+          ...directState,
           currentTurn: {
             ...directState.currentTurn,
             attackCount: i % 10,

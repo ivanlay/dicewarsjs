@@ -27,13 +27,13 @@ export { gameEvents as default };
 /**
  * Error handler for global mechanics errors
  * Attaches to global event listeners for error reporting
- * 
+ *
  * @param {Error} error - The error to handle
  * @param {Object} metadata - Additional metadata about the error context
  */
 export const handleGlobalError = (error, metadata = {}) => {
   console.error('Game Mechanics Error:', error, metadata);
-  
+
   // Emit error event for logging/analytics
   gameEvents.emit('custom', {
     type: 'global_error',
@@ -42,14 +42,14 @@ export const handleGlobalError = (error, metadata = {}) => {
       message: error.message,
       stack: error.stack,
       code: error.code || 'UNKNOWN',
-      ...metadata
-    }
+      ...metadata,
+    },
   });
-  
+
   return {
     success: false,
     error,
     message: error.message || 'An unknown error occurred',
-    metadata
+    metadata,
   };
 };

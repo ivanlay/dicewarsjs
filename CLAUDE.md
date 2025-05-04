@@ -81,6 +81,7 @@ Before creating a pull request:
 8. If adding new features, update relevant documentation
 
 Note on linting:
+
 - Run `npm run lint:fix` to automatically fix linting issues
 - Some linting rules are relaxed to accommodate game development patterns
 - Pre-commit hooks verify your code meets the project's style requirements
