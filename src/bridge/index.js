@@ -15,12 +15,24 @@ import './gameUtils.js';
 import './render.js';
 import './sound.js';
 import './ai.js';
+import './Game.js';
 
 // Export utility modules for ES6 usage
 export * from '../utils/gameUtils.js';
 export * from '../utils/render.js';
 export * from '../utils/sound.js';
 export * from '../utils/config.js';
+
+// Export core modules for ES6 usage
+export { Game } from '../Game.js';
+// Import mechanics but only re-export non-conflicting parts
+import * as Mechanics from '../mechanics/index.js';
+// Selectively re-export to avoid conflicts
+export const {
+  makeMap, setAreaTc, 
+  executeAttack, distributeReinforcements, setPlayerTerritoryData,
+  executeAIMove, AI_REGISTRY
+} = Mechanics;
 
 // Export AI modules for ES6 usage
 export * from '../ai/index.js';
@@ -30,7 +42,8 @@ const moduleStatus = {
   gameUtils: 'loaded',
   render: 'loaded',
   sound: 'loaded',
-  ai: 'loaded'
+  ai: 'loaded',
+  game: 'loaded'
 };
 
 // Add a check method to verify all modules are loaded
@@ -65,6 +78,8 @@ function findModuleFromError(error) {
     return 'sound';
   } else if (errorString.includes('ai') || stack.includes('ai')) {
     return 'ai';
+  } else if (errorString.includes('Game') || stack.includes('Game')) {
+    return 'game';
   }
   
   return null;
