@@ -10,7 +10,7 @@
  * - Choke points and strategic territory value
  * - Attack risk and potential rewards
  */
-export function ai_adaptive(game) {
+export const ai_adaptive = (game) => {
     // Get current player number
     const pn = game.get_pn();
     
@@ -32,7 +32,7 @@ export function ai_adaptive(game) {
     // Step 6: Execute the selected move
     game.area_from = bestMove.from;
     game.area_to = bestMove.to;
-}
+};
 
 /**
  * Analyze the current game state to inform strategic decisions
@@ -41,7 +41,7 @@ export function ai_adaptive(game) {
  * @param {Object} game - The game state object
  * @returns {Object} Analysis of the current game state
  */
-function analyzeGameState(game) {
+const analyzeGameState = (game) => {
     const state = {
         playerStats: [],
         territories: {
@@ -62,12 +62,17 @@ function analyzeGameState(game) {
         playerThreatLevel: new Array(8).fill(0)
     };
     
-    // Calculate territory and dice statistics
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        
-        const player = game.adat[i].arm;
-        const dice = game.adat[i].dice;
+    // Get territories data
+    const { adat, AREA_MAX, player } = game;
+    
+    // Calculate territory and dice statistics using array methods
+    const validTerritories = [...Array(AREA_MAX).keys()]
+        .slice(1) // Territories start at index 1
+        .filter(i => adat[i].size !== 0);
+    
+    // Process valid territories
+    validTerritories.forEach(i => {
+        const { arm: player, dice } = adat[i];
         
         // Count territories and dice by player
         state.territories.total++;
@@ -76,22 +81,15 @@ function analyzeGameState(game) {
         state.dice.total += dice;
         state.dice.byPlayer[player] += dice;
         
-        // Check if this is a border territory
-        let isBorder = false;
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
-            
-            if (game.adat[j].arm !== player) {
-                isBorder = true;
-                break;
-            }
-        }
+        // Check if this is a border territory using some() for early exit
+        const isBorder = validTerritories.some(j => 
+            i !== j && adat[i].join[j] && adat[j].arm !== player
+        );
         
         if (isBorder) {
             state.borderTerritories[player]++;
         }
-    }
+    });
     
     // Calculate average dice per territory and count active players
     for (let i = 0; i < 8; i++) {
@@ -105,33 +103,33 @@ function analyzeGameState(game) {
                 dice: state.dice.byPlayer[i],
                 borderTerritories: state.borderTerritories[i],
                 averageDice: state.averageDicePerTerritory[i],
-                connectedTerritories: game.player[i].area_tc
+                connectedTerritories: player[i].area_tc
             };
         }
     }
     
     // Rank players by dice count (index 0 = highest ranking player)
-    state.playerRankings = Array(8).fill().map((_, i) => i)
+    state.playerRankings = Array(8).fill()
+        .map((_, i) => i)
         .filter(i => state.territories.byPlayer[i] > 0) // Only include active players
         .sort((a, b) => state.dice.byPlayer[b] - state.dice.byPlayer[a]);
     
     // Identify dominant player (has >35% of total dice)
-    for (let i = 0; i < 8; i++) {
-        if (state.dice.byPlayer[i] > state.dice.total * 0.35) {
-            state.dominantPlayer = i;
-            break;
-        }
-    }
+    state.dominantPlayer = state.playerRankings.find(i => 
+        state.dice.byPlayer[i] > state.dice.total * 0.35
+    ) ?? -1;
     
     // Calculate threat level each player poses to others
-    for (let i = 0; i < 8; i++) {
-        if (state.territories.byPlayer[i] === 0) continue;
+    state.playerRankings.forEach(i => {
+        // Base threat on dice count, average dice, and territory percentage
+        const territoryPercentage = state.territories.byPlayer[i] / state.territories.total;
         
-        // Base threat on dice count and average dice
-        state.playerThreatLevel[i] = state.dice.byPlayer[i] * 0.6 + 
-                                    state.averageDicePerTerritory[i] * 10 + 
-                                    (state.territories.byPlayer[i] / state.territories.total) * 50;
-    }
+        state.playerThreatLevel[i] = (
+            state.dice.byPlayer[i] * 0.6 + 
+            state.averageDicePerTerritory[i] * 10 + 
+            territoryPercentage * 50
+        );
+    });
     
     // Determine game phase based on territory occupation and player count
     if (state.territories.total > 0) {
@@ -139,20 +137,17 @@ function analyzeGameState(game) {
         const territoriesClaimed = state.territories.total / 30;
         
         // Game phase depends on territory claim percentage and player count
-        if (state.remainingPlayers > 5 || territoriesClaimed < 0.6) {
-            state.gamePhase = 'early';
-        } else if (state.remainingPlayers > 3 || territoriesClaimed < 0.9) {
-            state.gamePhase = 'mid';
-        } else {
-            state.gamePhase = 'late';
-        }
+        state.gamePhase = 
+            (state.remainingPlayers > 5 || territoriesClaimed < 0.6) ? 'early' :
+            (state.remainingPlayers > 3 || territoriesClaimed < 0.9) ? 'mid' : 
+            'late';
     }
     
-    // Detect choke points (basic implementation)
+    // Detect choke points
     state.chokePoints = identifyChokePoints(game);
     
     return state;
-}
+};
 
 /**
  * Identify territories that are strategic choke points
@@ -161,64 +156,53 @@ function analyzeGameState(game) {
  * @param {Object} game - The game state object
  * @returns {Array} List of choke point territories with their strategic value
  */
-function identifyChokePoints(game) {
-    const chokePoints = [];
-    const areaConnectivity = [];
+const identifyChokePoints = (game) => {
+    const { adat, AREA_MAX } = game;
+    const validTerritories = [...Array(AREA_MAX).keys()]
+        .slice(1)
+        .filter(i => adat[i].size !== 0);
     
     // Calculate connectivity for all territories
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        
-        // Count how many other territories this one connects to
-        let connections = 0;
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (game.adat[i].join[j]) connections++;
-        }
-        
-        areaConnectivity[i] = connections;
-    }
+    const areaConnectivity = validTerritories.reduce((acc, i) => {
+        // Count connections to other territories
+        const connections = validTerritories.filter(j => j !== i && adat[i].join[j]).length;
+        acc[i] = connections;
+        return acc;
+    }, []);
     
-    // Identify potential choke points - simplistic approach
-    // A more sophisticated implementation would check actual path disconnection
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        
-        // Count neighbors of each player
-        const neighborsByPlayer = new Array(8).fill(0);
-        
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
+    // Identify potential choke points
+    const chokePoints = validTerritories
+        .map(i => {
+            // Count neighbors by player
+            const neighborsByPlayer = validTerritories
+                .filter(j => j !== i && adat[i].join[j])
+                .reduce((counts, j) => {
+                    const playerIndex = adat[j].arm;
+                    counts[playerIndex] = (counts[playerIndex] || 0) + 1;
+                    return counts;
+                }, new Array(8).fill(0));
             
-            neighborsByPlayer[game.adat[j].arm]++;
-        }
-        
-        // Count how many different players this territory connects
-        let differentPlayers = 0;
-        for (let p = 0; p < 8; p++) {
-            if (neighborsByPlayer[p] > 0) differentPlayers++;
-        }
-        
-        // If this territory connects multiple players' territories or has strategic value
-        const strategicValue = differentPlayers * 3 + (areaConnectivity[i] > 3 ? 2 : 0);
-        
-        if (strategicValue >= 4) {
-            chokePoints.push({
+            // Count different players connected by this territory
+            const differentPlayers = neighborsByPlayer.filter(count => count > 0).length;
+            
+            // Calculate strategic value
+            const strategicValue = differentPlayers * 3 + (areaConnectivity[i] > 3 ? 2 : 0);
+            
+            return {
                 territory: i,
-                strategicValue: strategicValue,
+                strategicValue,
                 connectivity: areaConnectivity[i],
-                owner: game.adat[i].arm,
-                dice: game.adat[i].dice
-            });
-        }
-    }
+                owner: adat[i].arm,
+                dice: adat[i].dice,
+                // Only return if it meets threshold
+                isChokePoint: strategicValue >= 4
+            };
+        })
+        .filter(point => point.isChokePoint);
     
     // Sort by strategic value (highest first)
-    chokePoints.sort((a, b) => b.strategicValue - a.strategicValue);
-    
-    return chokePoints;
-}
+    return chokePoints.sort((a, b) => b.strategicValue - a.strategicValue);
+};
 
 /**
  * Determine the optimal strategy based on game state
@@ -229,7 +213,8 @@ function identifyChokePoints(game) {
  * @param {number} pn - Current player number
  * @returns {Object} Strategy parameters to guide decision making
  */
-function determineStrategy(game, gameState, pn) {
+const determineStrategy = (game, gameState, pn) => {
+    // Default strategy with medium settings
     const strategy = {
         aggression: 0.5,     // 0 (defensive) to 1 (aggressive)
         expansion: 0.5,      // 0 (consolidate) to 1 (expand)
@@ -247,74 +232,101 @@ function determineStrategy(game, gameState, pn) {
     const myRanking = gameState.playerRankings.indexOf(pn);
     const myRelativeStrength = myRanking / Math.max(1, gameState.remainingPlayers - 1);
     
-    // Adjust based on game phase
-    switch (gameState.gamePhase) {
-        case 'early':
-            // Early game: focus on expansion and territory acquisition
-            strategy.aggression = 0.7;
-            strategy.expansion = 0.8;
-            strategy.riskTolerance = 0.6;
-            
-            // If we're significantly behind already, be more aggressive
-            if (myRanking > 2 && gameState.remainingPlayers > 4) {
-                strategy.aggression = 0.8;
-                strategy.riskTolerance = 0.7;
-            }
-            break;
-            
-        case 'mid':
-            // Mid game: balanced approach
-            strategy.aggression = 0.5;
-            strategy.expansion = 0.5;
-            strategy.prioritizeChokePoints = true;
-            
-            // If we're leading, be more conservative to preserve advantage
-            if (myRanking === 0) {
-                strategy.aggression = 0.4;
-                strategy.riskTolerance = 0.3;
-                strategy.expansion = 0.4;
-            }
-            
-            // If we're behind but not last, be more aggressive
-            if (myRanking > 0 && myRanking < gameState.remainingPlayers - 1) {
+    // Strategy adjustment based on game phase
+    const adjustStrategyByPhase = () => {
+        const { gamePhase, remainingPlayers, playerRankings } = gameState;
+        
+        // Adjust based on game phase
+        switch (gamePhase) {
+            case 'early':
+                // Early game: focus on expansion and territory acquisition
                 strategy.aggression = 0.7;
+                strategy.expansion = 0.8;
                 strategy.riskTolerance = 0.6;
                 
-                // Target the player just ahead of us
-                strategy.targetSelection.specificPlayer = gameState.playerRankings[myRanking - 1];
-            }
-            
-            // If we're last, target the weakest player
-            if (myRanking === gameState.remainingPlayers - 1) {
-                strategy.aggression = 0.8;
-                strategy.riskTolerance = 0.7;
-                strategy.targetSelection.weakestPlayer = true;
-            }
-            break;
-            
-        case 'late':
-            // Late game: focus on winning or survival
-            
-            // If we're leading, focus on eliminating the second-place player
-            if (myRanking === 0) {
-                strategy.aggression = 0.8;
-                strategy.expansion = 0.6;
-                strategy.targetSelection.specificPlayer = gameState.playerRankings[1];
-            } 
-            // If we're second, target the leader
-            else if (myRanking === 1) {
-                strategy.aggression = 0.7;
-                strategy.riskTolerance = 0.6;
-                strategy.targetSelection.specificPlayer = gameState.playerRankings[0];
-            } 
-            // If we're far behind, high risk/high reward strategy
-            else {
-                strategy.aggression = 0.9;
-                strategy.riskTolerance = 0.8;
-                strategy.targetSelection.weakestPlayer = true;
-            }
-            break;
-    }
+                // If we're significantly behind already, be more aggressive
+                if (myRanking > 2 && remainingPlayers > 4) {
+                    strategy.aggression = 0.8;
+                    strategy.riskTolerance = 0.7;
+                }
+                break;
+                
+            case 'mid':
+                // Mid game: balanced approach
+                strategy.aggression = 0.5;
+                strategy.expansion = 0.5;
+                strategy.prioritizeChokePoints = true;
+                
+                // Position-specific adjustments
+                if (myRanking === 0) {
+                    // Leading - be more conservative
+                    Object.assign(strategy, {
+                        aggression: 0.4,
+                        riskTolerance: 0.3,
+                        expansion: 0.4
+                    });
+                } else if (myRanking > 0 && myRanking < remainingPlayers - 1) {
+                    // Middle of pack - target player ahead
+                    Object.assign(strategy, {
+                        aggression: 0.7,
+                        riskTolerance: 0.6,
+                        targetSelection: {
+                            ...strategy.targetSelection,
+                            specificPlayer: playerRankings[myRanking - 1]
+                        }
+                    });
+                } else if (myRanking === remainingPlayers - 1) {
+                    // Last place - target weakest
+                    Object.assign(strategy, {
+                        aggression: 0.8,
+                        riskTolerance: 0.7,
+                        targetSelection: {
+                            ...strategy.targetSelection,
+                            weakestPlayer: true
+                        }
+                    });
+                }
+                break;
+                
+            case 'late':
+                // Late game: position-based strategy
+                if (myRanking === 0) {
+                    // Leading - eliminate second place
+                    Object.assign(strategy, {
+                        aggression: 0.8,
+                        expansion: 0.6,
+                        targetSelection: {
+                            ...strategy.targetSelection,
+                            specificPlayer: playerRankings[1]
+                        }
+                    });
+                } else if (myRanking === 1) {
+                    // Second place - target leader
+                    Object.assign(strategy, {
+                        aggression: 0.7,
+                        riskTolerance: 0.6,
+                        targetSelection: {
+                            ...strategy.targetSelection,
+                            specificPlayer: playerRankings[0]
+                        }
+                    });
+                } else {
+                    // Far behind - high risk strategy
+                    Object.assign(strategy, {
+                        aggression: 0.9,
+                        riskTolerance: 0.8,
+                        targetSelection: {
+                            ...strategy.targetSelection,
+                            weakestPlayer: true
+                        }
+                    });
+                }
+                break;
+        }
+    };
+    
+    // Apply game phase strategy adjustments
+    adjustStrategyByPhase();
     
     // Adjust for dominant player presence
     if (gameState.dominantPlayer !== -1) {
@@ -323,21 +335,25 @@ function determineStrategy(game, gameState, pn) {
             strategy.aggression = Math.max(0.3, strategy.aggression - 0.2);
             strategy.riskTolerance = Math.max(0.3, strategy.riskTolerance - 0.2);
         } else {
-            // Someone else is dominant, focus on them if they're threatening us
+            // Someone else is dominant, focus on them
             strategy.targetSelection.dominantPlayer = true;
             strategy.aggression = Math.min(0.8, strategy.aggression + 0.1);
         }
     }
     
-    // Adjust for our territory connectivity
-    const consolidationRatio = game.player[pn].area_tc / gameState.territories.byPlayer[pn];
+    // Adjust for territory connectivity
+    const { player } = game;
+    const { territories } = gameState;
+    const consolidationRatio = player[pn].area_tc / territories.byPlayer[pn];
+    
     if (consolidationRatio < 0.7) {
         // Our territories are fragmented, focus on consolidation
         strategy.expansion = Math.max(0.2, strategy.expansion - 0.3);
     }
     
     // Adjust for border pressure
-    const borderRatio = gameState.borderTerritories[pn] / gameState.territories.byPlayer[pn];
+    const borderRatio = gameState.borderTerritories[pn] / territories.byPlayer[pn];
+    
     if (borderRatio > 0.7) {
         // Many border territories, need defensive reinforcement
         strategy.reinforcementFocus = 'defensive';
@@ -348,13 +364,13 @@ function determineStrategy(game, gameState, pn) {
     }
     
     // Adjust for stock (available reinforcement dice)
-    if (game.player[pn].stock > 4) {
+    if (player[pn].stock > 4) {
         // We have reinforcements, can be more aggressive
         strategy.riskTolerance = Math.min(0.8, strategy.riskTolerance + 0.1);
     }
     
     return strategy;
-}
+};
 
 /**
  * Generate and evaluate all possible moves based on the current strategy
@@ -364,74 +380,85 @@ function determineStrategy(game, gameState, pn) {
  * @param {number} pn - Current player number
  * @returns {Array} Sorted list of possible moves with their evaluated value
  */
-function generateMoves(game, strategy, pn) {
-    const moves = [];
-    
+const generateMoves = (game, strategy, pn) => {
     // Pre-calculate territory information to avoid redundant calculations
     const areaInfo = calculateAreaInfo(game);
+    const { adat, AREA_MAX, dominantPlayer } = game;
     
-    // Generate all possible attacking moves
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        if (game.adat[i].arm !== pn) continue;
-        if (game.adat[i].dice <= 1) continue;
+    // Finding valid attacking territories (our territories with > 1 dice)
+    const attackingTerritories = [...Array(AREA_MAX).keys()]
+        .slice(1)
+        .filter(i => 
+            adat[i].size !== 0 && 
+            adat[i].arm === pn && 
+            adat[i].dice > 1
+        );
+    
+    // Generate all possible moves
+    const moves = [];
+    
+    // For each potential attacker, find all targets
+    attackingTerritories.forEach(from => {
+        // Find all enemy territories we can attack
+        const targets = [...Array(AREA_MAX).keys()]
+            .slice(1)
+            .filter(to => 
+                adat[to].size !== 0 && 
+                adat[to].arm !== pn &&
+                adat[from].join[to]
+            );
         
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (game.adat[j].arm === pn) continue;
-            if (!game.adat[i].join[j]) continue;
-            
+        targets.forEach(to => {
             // Calculate dice advantage
-            const diceAdvantage = game.adat[i].dice - game.adat[j].dice;
+            const attackerDice = adat[from].dice;
+            const defenderDice = adat[to].dice;
+            const diceAdvantage = attackerDice - defenderDice;
             
             // Skip if we don't have an advantage, unless at max dice and aggressive
-            if (diceAdvantage <= 0) {
-                // Only consider equal dice attacks if we have max dice and high aggression
-                if (!(game.adat[i].dice === 8 && strategy.aggression > 0.7)) {
-                    continue;
-                }
+            if (diceAdvantage <= 0 && !(attackerDice === 8 && strategy.aggression > 0.7)) {
+                return;
             }
             
             // Calculate attack risk
-            const attackRisk = calculateAttackRisk(game, i, j, areaInfo);
+            const attackRisk = calculateAttackRisk(game, from, to, areaInfo);
             
             // Skip high-risk attacks if we're risk-averse
-            if (attackRisk > 0.7 && strategy.riskTolerance < 0.4) continue;
+            if (attackRisk > 0.7 && strategy.riskTolerance < 0.4) return;
             
             // Calculate strategic value of this attack
-            const strategicValue = calculateStrategicValue(game, i, j, areaInfo, strategy);
+            const strategicValue = calculateStrategicValue(game, from, to, areaInfo, strategy);
+            
+            // Target selection scoring
+            let targetValue = 0;
+            const defendingPlayer = adat[to].arm;
             
             // Target selection adjustments
-            let targetValue = 0;
-            const defendingPlayer = game.adat[j].arm;
+            const { targetSelection } = strategy;
             
-            // If we're targeting the dominant player and this is them
-            if (strategy.targetSelection.dominantPlayer && defendingPlayer === game.dominantPlayer) {
+            // If targeting dominant player
+            if (targetSelection.dominantPlayer && defendingPlayer === dominantPlayer) {
                 targetValue += 3;
             }
             
-            // If we're targeting the weakest player
-            if (strategy.targetSelection.weakestPlayer) {
-                // Find the weakest active player
+            // If targeting weakest player
+            if (targetSelection.weakestPlayer) {
                 const weakestPlayer = findWeakestPlayer(game);
                 if (defendingPlayer === weakestPlayer) {
                     targetValue += 2;
                 }
             }
             
-            // If we're targeting a specific player
-            if (strategy.targetSelection.specificPlayer !== -1 && 
-                defendingPlayer === strategy.targetSelection.specificPlayer) {
+            // If targeting specific player
+            if (targetSelection.specificPlayer !== -1 && 
+                defendingPlayer === targetSelection.specificPlayer) {
                 targetValue += 4;
             }
             
-            // Check if this is a choke point (higher strategic value)
-            let chokePointValue = 0;
-            if (strategy.prioritizeChokePoints) {
-                if (isChokePoint(game, j)) {
-                    chokePointValue = 3;
-                }
-            }
+            // Check if this is a choke point
+            const chokePointValue = strategy.prioritizeChokePoints && isChokePoint(game, to) ? 3 : 0;
+            
+            // Calculate risk adjustment factor
+            const riskAdjustment = attackRisk * (1 - strategy.riskTolerance) * 5;
             
             // Calculate total move value
             const moveValue = (
@@ -439,26 +466,25 @@ function generateMoves(game, strategy, pn) {
                 (strategicValue * 3) + 
                 targetValue + 
                 chokePointValue -
-                (attackRisk * (1 - strategy.riskTolerance) * 5)
+                riskAdjustment
             );
             
+            // Add to possible moves
             moves.push({
-                from: i,
-                to: j,
+                from,
+                to,
                 value: moveValue,
-                diceAdvantage: diceAdvantage,
+                diceAdvantage,
                 risk: attackRisk,
-                strategicValue: strategicValue,
+                strategicValue,
                 isChokePoint: chokePointValue > 0
             });
-        }
-    }
+        });
+    });
     
     // Sort by value (highest first)
-    moves.sort((a, b) => b.value - a.value);
-    
-    return moves;
-}
+    return moves.sort((a, b) => b.value - a.value);
+};
 
 /**
  * Calculate territory information including neighboring territory analysis
@@ -466,60 +492,48 @@ function generateMoves(game, strategy, pn) {
  * @param {Object} game - The game state object
  * @returns {Array} Information about each territory's neighbors
  */
-function calculateAreaInfo(game) {
+const calculateAreaInfo = (game) => {
+    const { adat, AREA_MAX } = game;
     const info = [];
     
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) {
+    for (let i = 1; i < AREA_MAX; i++) {
+        if (adat[i].size === 0) {
             info[i] = null;
             continue;
         }
         
-        let friendly_neighbors = 0;
-        let unfriendly_neighbors = 0;
-        let highest_friendly_neighbor_dice = 0;
-        let highest_unfriendly_neighbor_dice = 0;
-        let second_highest_unfriendly_neighbor_dice = 0;
-        let num_neighbors = 0;
+        const owner = adat[i].arm;
         
-        const owner = game.adat[i].arm;
+        // Get all neighbors
+        const neighbors = [...Array(AREA_MAX).keys()]
+            .slice(1)
+            .filter(j => j !== i && adat[j].size !== 0 && adat[i].join[j]);
         
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (j === i) continue;
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
-            
-            num_neighbors++;
-            const neighborDice = game.adat[j].dice;
-            
-            if (game.adat[j].arm === owner) {
-                friendly_neighbors++;
-                if (neighborDice > highest_friendly_neighbor_dice) {
-                    highest_friendly_neighbor_dice = neighborDice;
-                }
-            } else {
-                unfriendly_neighbors++;
-                if (neighborDice > highest_unfriendly_neighbor_dice) {
-                    second_highest_unfriendly_neighbor_dice = highest_unfriendly_neighbor_dice;
-                    highest_unfriendly_neighbor_dice = neighborDice;
-                } else if (neighborDice > second_highest_unfriendly_neighbor_dice) {
-                    second_highest_unfriendly_neighbor_dice = neighborDice;
-                }
-            }
-        }
+        // Split neighbors by owner
+        const friendlyNeighbors = neighbors.filter(j => adat[j].arm === owner);
+        const unfriendlyNeighbors = neighbors.filter(j => adat[j].arm !== owner);
+        
+        // Calculate highest dice counts
+        const highestFriendlyDice = friendlyNeighbors.length ? 
+            Math.max(...friendlyNeighbors.map(j => adat[j].dice)) : 0;
+        
+        // Sort unfriendly neighbors by dice (descending)
+        const unfriendlyDiceValues = unfriendlyNeighbors
+            .map(j => adat[j].dice)
+            .sort((a, b) => b - a);
         
         info[i] = {
-            friendly_neighbors: friendly_neighbors,
-            unfriendly_neighbors: unfriendly_neighbors,
-            highest_friendly_neighbor_dice: highest_friendly_neighbor_dice,
-            highest_unfriendly_neighbor_dice: highest_unfriendly_neighbor_dice,
-            second_highest_unfriendly_neighbor_dice: second_highest_unfriendly_neighbor_dice,
-            num_neighbors: num_neighbors
+            friendly_neighbors: friendlyNeighbors.length,
+            unfriendly_neighbors: unfriendlyNeighbors.length,
+            highest_friendly_neighbor_dice: highestFriendlyDice,
+            highest_unfriendly_neighbor_dice: unfriendlyDiceValues[0] || 0,
+            second_highest_unfriendly_neighbor_dice: unfriendlyDiceValues[1] || 0,
+            num_neighbors: neighbors.length
         };
     }
     
     return info;
-}
+};
 
 /**
  * Calculate the risk of an attack based on multiple factors
@@ -530,31 +544,29 @@ function calculateAreaInfo(game) {
  * @param {Array} areaInfo - Pre-calculated territory information
  * @returns {number} Risk factor between 0 (low risk) and 1 (high risk)
  */
-function calculateAttackRisk(game, from, to, areaInfo) {
-    let risk = 0;
+const calculateAttackRisk = (game, from, to, areaInfo) => {
+    const { adat } = game;
+    const fromInfo = areaInfo[from];
+    const toInfo = areaInfo[to];
     
-    // Base risk from dice ratio
-    const diceRatio = game.adat[to].dice / game.adat[from].dice;
-    risk += diceRatio * 0.5;
+    // Calculate various risk factors
+    const riskFactors = {
+        // Base risk from dice ratio (higher = more risk)
+        diceRatio: (adat[to].dice / adat[from].dice) * 0.5,
+        
+        // Risk from exposing the attacking territory (more enemies = more risk)
+        exposure: (fromInfo.unfriendly_neighbors / 6) * 0.3, // Normalize to 0-1
+        
+        // Risk from attacking a territory with strong friendly support
+        enemySupport: toInfo.highest_friendly_neighbor_dice > adat[from].dice - 1 ? 0.3 : 0,
+        
+        // Risk from breaking a strong connected territory
+        connectivity: fromInfo.friendly_neighbors === 1 ? 0.2 : 0
+    };
     
-    // Risk from exposing the attacking territory
-    const exposureRisk = areaInfo[from].unfriendly_neighbors / 6; // Normalize to 0-1
-    risk += exposureRisk * 0.3;
-    
-    // Risk from attacking a territory with strong friendly support
-    if (areaInfo[to].highest_friendly_neighbor_dice > game.adat[from].dice - 1) {
-        risk += 0.3;
-    }
-    
-    // Risk from breaking a strong connected territory
-    let connectivityRisk = 0;
-    if (areaInfo[from].friendly_neighbors === 1) {
-        connectivityRisk = 0.2;
-    }
-    risk += connectivityRisk;
-    
-    return Math.min(1, risk); // Ensure risk is between 0 and 1
-}
+    // Sum all risk factors and clamp to 0-1 range
+    return Math.min(1, Object.values(riskFactors).reduce((total, risk) => total + risk, 0));
+};
 
 /**
  * Calculate the strategic value of an attack
@@ -566,27 +578,29 @@ function calculateAttackRisk(game, from, to, areaInfo) {
  * @param {Object} strategy - Strategic parameters
  * @returns {number} Strategic value of the attack
  */
-function calculateStrategicValue(game, from, to, areaInfo, strategy) {
+const calculateStrategicValue = (game, from, to, areaInfo, strategy) => {
     let value = 0;
+    const { expansion, aggression } = strategy;
+    const { adat } = game;
     
-    // Value from expansion vs. consolidation strategy
-    if (strategy.expansion > 0.5) {
+    // Calculate value based on expansion vs consolidation preference
+    if (expansion > 0.5) {
         // Expansion value - favor territories that open up new attack options
-        value += areaInfo[to].unfriendly_neighbors * 0.2 * strategy.expansion;
+        value += areaInfo[to].unfriendly_neighbors * 0.2 * expansion;
     } else {
         // Consolidation value - favor territories that reduce our exposed border
         const borderReduction = simulateBorderReduction(game, from, to);
-        value += borderReduction * 0.3 * (1 - strategy.expansion);
+        value += borderReduction * 0.3 * (1 - expansion);
     }
     
-    // Value from aggression strategy
-    if (strategy.aggression > 0.5) {
+    // Calculate value based on aggression preference
+    if (aggression > 0.5) {
         // Aggressive value - favor high-dice territories
-        value += game.adat[to].dice * 0.1 * strategy.aggression;
+        value += adat[to].dice * 0.1 * aggression;
     } else {
         // Defensive value - favor territories that improve our defensive position
         const defensiveImprovement = simulateDefensiveImprovement(game, from, to);
-        value += defensiveImprovement * 0.2 * (1 - strategy.aggression);
+        value += defensiveImprovement * 0.2 * (1 - aggression);
     }
     
     // Value from connectivity improvement
@@ -594,7 +608,7 @@ function calculateStrategicValue(game, from, to, areaInfo, strategy) {
     value += connectivityValue * 0.3;
     
     return value;
-}
+};
 
 /**
  * Find the weakest active player based on dice count
@@ -602,21 +616,17 @@ function calculateStrategicValue(game, from, to, areaInfo, strategy) {
  * @param {Object} game - The game state object
  * @returns {number} Player number of the weakest active player
  */
-function findWeakestPlayer(game) {
-    let weakestPlayer = -1;
-    let minDice = Infinity;
+const findWeakestPlayer = (game) => {
+    const { player } = game;
     
-    for (let i = 0; i < 8; i++) {
-        if (game.player[i].area_c === 0) continue; // Skip inactive players
-        
-        if (game.player[i].dice_c < minDice) {
-            minDice = game.player[i].dice_c;
-            weakestPlayer = i;
-        }
-    }
-    
-    return weakestPlayer;
-}
+    // Filter active players and find the one with minimum dice
+    return [...Array(8).keys()]
+        .filter(i => player[i].area_c > 0)
+        .reduce((weakest, i) => 
+            player[i].dice_c < player[weakest]?.dice_c ? i : weakest, 
+            -1
+        );
+};
 
 /**
  * Check if a territory is a strategic choke point
@@ -625,20 +635,20 @@ function findWeakestPlayer(game) {
  * @param {number} territory - Territory ID to check
  * @returns {boolean} True if the territory is a choke point
  */
-function isChokePoint(game, territory) {
-    // Basic implementation - count connected players
+const isChokePoint = (game, territory) => {
+    const { adat, AREA_MAX } = game;
+    
+    // Count unique players connected to this territory
     const connectedPlayers = new Set();
     
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        if (!game.adat[territory].join[i]) continue;
-        
-        connectedPlayers.add(game.adat[i].arm);
+    for (let i = 1; i < AREA_MAX; i++) {
+        if (adat[i].size === 0 || !adat[territory].join[i]) continue;
+        connectedPlayers.add(adat[i].arm);
     }
     
     // A territory connecting multiple players is likely a choke point
     return connectedPlayers.size >= 3;
-}
+};
 
 /**
  * Simulate how an attack would reduce our border exposure
@@ -648,62 +658,47 @@ function isChokePoint(game, territory) {
  * @param {number} to - Defending territory ID
  * @returns {number} Estimated border reduction factor
  */
-function simulateBorderReduction(game, from, to) {
+const simulateBorderReduction = (game, from, to) => {
+    const { adat, AREA_MAX } = game;
     const pn = game.get_pn();
     
-    // Count our current border territories
-    let currentBorders = 0;
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        if (game.adat[i].arm !== pn) continue;
+    // Helper function to count border territories for a player
+    const countBorderTerritories = () => {
+        // Get all our territories
+        const ourTerritories = [...Array(AREA_MAX).keys()]
+            .slice(1)
+            .filter(i => adat[i].size !== 0 && adat[i].arm === pn);
         
-        // Check if this is a border territory
-        let isBorder = false;
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
-            
-            if (game.adat[j].arm !== pn) {
-                isBorder = true;
-                break;
-            }
-        }
-        
-        if (isBorder) currentBorders++;
-    }
+        // Count which ones are borders
+        return ourTerritories.filter(i => {
+            // A territory is a border if it has at least one enemy neighbor
+            return [...Array(AREA_MAX).keys()]
+                .slice(1)
+                .some(j => 
+                    adat[j].size !== 0 && 
+                    adat[i].join[j] && 
+                    adat[j].arm !== pn
+                );
+        }).length;
+    };
+    
+    // Count current border territories
+    const currentBorders = countBorderTerritories();
     
     // Simulate capturing the target territory
-    const originalOwner = game.adat[to].arm;
-    game.adat[to].arm = pn;
+    const originalOwner = adat[to].arm;
+    adat[to].arm = pn;
     
-    // Count our borders after the simulated capture
-    let newBorders = 0;
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        if (game.adat[i].arm !== pn) continue;
-        
-        // Check if this is a border territory
-        let isBorder = false;
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
-            
-            if (game.adat[j].arm !== pn) {
-                isBorder = true;
-                break;
-            }
-        }
-        
-        if (isBorder) newBorders++;
-    }
+    // Count borders after capture
+    const newBorders = countBorderTerritories();
     
     // Restore original state
-    game.adat[to].arm = originalOwner;
+    adat[to].arm = originalOwner;
     
-    // Calculate border reduction
-    const reduction = (currentBorders - newBorders + 1) / currentBorders;
-    return Math.max(0, reduction);
-}
+    // Calculate border reduction (if currentBorders is 0, return 0 to avoid division by zero)
+    return currentBorders === 0 ? 0 : 
+        Math.max(0, (currentBorders - newBorders + 1) / currentBorders);
+};
 
 /**
  * Simulate how an attack would improve our defensive position
@@ -713,53 +708,57 @@ function simulateBorderReduction(game, from, to) {
  * @param {number} to - Defending territory ID
  * @returns {number} Estimated defensive improvement factor
  */
-function simulateDefensiveImprovement(game, from, to) {
+const simulateDefensiveImprovement = (game, from, to) => {
+    const { adat, AREA_MAX } = game;
     const pn = game.get_pn();
     
-    // Count initial threat level (enemy dice adjacent to our territories)
-    let initialThreat = 0;
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        if (game.adat[i].arm !== pn) continue;
+    // Helper function to calculate total threat (sum of enemy dice adjacent to our territories)
+    const calculateThreat = () => {
+        let threat = 0;
         
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
+        // Get all our territories
+        const ourTerritories = [...Array(AREA_MAX).keys()]
+            .slice(1)
+            .filter(i => adat[i].size !== 0 && adat[i].arm === pn);
+        
+        // For each of our territories, sum enemy dice adjacent to it
+        ourTerritories.forEach(i => {
+            // Get adjacent enemy territories
+            const adjacentEnemies = [...Array(AREA_MAX).keys()]
+                .slice(1)
+                .filter(j => 
+                    adat[j].size !== 0 && 
+                    adat[i].join[j] && 
+                    adat[j].arm !== pn
+                );
             
-            if (game.adat[j].arm !== pn) {
-                initialThreat += game.adat[j].dice;
-            }
-        }
-    }
+            // Sum their dice
+            adjacentEnemies.forEach(j => {
+                threat += adat[j].dice;
+            });
+        });
+        
+        return threat;
+    };
+    
+    // Calculate initial threat
+    const initialThreat = calculateThreat();
     
     // Simulate capturing the target territory
-    const originalOwner = game.adat[to].arm;
-    game.adat[to].arm = pn;
+    const originalOwner = adat[to].arm;
+    adat[to].arm = pn;
     
-    // Count threat level after the simulated capture
-    let newThreat = 0;
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size === 0) continue;
-        if (game.adat[i].arm !== pn) continue;
-        
-        for (let j = 1; j < game.AREA_MAX; j++) {
-            if (game.adat[j].size === 0) continue;
-            if (!game.adat[i].join[j]) continue;
-            
-            if (game.adat[j].arm !== pn) {
-                newThreat += game.adat[j].dice;
-            }
-        }
-    }
+    // Calculate new threat
+    const newThreat = calculateThreat();
     
     // Restore original state
-    game.adat[to].arm = originalOwner;
+    adat[to].arm = originalOwner;
     
-    // Calculate threat reduction
+    // Calculate threat reduction (avoid division by zero)
     if (initialThreat === 0) return 0;
-    const reduction = (initialThreat - newThreat) / initialThreat;
-    return Math.max(0, reduction);
-}
+    
+    return Math.max(0, (initialThreat - newThreat) / initialThreat);
+};
 
 /**
  * Simulate how an attack would improve our territory connectivity
@@ -769,28 +768,31 @@ function simulateDefensiveImprovement(game, from, to) {
  * @param {number} to - Defending territory ID
  * @returns {number} Estimated connectivity improvement factor
  */
-function simulateConnectivityImprovement(game, from, to) {
+const simulateConnectivityImprovement = (game, from, to) => {
+    const { adat, player } = game;
     const pn = game.get_pn();
     
     // Save original connected territory count
-    const originalConnected = game.player[pn].area_tc;
+    const originalConnected = player[pn].area_tc;
     
     // Simulate capturing the target territory
-    const originalOwner = game.adat[to].arm;
-    game.adat[to].arm = pn;
+    const originalOwner = adat[to].arm;
+    adat[to].arm = pn;
     
     // Recalculate connected territories
     game.set_area_tc(pn);
-    const newConnected = game.player[pn].area_tc;
+    const newConnected = player[pn].area_tc;
     
     // Restore original state
-    game.adat[to].arm = originalOwner;
+    adat[to].arm = originalOwner;
     game.set_area_tc(pn);
     
     // Calculate improvement ratio
-    const improvement = (newConnected - originalConnected) / Math.max(1, game.player[pn].area_c);
+    const totalTerritories = Math.max(1, player[pn].area_c);
+    const improvement = (newConnected - originalConnected) / totalTerritories;
+    
     return Math.max(0, improvement * 2);
-}
+};
 
 /**
  * Select the best move from the evaluated options
@@ -799,10 +801,8 @@ function simulateConnectivityImprovement(game, from, to) {
  * @param {Object} strategy - Strategic parameters
  * @returns {Object} The selected move to execute
  */
-function selectBestMove(moves, strategy) {
+const selectBestMove = (moves, strategy) => {
     if (moves.length === 0) return null;
-    
-    // Usually select the highest valued move
     
     // Add some randomness based on risk tolerance
     if (Math.random() < strategy.riskTolerance * 0.3) {
@@ -812,5 +812,6 @@ function selectBestMove(moves, strategy) {
         return topMoves[Math.floor(Math.random() * topMoves.length)];
     }
     
+    // Otherwise return the highest rated move
     return moves[0];
-}
+};

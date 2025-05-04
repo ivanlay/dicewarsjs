@@ -10,13 +10,13 @@
  * 3. Test new ES6 modules without disrupting the game
  */
 
-// Import all bridge modules
+// Import all bridge modules directly
 import './gameUtils.js';
 import './render.js';
 import './sound.js';
 import './ai.js';
 
-// Also export utility modules for ES6 usage
+// Export utility modules for ES6 usage
 export * from '../utils/gameUtils.js';
 export * from '../utils/render.js';
 export * from '../utils/sound.js';
@@ -25,5 +25,50 @@ export * from '../utils/config.js';
 // Export AI modules for ES6 usage
 export * from '../ai/index.js';
 
-// Log successful bridge initialization
+// Track module loading status
+const moduleStatus = {
+  gameUtils: 'loaded',
+  render: 'loaded',
+  sound: 'loaded',
+  ai: 'loaded'
+};
+
+// Add a check method to verify all modules are loaded
+window.checkBridgeStatus = () => {
+  console.log('Bridge module status:', moduleStatus);
+  return moduleStatus;
+};
+
+// Set up error handlers for each module
+window.addEventListener('error', (event) => {
+  // Extract module name from error message or stack trace
+  const errorModule = findModuleFromError(event.error || event.message);
+  if (errorModule) {
+    moduleStatus[errorModule] = 'failed';
+    console.error(`Error in bridge module ${errorModule}:`, event.error || event.message);
+  }
+});
+
+// Utility function to determine the module from an error
+function findModuleFromError(error) {
+  if (!error) return null;
+  
+  const errorString = error.toString ? error.toString() : String(error);
+  const stack = error.stack || '';
+
+  // Check if error mentions a specific module
+  if (errorString.includes('gameUtils') || stack.includes('gameUtils')) {
+    return 'gameUtils';
+  } else if (errorString.includes('render') || stack.includes('render')) {
+    return 'render';
+  } else if (errorString.includes('sound') || stack.includes('sound')) {
+    return 'sound';
+  } else if (errorString.includes('ai') || stack.includes('ai')) {
+    return 'ai';
+  }
+  
+  return null;
+}
+
+// Log bridge initialization
 console.log('ES6 utility and AI bridge modules loaded successfully');

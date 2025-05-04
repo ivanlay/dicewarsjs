@@ -18,7 +18,8 @@ module.exports = {
   // Specify where to find test files
   testMatch: [
     '**/tests/**/*.test.js',
-    '**/src/**/*.test.js'
+    '**/src/**/*.test.js',
+    '**/tests/benchmarks/*.benchmark.js'
   ],
   
   // Setup files to run before tests
