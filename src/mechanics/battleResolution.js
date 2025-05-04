@@ -2,7 +2,7 @@
  * Battle Resolution Module
  *
  * Provides functions for handling battles, dice rolls, and attack mechanics.
- * Extracted from Game.js for modularity.
+ * Implemented using functional programming patterns and ES6 features.
  */
 
 import { Battle, HistoryData } from '../models/index.js';
@@ -10,287 +10,455 @@ import { Battle, HistoryData } from '../models/index.js';
 // Import to avoid circular dependency
 import { setAreaTc } from './mapGenerator.js';
 
+// Import event system
+import {
+  gameEvents,
+  EventType,
+  emitTerritoryAttack,
+  emitTerritoryCapture,
+  emitDiceRolled,
+  emitTerritoryReinforced
+} from './eventSystem.js';
+
+// Import error handling utilities
+import {
+  validateTerritories,
+  validatePlayer,
+  TerritoryError,
+  BattleError,
+  PlayerError,
+  withErrorHandling
+} from './errorHandling.js';
+
 /**
  * Roll dice for attack or defense
  *
- * Simulates rolling a specified number of dice for battle.
+ * Simulates rolling a specified number of dice for battle using a functional approach.
  *
  * @param {number} count - Number of dice to roll
  * @returns {Object} Dice values and total
+ * @throws {Error} If count is invalid
  */
-export function rollDice(count) {
+export const rollDice = count => {
+  // Validate input
+  if (typeof count !== 'number') {
+    throw new Error(`Expected count to be a number, got ${typeof count}`);
+  }
+
   if (count <= 0) {
     return { values: [], total: 0 };
   }
 
-  const values = [];
-  let total = 0;
-
-  // Generate 1-6 for each die
-  for (let i = 0; i < count; i++) {
-    const value = Math.floor(Math.random() * 6) + 1;
-    values.push(value);
-    total += value;
-  }
+  // Generate dice rolls using array methods
+  const values = Array.from({ length: count }, () => 
+    Math.floor(Math.random() * 6) + 1
+  );
+  
+  // Calculate total using reduce
+  const total = values.reduce((sum, value) => sum + value, 0);
 
   return { values, total };
-}
+};
 
 /**
  * Calculate Probability of Successful Attack
  *
- * Estimates the probability of winning a battle based on attacker and defender dice.
+ * Estimates the probability of winning a battle based on attacker and defender dice
+ * using a functional approach with specialized case handling.
  *
  * @param {number} attackerDice - Number of dice the attacker has
  * @param {number} defenderDice - Number of dice the defender has
  * @returns {number} Probability of success as a value from 0 to 1
+ * @throws {Error} If dice counts are invalid
  */
-export function calculateAttackProbability(attackerDice, defenderDice) {
-  // Simple probability model based on dice counts
+export const calculateAttackProbability = (attackerDice, defenderDice) => {
+  // Validate inputs
+  if (typeof attackerDice !== 'number' || typeof defenderDice !== 'number') {
+    throw new Error('Dice counts must be numbers');
+  }
+
+  // Early return for edge cases
   if (attackerDice <= 0 || defenderDice <= 0) {
     return 0;
   }
 
-  // Base probability comes from the ratio of dice
+  // Handle special cases with specific probability assignments
+  const specialCases = [
+    { condition: attackerDice >= defenderDice * 3, probability: 0.95 }, // Almost certain win
+    { condition: defenderDice >= attackerDice * 3, probability: 0.05 }  // Almost certain loss
+  ];
+
+  // Find a matching special case
+  const matchingCase = specialCases.find(({ condition }) => condition);
+  if (matchingCase) {
+    return matchingCase.probability;
+  }
+
+  // General case - sigmoid function based on dice ratio
   const ratio = attackerDice / defenderDice;
-
-  /*
-   * Apply sigmoid function to get a probability between 0 and 1
-   * This creates an S-curve that's more realistic than linear
-   */
-  const probability = 1 / (1 + Math.exp(-2 * (ratio - 1)));
-
-  // Adjust probability for extreme cases
-  if (attackerDice >= defenderDice * 3) {
-    return 0.95; // Almost certain win with 3:1 advantage
-  }
-
-  if (defenderDice >= attackerDice * 3) {
-    return 0.05; // Almost certain loss with 1:3 disadvantage
-  }
-
-  return probability;
-}
+  return 1 / (1 + Math.exp(-2 * (ratio - 1)));
+};
 
 /**
  * Resolve Battle between Territories
  *
  * Simulates dice battle between attacking and defending territories.
+ * Uses functional composition pattern and emits events.
  *
  * @param {Object} gameState - Game state including territories
  * @param {number} fromArea - Index of attacking territory
  * @param {number} toArea - Index of defending territory
  * @returns {Object} Battle results including success flag and dice values
+ * @throws {BattleError} If battle cannot be resolved
  */
-export function resolveBattle(gameState, fromArea, toArea) {
-  const { adat } = gameState;
+export const resolveBattle = (gameState, fromArea, toArea) => {
+  try {
+    const { adat } = gameState;
 
-  // Get dice counts
-  const attackerDice = adat[fromArea].dice;
-  const defenderDice = adat[toArea].dice;
+    // Validate territories are valid for attack
+    validateTerritories(gameState, fromArea, toArea);
 
-  // Roll dice
-  const attackerRoll = rollDice(attackerDice);
-  const defenderRoll = rollDice(defenderDice);
+    // Get dice counts
+    const attackerDice = adat[fromArea].dice;
+    const defenderDice = adat[toArea].dice;
 
-  // Determine outcome
-  const success = attackerRoll.total > defenderRoll.total;
+    // Roll dice using the functional dice roller
+    const attackerRoll = rollDice(attackerDice);
+    const defenderRoll = rollDice(defenderDice);
 
-  // Create battle data object
-  const battleData = {
-    attackerArea: fromArea,
-    defenderArea: toArea,
-    attackerDice,
-    defenderDice,
-    attackerRoll,
-    defenderRoll,
-    success,
-  };
+    // Emit dice rolled events
+    emitDiceRolled(gameState, fromArea, attackerRoll.values, attackerRoll.total, 'attack');
+    emitDiceRolled(gameState, toArea, defenderRoll.values, defenderRoll.total, 'defend');
 
-  return battleData;
-}
+    // Determine outcome
+    const success = attackerRoll.total > defenderRoll.total;
+
+    // Create battle data object using shorthand property names
+    return {
+      attackerArea: fromArea,
+      defenderArea: toArea,
+      attackerDice,
+      defenderDice,
+      attackerRoll,
+      defenderRoll,
+      success,
+    };
+  } catch (error) {
+    // Convert to BattleError if not already a GameError
+    if (error.name !== 'TerritoryError' && error.name !== 'BattleError') {
+      throw new BattleError(
+        `Failed to resolve battle: ${error.message}`,
+        fromArea,
+        toArea,
+        { originalError: error }
+      );
+    }
+    throw error;
+  }
+};
 
 /**
  * Execute an Attack
  *
  * Performs an attack between territories, updates game state, and records in history.
+ * Uses a functional approach with clear separation of concerns.
+ * Emits events for attack and territory capture.
  *
  * @param {Object} gameState - Game state including territories
  * @param {number} fromArea - Index of attacking territory
  * @param {number} toArea - Index of defending territory
+ * @param {number} [currentPlayerId] - Optional ID of current player for validation
  * @returns {Object} Updated game state and battle results
+ * @throws {BattleError} If attack fails due to validation or other errors
  */
-export function executeAttack(gameState, fromArea, toArea) {
+export const executeAttack = withErrorHandling((gameState, fromArea, toArea, currentPlayerId) => {
   const { adat, his, his_c } = gameState;
 
-  // Validate attack
-  if (fromArea <= 0 || toArea <= 0 || fromArea === toArea) {
-    return { success: false, message: 'Invalid attack parameters' };
-  }
+  // Validate territories and ownership if player ID provided
+  validateTerritories(gameState, fromArea, toArea, currentPlayerId);
 
-  if (adat[fromArea].dice <= 1) {
-    return { success: false, message: 'Need at least 2 dice to attack' };
+  // Validate player if provided
+  if (currentPlayerId !== undefined) {
+    validatePlayer(gameState, currentPlayerId);
   }
 
   // Record the attack in progress
-  gameState.area_from = fromArea;
-  gameState.area_to = toArea;
+  const updatedGameState = {
+    ...gameState,
+    area_from: fromArea,
+    area_to: toArea
+  };
+
+  // Emit territory attack event
+  emitTerritoryAttack(updatedGameState, fromArea, toArea);
 
   // Resolve the battle
-  const battle = resolveBattle(gameState, fromArea, toArea);
+  const battle = resolveBattle(updatedGameState, fromArea, toArea);
 
   // Record outcome in game state
-  gameState.defeat = battle.success ? 1 : 0;
+  updatedGameState.defeat = battle.success ? 1 : 0;
 
-  // Create a history entry
-  if (!gameState.his[his_c]) {
-    gameState.his[his_c] = new HistoryData();
+  // Ensure history entry exists
+  if (!updatedGameState.his[his_c]) {
+    updatedGameState.his[his_c] = new HistoryData();
   }
 
-  gameState.his[his_c].from = fromArea;
-  gameState.his[his_c].to = toArea;
-  gameState.his[his_c].res = battle.success ? 1 : 0;
-  gameState.his_c++;
+  // Record in history
+  updatedGameState.his[his_c].from = fromArea;
+  updatedGameState.his[his_c].to = toArea;
+  updatedGameState.his[his_c].res = battle.success ? 1 : 0;
+  updatedGameState.his_c++;
 
-  // Update territory state based on outcome
+  // Update territory state based on outcome using pure function pattern
   if (battle.success) {
     // Attacker conquers territory
     const previousOwner = adat[toArea].arm;
+    const attackingPlayer = adat[fromArea].arm;
 
     // Territory changes ownership
-    adat[toArea].arm = adat[fromArea].arm;
+    adat[toArea].arm = attackingPlayer;
     adat[toArea].dice = adat[fromArea].dice - 1;
     adat[fromArea].dice = 1;
 
-    // Update connected territories for both players
-    if (previousOwner !== adat[fromArea].arm) {
-      setPlayerTerritoryData(gameState, previousOwner);
-      setPlayerTerritoryData(gameState, adat[fromArea].arm);
+    // Emit territory capture event
+    emitTerritoryCapture(updatedGameState, toArea, previousOwner, attackingPlayer);
+
+    // Update connected territories for affected players
+    if (previousOwner !== attackingPlayer) {
+      setPlayerTerritoryData(updatedGameState, previousOwner);
+      setPlayerTerritoryData(updatedGameState, attackingPlayer);
+      
+      // Check if player has been eliminated
+      if (updatedGameState.player[previousOwner].area_c === 0) {
+        gameEvents.emit(EventType.PLAYER_ELIMINATED, {
+          playerId: previousOwner,
+          eliminatedBy: attackingPlayer,
+          gameState: updatedGameState
+        });
+      }
+      
+      // Check if player has won (has all territories)
+      const totalTerritories = Object.values(adat)
+        .filter(area => area.size > 0)
+        .length;
+        
+      if (updatedGameState.player[attackingPlayer].area_c === totalTerritories) {
+        gameEvents.emit(EventType.PLAYER_VICTORY, {
+          playerId: attackingPlayer,
+          gameState: updatedGameState
+        });
+      }
     }
   } else {
     // Attack failed - attacker loses all but one die
     adat[fromArea].dice = 1;
+    
+    // Emit territory defend success event
+    gameEvents.emit(EventType.TERRITORY_DEFEND, {
+      territoryId: toArea,
+      attackerId: fromArea,
+      attackerPlayerId: adat[fromArea].arm,
+      defenderPlayerId: adat[toArea].arm,
+      gameState: updatedGameState
+    });
   }
 
   return {
     ...battle,
-    gameState,
+    gameState: updatedGameState,
   };
-}
+}, (error, gameState, fromArea, toArea) => {
+  // Custom error handler for executeAttack
+  console.error(`Attack failed from ${fromArea} to ${toArea}:`, error);
+  
+  // Return failure result
+  return {
+    success: false,
+    message: error.message,
+    error,
+    attackerArea: fromArea,
+    defenderArea: toArea,
+    gameState
+  };
+});
 
 /**
  * Calculate and distribute reinforcements
  *
  * Determines how many reinforcement dice a player receives and distributes them.
+ * Uses functional programming patterns for territory selection and dice distribution.
+ * Emits events for reinforcement.
  *
  * @param {Object} gameState - Game state including player data
  * @param {number} playerIndex - Player to distribute reinforcements for
  * @returns {Object} Updated gameState with reinforcements distributed
+ * @throws {PlayerError} If player validation fails
  */
-export function distributeReinforcements(gameState, playerIndex) {
-  const { player, adat, AREA_MAX, STOCK_MAX } = gameState;
+export const distributeReinforcements = withErrorHandling((gameState, playerIndex) => {
+  const { player, adat, AREA_MAX, STOCK_MAX, his, his_c } = gameState;
 
-  // Calculate reinforcements - larger connected territory groups give more dice
-  let reinforcements = Math.floor(player[playerIndex].area_tc / 3);
+  // Validate player
+  validatePlayer(gameState, playerIndex);
 
-  // Minimum of 1 reinforcement if player has any territories
-  if (player[playerIndex].area_c > 0 && reinforcements < 1) {
-    reinforcements = 1;
-  }
+  // Calculate reinforcements with minimum of 1 if player has territories
+  const calculateReinforcements = () => {
+    const baseReinforcements = Math.floor(player[playerIndex].area_tc / 3);
+    return player[playerIndex].area_c > 0 ? Math.max(baseReinforcements, 1) : baseReinforcements;
+  };
 
-  // Add to player's stock, up to the maximum
-  player[playerIndex].stock += reinforcements;
-  if (player[playerIndex].stock > STOCK_MAX) {
-    player[playerIndex].stock = STOCK_MAX;
-  }
+  // Add reinforcements to player's stock, capped at maximum
+  const addReinforcementsToStock = (reinforcements) => {
+    player[playerIndex].stock = Math.min(
+      player[playerIndex].stock + reinforcements,
+      STOCK_MAX
+    );
+    
+    // Emit event for reinforcements added to stock
+    gameEvents.emit(EventType.DICE_ADDED, {
+      playerId: playerIndex,
+      diceAdded: reinforcements,
+      stockTotal: player[playerIndex].stock,
+      gameState
+    });
+  };
+
+  // Calculate and add reinforcements
+  const reinforcements = calculateReinforcements();
+  addReinforcementsToStock(reinforcements);
 
   // No reinforcements available
   if (player[playerIndex].stock <= 0) {
     return gameState;
   }
 
-  /*
-   * Distribute reinforcements
-   * Strategy: Prioritize border territories with fewer dice
-   */
-
   // Find all territories owned by this player
-  const territories = [];
+  const findPlayerTerritories = () => {
+    return Array.from({ length: AREA_MAX })
+      .map((_, i) => i)
+      .filter(i => 
+        i > 0 && 
+        adat[i].size > 0 && 
+        adat[i].arm === playerIndex && 
+        adat[i].dice < 8 // Skip territories at max dice
+      )
+      .map(id => {
+        // Check if this territory borders an enemy
+        const isBorder = Array.from({ length: AREA_MAX })
+          .map((_, j) => j)
+          .filter(j => 
+            j > 0 && 
+            adat[j].size > 0 && 
+            adat[i].join[j] === 1 && 
+            adat[j].arm !== playerIndex
+          )
+          .length > 0;
 
-  for (let i = 1; i < AREA_MAX; i++) {
-    if (adat[i].size === 0) continue;
-    if (adat[i].arm !== playerIndex) continue;
-    if (adat[i].dice >= 8) continue; // Skip territories at max dice
+        // Calculate priority score - border territories and those with fewer dice get priority
+        const priority = (isBorder ? 100 : 0) + (8 - adat[id].dice) * 10;
 
-    // Calculate priority - higher for border territories with fewer dice
-    let isBorder = false;
+        return { id, priority };
+      })
+      .sort((a, b) => b.priority - a.priority); // Sort by priority (higher first)
+  };
 
-    // Check if this territory borders an enemy
-    for (let j = 1; j < AREA_MAX; j++) {
-      if (adat[i].join[j] === 0) continue;
-      if (adat[j].arm !== playerIndex) {
-        isBorder = true;
-        break;
+  const territories = findPlayerTerritories();
+
+  // Distribute available reinforcements to territories based on priority
+  const distributeAvailableDice = () => {
+    let remainingStock = player[playerIndex].stock;
+    let currentHistory = his_c;
+    
+    // Try to distribute to each territory in priority order until stock is depleted
+    for (const { id } of territories) {
+      if (remainingStock <= 0) break;
+
+      // Check if territory can receive more dice
+      if (adat[id].dice >= 8) {
+        continue;
       }
+
+      // Add a die to this territory
+      const previousDice = adat[id].dice;
+      adat[id].dice++;
+      remainingStock--;
+
+      // Emit territory reinforced event
+      emitTerritoryReinforced(gameState, id, 1);
+
+      // Add to history
+      if (!gameState.his[currentHistory]) {
+        gameState.his[currentHistory] = new HistoryData();
+      }
+
+      gameState.his[currentHistory].from = id;
+      gameState.his[currentHistory].to = 0; // 0 indicates reinforcement, not attack
+      gameState.his[currentHistory].res = 0;
+      currentHistory++;
     }
 
-    // Calculate priority score - border territories and those with fewer dice get priority
-    const priority = (isBorder ? 100 : 0) + (8 - adat[i].dice) * 10;
+    // Update the game state
+    player[playerIndex].stock = remainingStock;
+    return currentHistory;
+  };
 
-    territories.push({
-      id: i,
-      priority,
-    });
-  }
+  // Distribute the dice and update history counter
+  gameState.his_c = distributeAvailableDice();
 
-  // Sort by priority (higher first)
-  territories.sort((a, b) => b.priority - a.priority);
-
-  // Distribute available reinforcements
-  for (let i = 0; i < territories.length && player[playerIndex].stock > 0; i++) {
-    const territoryId = territories[i].id;
-
-    adat[territoryId].dice++;
-    player[playerIndex].stock--;
-
-    // Add to history
-    if (!gameState.his[gameState.his_c]) {
-      gameState.his[gameState.his_c] = new HistoryData();
-    }
-
-    gameState.his[gameState.his_c].from = territoryId;
-    gameState.his[gameState.his_c].to = 0; // 0 indicates reinforcement, not attack
-    gameState.his[gameState.his_c].res = 0;
-    gameState.his_c++;
-  }
+  // Emit turn start event after reinforcements are distributed
+  gameEvents.emit(EventType.TURN_START, {
+    playerId: playerIndex,
+    reinforcementsAdded: reinforcements,
+    gameState
+  });
 
   return gameState;
-}
+}, (error, gameState, playerIndex) => {
+  // Custom error handler for distributeReinforcements
+  console.error(`Failed to distribute reinforcements for player ${playerIndex}:`, error);
+  
+  // Return unchanged game state
+  return {
+    success: false,
+    message: error.message,
+    error,
+    gameState
+  };
+});
 
 /**
  * Update player's territory and dice data
  *
  * Recalculates a player's total territories, dice, and connected groups.
+ * Uses functional programming patterns for counting and grouping.
  *
  * @param {Object} gameState - Game state including player and territory data
  * @param {number} playerIndex - Player to update data for
+ * @throws {PlayerError} If player data update fails
  */
-export function setPlayerTerritoryData(gameState, playerIndex) {
+export const setPlayerTerritoryData = withErrorHandling((gameState, playerIndex) => {
   const { player, adat, AREA_MAX } = gameState;
+
+  // Validate player exists
+  if (!player[playerIndex]) {
+    throw new PlayerError(`Player ${playerIndex} does not exist`, playerIndex);
+  }
 
   // Reset counters
   player[playerIndex].area_c = 0;
   player[playerIndex].dice_c = 0;
 
-  // Count territories and dice
-  for (let i = 1; i < AREA_MAX; i++) {
-    if (adat[i].size === 0) continue;
-    if (adat[i].arm !== playerIndex) continue;
+  // Count territories and dice using functional approach
+  const playerTerritories = Array.from({ length: AREA_MAX })
+    .map((_, i) => i)
+    .filter(i => i > 0 && adat[i].size > 0 && adat[i].arm === playerIndex);
 
-    player[playerIndex].area_c++;
-    player[playerIndex].dice_c += adat[i].dice;
-  }
+  // Update counters
+  player[playerIndex].area_c = playerTerritories.length;
+  player[playerIndex].dice_c = playerTerritories.reduce(
+    (total, id) => total + adat[id].dice, 
+    0
+  );
 
   // Calculate connected territory groups
   setAreaTc(gameState, playerIndex);
-}
+});

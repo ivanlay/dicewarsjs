@@ -287,9 +287,10 @@ describe('Immutable State Management', () => {
       state = gameState.updateTurn({ currentPlayerIndex: 2 });
       expect(state.currentTurn.currentPlayerIndex).toBe(2);
 
-      // Advance to next player
+      // Advance to next player - assuming 7 players (default) and wrapping around
       state = gameState.nextPlayerTurn();
-      expect(state.currentTurn.currentPlayerIndex).toBe(3);
+      const expectedIndex = (2 + 1) % state.config.playerCount;
+      expect(state.currentTurn.currentPlayerIndex).toBe(expectedIndex);
 
       // History should be tracking states
       expect(gameState.getStateHistory().length).toBe(3);

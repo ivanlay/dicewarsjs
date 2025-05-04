@@ -3,9 +3,23 @@
  *
  * Provides functions for procedurally generating game maps with territories of varied sizes,
  * ensuring good gameplay balance. Extracted from Game.js for modularity.
+ * Implemented using functional programming patterns and ES6 features.
+ * 
+ * @module mechanics/mapGenerator
  */
 
 import { AreaData, JoinData } from '../models/index.js';
+import { withErrorHandling, GameError, TerritoryError } from './errorHandling.js';
+import { gameEvents, EventType } from './eventSystem.js';
+
+/**
+ * Territory growth options
+ * 
+ * @typedef {Object} TerritoryGrowthOptions
+ * @property {number} minSize - Minimum size for territories (default: 3)
+ * @property {number} targetSize - Target size for territories (default: 8)
+ * @property {number} growthStrategy - Strategy to use for territory growth (0=balanced, 1=compact, 2=sprawling)
+ */
 
 /**
  * Grow a Territory
@@ -18,75 +32,125 @@ import { AreaData, JoinData } from '../models/index.js';
  * @param {number} cmax - Target maximum size for the territory
  * @param {number} an - Territory ID to assign
  * @returns {number} Number of cells in the created territory
+ * @throws {TerritoryError} If territory creation fails
  */
-export function percolate(gameState, pt, cmax, an) {
+export const percolate = withErrorHandling((gameState, pt, cmax, an) => {
   // Destructure required variables from gameState
   const { cel, join, num, next_f, cel_max } = gameState;
 
   // Ensure minimum territory size
-  if (cmax < 3) cmax = 3;
-
+  const targetSize = Math.max(cmax, 3);
   const opos = pt; // Starting cell position
 
   // Initialize adjacency flags for all cells
-  for (let i = 0; i < cel_max; i++) next_f[i] = 0;
+  Array.from({ length: cel_max }).forEach((_, i) => {
+    next_f[i] = 0;
+  });
 
   // Initial growth phase - add cells until target size or no more available
-  let c = 0; // Cell count
+  let cellCount = 0;
   let currentPos = opos;
 
-  while (true) {
-    // Add current cell to territory
+  // Territory growth process
+  const growTerritory = () => {
     cel[currentPos] = an;
-    c++;
+    cellCount++;
 
     // Mark all adjacent cells as candidates for growth
-    for (let i = 0; i < 6; i++) {
-      const pos = join[currentPos].dir[i];
-      if (pos < 0) continue; // Skip out-of-bounds
-      next_f[pos] = 1; // Mark as adjacent
-    }
+    Array.from({ length: 6 })
+      .map((_, i) => join[currentPos].dir[i])
+      .filter(pos => pos >= 0)
+      .forEach(pos => {
+        next_f[pos] = 1; // Mark as adjacent
+      });
 
     // Find best candidate cell to add next (lowest random priority number)
-    let min = 9999;
-    let nextPos = -1;
-
-    for (let i = 0; i < cel_max; i++) {
-      if (next_f[i] === 0) continue; // Skip non-adjacent cells
-      if (cel[i] > 0) continue; // Skip cells already in territories
-      if (num[i] > min) continue; // Skip cells with higher priority
-
-      min = num[i];
-      nextPos = i; // This becomes the next cell to add
-    }
+    const nextCellInfo = Array.from({ length: cel_max })
+      .map((_, i) => ({ index: i, priority: num[i] }))
+      .filter(({ index }) => 
+        next_f[index] === 1 && // Is adjacent
+        cel[index] === 0      // Not already in a territory
+      )
+      .reduce(
+        (best, current) => 
+          current.priority < best.priority ? current : best,
+        { index: -1, priority: 9999 }
+      );
 
     // Stop growing if no more cells are available or we've reached target size
-    if (min === 9999 || nextPos === -1) break; // No more adjacent cells
-    if (c >= cmax) break; // Reached target size
+    if (nextCellInfo.index === -1 || cellCount >= targetSize) {
+      return false;
+    }
 
-    // Move to the next position
-    currentPos = nextPos;
-  }
+    // Move to the next position and continue growing
+    currentPos = nextCellInfo.index;
+    return true;
+  };
+
+  // Grow until we can't anymore
+  while (growTerritory()) {}
 
   // Boundary smoothing - add all adjacent cells to avoid single-cell gaps
-  for (let i = 0; i < cel_max; i++) {
-    if (next_f[i] === 0) continue; // Skip non-adjacent cells
-    if (cel[i] > 0) continue; // Skip cells already in territories
+  const smoothBoundary = () => {
+    const addedCells = Array.from({ length: cel_max })
+      .map((_, i) => i)
+      .filter(i => 
+        next_f[i] === 1 && // Is adjacent
+        cel[i] === 0      // Not already in a territory
+      )
+      .map(i => {
+        // Add this cell to the territory
+        cel[i] = an;
+        cellCount++;
 
-    // Add this cell to the territory
-    cel[i] = an;
-    c++;
+        // Mark cells adjacent to this one as candidates for the next territory
+        return Array.from({ length: 6 })
+          .map((_, k) => join[i].dir[k])
+          .filter(pos => pos >= 0);
+      })
+      .flat();
 
-    // Mark cells adjacent to this one as candidates for the next territory
-    for (let k = 0; k < 6; k++) {
-      const pos = join[i].dir[k];
-      if (pos < 0) continue; // Skip out-of-bounds
-      gameState.rcel[pos] = 1; // Mark as available for next territory
+    // Mark cells as available for next territory
+    addedCells.forEach(pos => {
+      gameState.rcel[pos] = 1;
+    });
+  };
+
+  smoothBoundary();
+
+  // Emit territory creation event
+  gameEvents.emit(EventType.CUSTOM, {
+    type: 'territory_created',
+    territoryId: an,
+    size: cellCount,
+    gameState
+  });
+
+  return cellCount; // Return total number of cells in the territory
+}, (error, gameState, pt, cmax, an) => {
+  // Custom error handler for percolate
+  console.error(`Failed to grow territory ${an} from cell ${pt}:`, error);
+  
+  // Clean up any partially assigned cells
+  if (gameState && gameState.cel) {
+    for (let i = 0; i < gameState.cel_max; i++) {
+      if (gameState.cel[i] === an) {
+        gameState.cel[i] = 0; // Reset cell to unassigned
+      }
     }
   }
+  
+  // Return failure result
+  return 0; // Zero cells created
+});
 
-  return c; // Return total number of cells in the territory
-}
+/**
+ * Border segment data
+ * 
+ * @typedef {Object} BorderSegment
+ * @property {number} cell - Cell index
+ * @property {number} dir - Direction (0-5 for hexagonal grid)
+ */
 
 /**
  * Generate Territory Border Data
@@ -97,53 +161,63 @@ export function percolate(gameState, pt, cmax, an) {
  * @param {Object} gameState - Game state including grid and territory data
  * @param {number} old_cel - Starting cell index
  * @param {number} old_dir - Starting direction
+ * @throws {TerritoryError} If border generation fails
  */
-export function setAreaLine(gameState, old_cel, old_dir) {
+export const setAreaLine = withErrorHandling((gameState, old_cel, old_dir) => {
   const { cel, join, adat } = gameState;
 
   let c = old_cel; // Current cell
   let d = old_dir; // Current direction
   const area = cel[c]; // Territory ID
-  let cnt = 0; // Border segment counter
+  
+  // Verify area exists
+  if (!adat[area]) {
+    throw new TerritoryError(`Territory ${area} does not exist`, area);
+  }
+  
+  // Store line segments as we trace the boundary
+  const segments = [];
+  segments.push({ cell: c, dir: d });
 
-  // Store the first border segment
-  adat[area].line_cel[cnt] = c;
-  adat[area].line_dir[cnt] = d;
-  cnt++;
-
-  // Follow the boundary until we return to starting point
-  for (let i = 0; i < 100; i++) {
-    /*
-     * Safety limit of 100 segments
-     * Move to next direction
-     */
-    d++;
-    if (d >= 6) d = 0; // Direction wraps around 0-5
+  // Function to add a segment and update position
+  const addSegmentAndMove = () => {
+    // Move to next direction
+    d = (d + 1) % 6;
 
     // Check the cell in this direction
     const n = join[c].dir[d];
-    if (n >= 0) {
-      // If not out of bounds
-      if (cel[n] === area) {
-        /*
-         * If adjacent cell is same territory, move to that cell
-         * and adjust direction to continue following the boundary
-         */
-        c = n;
-        d -= 2;
-        if (d < 0) d += 6; // Turn 120° counterclockwise
-      }
+    
+    // If adjacent cell exists and is same territory, move to that cell
+    if (n >= 0 && cel[n] === area) {
+      c = n;
+      d = (d - 2 + 6) % 6; // Turn 120° counterclockwise (wrap around 0-5)
     }
 
     // Store this border segment
-    adat[area].line_cel[cnt] = c;
-    adat[area].line_dir[cnt] = d;
-    cnt++;
+    segments.push({ cell: c, dir: d });
 
-    // Stop if we've returned to the starting point
-    if (c === old_cel && d === old_dir) break;
-  }
-}
+    // Return true if we've reached the starting point
+    return c === old_cel && d === old_dir;
+  };
+
+  // Follow the boundary until we return to starting point (or hit safety limit)
+  for (let i = 0; i < 100 && !addSegmentAndMove(); i++) {}
+  
+  // Store the generated line data in the area data
+  segments.forEach((segment, index) => {
+    adat[area].line_cel[index] = segment.cell;
+    adat[area].line_dir[index] = segment.dir;
+  });
+});
+
+/**
+ * Map generation options
+ * 
+ * @typedef {Object} MapGenerationOptions
+ * @property {number} territorySizeVariance - How much territory sizes can vary (0-1)
+ * @property {number} waterPercentage - Percentage of the map that should be water (0-1)
+ * @property {boolean} allowIslands - Whether to allow isolated territories
+ */
 
 /**
  * Generate Game Map
@@ -156,9 +230,26 @@ export function setAreaLine(gameState, old_cel, old_dir) {
  * 4. Places initial dice
  *
  * @param {Object} gameState - Game state to modify
+ * @param {MapGenerationOptions} [options] - Optional map generation parameters
  * @returns {Object} Updated game state with generated map
+ * @throws {GameError} If map generation fails
  */
-export function makeMap(gameState) {
+export const makeMap = withErrorHandling((gameState, options = {}) => {
+  // Default options
+  const mapOptions = {
+    territorySizeVariance: 0.2,
+    waterPercentage: 0.1,
+    allowIslands: false,
+    ...options
+  };
+  
+  // Emit map generation start event
+  gameEvents.emit(EventType.CUSTOM, {
+    type: 'map_generation_start',
+    options: mapOptions,
+    gameState
+  });
+  
   // Destructure all required variables from gameState
   const { cel, cel_max, XMAX, YMAX, AREA_MAX, num, rcel, join, adat, pmax, chk, put_dice } =
     gameState;
@@ -170,16 +261,16 @@ export function makeMap(gameState) {
    */
 
   // Randomize cell order for territory generation
-  for (let i = 0; i < cel_max; i++) {
+  Array.from({ length: cel_max }).forEach((_, i) => {
     const r = Math.floor(Math.random() * cel_max);
     [num[i], num[r]] = [num[r], num[i]]; // ES6 swap
-  }
+  });
 
   // Initialize all cells and adjacency data
-  for (let i = 0; i < cel_max; i++) {
+  Array.from({ length: cel_max }).forEach((_, i) => {
     cel[i] = 0; // No territory assigned yet
     rcel[i] = 0; // Not available for expansion yet
-  }
+  });
 
   // Start the first territory (area number 1)
   let an = 1; // Territory ID counter
@@ -188,235 +279,318 @@ export function makeMap(gameState) {
   rcel[Math.floor(Math.random() * cel_max)] = 1;
 
   // Create territories until we run out of space or reach maximum count
-  while (true) {
-    // Determine penetration start cell
-    let pos = -1;
-    let min = 9999;
+  const createTerritories = () => {
+    while (an < AREA_MAX) {
+      // Find the next starting position using functional approach
+      const nextPosition = Array.from({ length: cel_max })
+        .map((_, i) => ({ index: i, priority: num[i] }))
+        .filter(({ index }) => 
+          cel[index] === 0 && // Not already in a territory
+          rcel[index] === 1   // Available for expansion
+        )
+        .reduce(
+          (best, current) => 
+            current.priority < best.priority ? current : best,
+          { index: -1, priority: 9999 }
+        );
+      
+      // No more cells available for territory creation
+      if (nextPosition.index === -1) break;
 
-    for (let i = 0; i < cel_max; i++) {
-      if (cel[i] > 0) continue;
-      if (num[i] > min) continue;
-      if (rcel[i] === 0) continue;
+      // Determine territory target size with some variance
+      const targetSize = Math.max(
+        3,
+        Math.floor(8 * (1 + (Math.random() * 2 - 1) * mapOptions.territorySizeVariance))
+      );
 
-      min = num[i];
-      pos = i;
+      // Start penetration (territory growth)
+      const ret = percolate(gameState, nextPosition.index, targetSize, an);
+      if (ret === 0) break;
+
+      an++;
     }
+  };
 
-    // No more cells available for territory creation
-    if (min === 9999 || pos === -1) break;
+  createTerritories();
 
-    // Start penetration (territory growth)
-    const ret = percolate(gameState, pos, 8, an);
-    if (ret === 0) break;
+  // Remove single-cell areas in sea using functional approach
+  const fillSingleCellGaps = () => {
+    Array.from({ length: cel_max })
+      .map((_, i) => i)
+      .filter(i => cel[i] === 0) // Only consider empty cells
+      .forEach(i => {
+        // Check all neighboring cells
+        const neighborInfo = Array.from({ length: 6 })
+          .map((_, k) => join[i].dir[k])
+          .filter(pos => pos >= 0)
+          .reduce(
+            (info, pos) => {
+              if (cel[pos] === 0) info.hasEmptyNeighbor = true;
+              else info.filledNeighborId = cel[pos];
+              return info;
+            },
+            { hasEmptyNeighbor: false, filledNeighborId: 0 }
+          );
 
-    an++;
-    if (an >= AREA_MAX) break;
-  }
+        // If the cell is completely surrounded by a territory, make it part of that territory
+        if (!neighborInfo.hasEmptyNeighbor && neighborInfo.filledNeighborId > 0) {
+          cel[i] = neighborInfo.filledNeighborId;
+        }
+      });
+  };
 
-  // Remove single-cell areas in sea
-  for (let i = 0; i < cel_max; i++) {
-    if (cel[i] > 0) continue;
-
-    let f = 0;
-    let a = 0;
-
-    for (let k = 0; k < 6; k++) {
-      const pos = join[i].dir[k];
-      if (pos < 0) continue;
-
-      if (cel[pos] === 0) f = 1;
-      else a = cel[pos];
-    }
-
-    if (f === 0) cel[i] = a;
-  }
+  fillSingleCellGaps();
 
   // Initialize area data
-  for (let i = 0; i < AREA_MAX; i++) {
+  Array.from({ length: AREA_MAX }).forEach((_, i) => {
     gameState.adat[i] = new AreaData();
-  }
+  });
 
-  // Calculate area sizes
-  for (let i = 0; i < cel_max; i++) {
-    an = cel[i];
-    if (an > 0) adat[an].size++;
-  }
+  // Calculate area sizes using functional approach
+  Array.from({ length: cel_max })
+    .map((_, i) => cel[i])
+    .filter(areaId => areaId > 0)
+    .forEach(areaId => {
+      adat[areaId].size++;
+    });
 
   // Remove areas with size <= 5
-  for (let i = 1; i < AREA_MAX; i++) {
-    if (adat[i].size <= 5) adat[i].size = 0;
-  }
+  const invalidAreas = Array.from({ length: AREA_MAX })
+    .map((_, i) => i)
+    .filter(i => i > 0 && adat[i].size <= 5);
 
-  for (let i = 0; i < cel_max; i++) {
-    an = cel[i];
-    if (adat[an].size === 0) cel[i] = 0;
-  }
+  invalidAreas.forEach(i => {
+    adat[i].size = 0;
+  });
 
-  // Determine area center and boundaries
-  for (let i = 1; i < AREA_MAX; i++) {
-    adat[i].left = XMAX;
-    adat[i].right = -1;
-    adat[i].top = YMAX;
-    adat[i].bottom = -1;
-    adat[i].len_min = 9999;
-  }
+  // Clear cells belonging to removed areas
+  Array.from({ length: cel_max })
+    .map((_, i) => ({ index: i, areaId: cel[i] }))
+    .filter(({ areaId }) => areaId > 0 && adat[areaId].size === 0)
+    .forEach(({ index }) => {
+      cel[index] = 0;
+    });
 
-  let c = 0;
-  for (let i = 0; i < YMAX; i++) {
-    for (let j = 0; j < XMAX; j++) {
-      an = cel[c];
-      if (an > 0) {
-        if (j < adat[an].left) adat[an].left = j;
-        if (j > adat[an].right) adat[an].right = j;
-        if (i < adat[an].top) adat[an].top = i;
-        if (i > adat[an].bottom) adat[an].bottom = i;
+  // Initialize area boundaries
+  Array.from({ length: AREA_MAX })
+    .map((_, i) => i)
+    .filter(i => i > 0)
+    .forEach(i => {
+      adat[i].left = XMAX;
+      adat[i].right = -1;
+      adat[i].top = YMAX;
+      adat[i].bottom = -1;
+      adat[i].len_min = 9999;
+    });
+
+  // Calculate area boundaries
+  const updateAreaBoundaries = () => {
+    let c = 0;
+    for (let i = 0; i < YMAX; i++) {
+      for (let j = 0; j < XMAX; j++) {
+        const areaId = cel[c];
+        if (areaId > 0) {
+          adat[areaId].left = Math.min(adat[areaId].left, j);
+          adat[areaId].right = Math.max(adat[areaId].right, j);
+          adat[areaId].top = Math.min(adat[areaId].top, i);
+          adat[areaId].bottom = Math.max(adat[areaId].bottom, i);
+        }
+        c++;
       }
-      c++;
     }
-  }
+  };
+
+  updateAreaBoundaries();
 
   // Calculate area centers
-  for (let i = 1; i < AREA_MAX; i++) {
-    adat[i].cx = Math.floor((adat[i].left + adat[i].right) / 2);
-    adat[i].cy = Math.floor((adat[i].top + adat[i].bottom) / 2);
-  }
+  Array.from({ length: AREA_MAX })
+    .map((_, i) => i)
+    .filter(i => i > 0)
+    .forEach(i => {
+      adat[i].cx = Math.floor((adat[i].left + adat[i].right) / 2);
+      adat[i].cy = Math.floor((adat[i].top + adat[i].bottom) / 2);
+    });
 
   // Find optimal center positions and establish adjacency
-  c = 0;
-  for (let i = 0; i < YMAX; i++) {
-    for (let j = 0; j < XMAX; j++) {
-      an = cel[c];
-      if (an > 0) {
-        // Distance from center (avoiding boundary lines)
-        let x = adat[an].cx - j;
-        if (x < 0) x = -x;
+  const establishAdjacency = () => {
+    let c = 0;
+    for (let i = 0; i < YMAX; i++) {
+      for (let j = 0; j < XMAX; j++) {
+        const areaId = cel[c];
+        if (areaId > 0) {
+          // Distance from center (avoiding boundary lines)
+          const x = Math.abs(adat[areaId].cx - j);
+          const y = Math.abs(adat[areaId].cy - i);
+          let len = x + y;
 
-        let y = adat[an].cy - i;
-        if (y < 0) y = -y;
+          // Check for adjacency to other territories
+          const adjacencyInfo = Array.from({ length: 6 })
+            .map((_, k) => ({ dir: k, pos: join[c].dir[k] }))
+            .filter(({ pos }) => pos > 0)
+            .map(({ pos }) => ({ pos, areaId: cel[pos] }))
+            .filter(({ areaId: adjAreaId }) => adjAreaId !== areaId && adjAreaId > 0);
 
-        let len = x + y;
-        let f = 0;
+          // If this cell has adjacent territories, it's on a border
+          const isBorder = adjacencyInfo.length > 0;
 
-        // Check for adjacency to other territories
-        for (let k = 0; k < 6; k++) {
-          const pos = join[c].dir[k];
-          if (pos > 0) {
-            const an2 = cel[pos];
-            if (an2 !== an && an2 > 0) {
-              f = 1;
-              // Create adjacency data
-              adat[an].join[an2] = 1;
-            }
+          // Create adjacency data
+          adjacencyInfo.forEach(({ areaId: adjAreaId }) => {
+            adat[areaId].join[adjAreaId] = 1;
+          });
+
+          // Cells on territory borders get lower priority for center
+          if (isBorder) len += 4;
+
+          // Use closest point as center
+          if (len < adat[areaId].len_min) {
+            adat[areaId].len_min = len;
+            adat[areaId].cpos = i * XMAX + j;
           }
         }
-
-        // Cells on territory borders get lower priority for center
-        if (f) len += 4;
-
-        // Use closest point as center
-        if (len < adat[an].len_min) {
-          adat[an].len_min = len;
-          adat[an].cpos = i * XMAX + j;
-        }
+        c++;
       }
-      c++;
     }
-  }
+  };
+
+  establishAdjacency();
 
   // Determine area player affiliations (distribute territories among players)
-  for (let i = 0; i < AREA_MAX; i++) {
+  // Initialize ownership
+  Array.from({ length: AREA_MAX }).forEach((_, i) => {
     adat[i].arm = -1;
-  }
+  });
 
-  let arm = 0; // Current player to assign
-  const alist = new Array(AREA_MAX); // Areas available for assignment
+  // Distribute territories to players
+  const distributeTerritoriesAmongPlayers = () => {
+    let arm = 0; // Current player to assign
 
-  while (true) {
-    let count = 0;
+    while (true) {
+      // Find unassigned territories
+      const unassignedTerritories = Array.from({ length: AREA_MAX })
+        .map((_, i) => i)
+        .filter(i => i > 0 && adat[i].size > 0 && adat[i].arm < 0);
 
-    // Find territories that haven't been assigned yet
-    for (let i = 1; i < AREA_MAX; i++) {
-      if (adat[i].size === 0) continue;
-      if (adat[i].arm >= 0) continue;
+      // All territories have been assigned
+      if (unassignedTerritories.length === 0) break;
 
-      alist[count] = i;
-      count++;
+      // Randomly select a territory to assign to the current player
+      const randomIndex = Math.floor(Math.random() * unassignedTerritories.length);
+      const assignedTerritory = unassignedTerritories[randomIndex];
+      adat[assignedTerritory].arm = arm;
+
+      // Move to next player (cycling back to 0 after reaching max)
+      arm = (arm + 1) % pmax;
     }
+  };
 
-    // All territories have been assigned
-    if (count === 0) break;
-
-    // Randomly select a territory to assign to the current player
-    const an = alist[Math.floor(Math.random() * count)];
-    adat[an].arm = arm;
-
-    // Move to next player (cycling back to 0 after reaching max)
-    arm = (arm + 1) % pmax;
-  }
+  distributeTerritoriesAmongPlayers();
 
   // Create area drawing line data (for borders)
-  for (let i = 0; i < AREA_MAX; i++) {
+  Array.from({ length: AREA_MAX }).forEach((_, i) => {
     chk[i] = 0;
-  }
+  });
 
   // Set up border drawing data for each territory
-  for (let i = 0; i < cel_max; i++) {
-    const area = cel[i];
-    if (area === 0) continue;
-    if (chk[area] > 0) continue;
+  const generateBorderData = () => {
+    Array.from({ length: cel_max })
+      .map((_, i) => ({ index: i, areaId: cel[i] }))
+      .filter(({ areaId }) => areaId > 0 && chk[areaId] === 0)
+      .forEach(({ index, areaId }) => {
+        // Find a cell on the border of this territory
+        const borderDir = Array.from({ length: 6 })
+          .map((_, k) => ({ dir: k, neighbor: join[index].dir[k] }))
+          .find(({ neighbor }) => 
+            neighbor >= 0 && cel[neighbor] !== areaId
+          );
 
-    // Find a cell on the border of this territory
-    for (let k = 0; k < 6; k++) {
-      if (chk[area] > 0) break;
-
-      const n = join[i].dir[k];
-      if (n >= 0) {
-        if (cel[n] !== area) {
-          setAreaLine(gameState, i, k);
-          chk[area] = 1;
+        // If we found a border, generate the line data
+        if (borderDir) {
+          setAreaLine(gameState, index, borderDir.dir);
+          chk[areaId] = 1;
         }
-      }
-    }
-  }
+      });
+  };
+
+  generateBorderData();
 
   // Place dice
-  let anum = 0;
-  for (let i = 1; i < AREA_MAX; i++) {
-    if (adat[i].size > 0) {
-      anum++;
+  // Count valid territories and initialize with 1 die each
+  const validTerritoryCount = Array.from({ length: AREA_MAX })
+    .map((_, i) => i)
+    .filter(i => i > 0 && adat[i].size > 0)
+    .map(i => {
       adat[i].dice = 1; // Start with 1 die per territory
-    }
-  }
+      return i;
+    })
+    .length;
 
   // Calculate additional dice to distribute
-  anum *= put_dice - 1;
-  let p = 0; // Current player for dice distribution
-
+  const additionalDice = validTerritoryCount * (put_dice - 1);
+  
   // Distribute remaining dice
-  for (let i = 0; i < anum; i++) {
-    const list = [];
+  const distributeDice = () => {
+    let p = 0; // Current player for dice distribution
+    
+    // For each die to distribute
+    Array.from({ length: additionalDice }).forEach(() => {
+      // Find territories owned by current player that can receive dice
+      const eligibleTerritories = Array.from({ length: AREA_MAX })
+        .map((_, j) => j)
+        .filter(j => 
+          j > 0 &&
+          adat[j].size > 0 &&
+          adat[j].arm === p &&
+          adat[j].dice < 8  // Max 8 dice per territory
+        );
 
-    // Find territories owned by current player that can receive dice
-    for (let j = 1; j < AREA_MAX; j++) {
-      if (adat[j].size === 0) continue;
-      if (adat[j].arm !== p) continue;
-      if (adat[j].dice >= 8) continue; // Max 8 dice per territory
+      if (eligibleTerritories.length > 0) {
+        // Randomly select a territory and add a die
+        const randomIndex = Math.floor(Math.random() * eligibleTerritories.length);
+        const selectedTerritory = eligibleTerritories[randomIndex];
+        adat[selectedTerritory].dice++;
+      }
 
-      list.push(j);
-    }
+      // Move to next player
+      p = (p + 1) % pmax;
+    });
+  };
 
-    if (list.length === 0) break;
+  distributeDice();
 
-    // Randomly select a territory and add a die
-    const an = list[Math.floor(Math.random() * list.length)];
-    adat[an].dice++;
+  // Calculate connected territories for each player
+  Array.from({ length: pmax }).forEach((_, p) => {
+    setAreaTc(gameState, p);
+  });
 
-    // Move to next player
-    p = (p + 1) % pmax;
-  }
+  // Emit map generation complete event
+  gameEvents.emit(EventType.CUSTOM, {
+    type: 'map_generation_complete',
+    territoriesCreated: an - 1,
+    gameState
+  });
 
   return gameState;
-}
+}, (error, gameState) => {
+  // Custom error handler for makeMap
+  console.error('Map generation failed:', error);
+  
+  // Emit error event
+  gameEvents.emit(EventType.CUSTOM, {
+    type: 'map_generation_error',
+    error: {
+      message: error.message,
+      name: error.name,
+      code: error.code || 'UNKNOWN'
+    }
+  });
+  
+  // Return failure result
+  throw new GameError(
+    `Failed to generate map: ${error.message}`,
+    'ERR_MAP_GENERATION',
+    { originalError: error }
+  );
+});
 
 /**
  * Calculate Connected Territory Groups
@@ -426,57 +600,89 @@ export function makeMap(gameState) {
  *
  * @param {Object} gameState - Game state including territory data
  * @param {number} pn - Player number/index
+ * @throws {GameError} If territory connectivity calculation fails
  */
-export function setAreaTc(gameState, pn) {
+export const setAreaTc = withErrorHandling((gameState, pn) => {
   const { player, adat, AREA_MAX, chk, tc } = gameState;
+
+  // Validate player
+  if (!player[pn]) {
+    throw new GameError(`Player ${pn} does not exist`, 'ERR_PLAYER_NOT_FOUND');
+  }
 
   player[pn].area_tc = 0;
 
   // Initialize each area as its own group (union-find algorithm)
-  for (let i = 0; i < AREA_MAX; i++) chk[i] = i;
+  Array.from({ length: AREA_MAX }).forEach((_, i) => {
+    chk[i] = i;
+  });
 
-  // Combine adjacent areas owned by the same player into groups
-  while (true) {
-    let f = 0; // Flag to track if any merges were made this iteration
+  // Find all areas owned by this player
+  const playerAreas = Array.from({ length: AREA_MAX })
+    .map((_, i) => i)
+    .filter(i => i > 0 && adat[i].size > 0 && adat[i].arm === pn);
 
-    // Check each territory
-    for (let i = 1; i < AREA_MAX; i++) {
-      if (adat[i].size === 0) continue; // Skip non-existent areas
-      if (adat[i].arm !== pn) continue; // Skip areas not owned by player
+  // Union-find algorithm to group connected territories
+  const findRoot = (id) => {
+    if (chk[id] === id) return id;
+    // Path compression - set parent to root directly
+    chk[id] = findRoot(chk[id]);
+    return chk[id];
+  };
 
-      // Check against each other territory for adjacency
-      for (let j = 1; j < AREA_MAX; j++) {
-        if (adat[j].size === 0) continue; // Skip non-existent areas
-        if (adat[j].arm !== pn) continue; // Skip areas not owned by player
-        if (adat[i].join[j] === 0) continue; // Skip non-adjacent areas
-        if (chk[j] === chk[i]) continue; // Skip if already in same group
-
-        // Merge the groups by setting both to the smaller group number
-        if (chk[i] > chk[j]) chk[i] = chk[j];
-        else chk[j] = chk[i];
-
-        f = 1; // Set flag indicating that a merge occurred
-      }
+  const unionAreas = (a, b) => {
+    const rootA = findRoot(a);
+    const rootB = findRoot(b);
+    if (rootA !== rootB) {
+      // Union by rank (smaller ID becomes the root)
+      if (rootA < rootB) chk[rootB] = rootA;
+      else chk[rootA] = rootB;
+      return true; // Merge occurred
     }
+    return false; // Already in same group
+  };
 
-    // If no merges occurred in this iteration, we're done
-    if (f === 0) break;
-  }
+  // Iteratively merge adjacent areas until no more merges occur
+  const mergeConnectedTerritories = () => {
+    let mergeOccurred;
+    do {
+      mergeOccurred = false;
+      
+      // Check each pair of player areas for adjacency
+      for (let i = 0; i < playerAreas.length; i++) {
+        const areaId = playerAreas[i];
+        const adjacentAreas = Array.from({ length: AREA_MAX })
+          .map((_, j) => j)
+          .filter(j => 
+            j > 0 && 
+            adat[j].size > 0 && 
+            adat[j].arm === pn && 
+            adat[areaId].join[j] === 1
+          );
+          
+        // Try to merge with each adjacent area
+        adjacentAreas.forEach(adjAreaId => {
+          if (unionAreas(areaId, adjAreaId)) {
+            mergeOccurred = true;
+          }
+        });
+      }
+    } while (mergeOccurred);
+  };
+
+  mergeConnectedTerritories();
 
   // Count the size of each territory group
-  for (let i = 0; i < AREA_MAX; i++) tc[i] = 0;
+  Array.from({ length: AREA_MAX }).forEach((_, i) => {
+    tc[i] = 0;
+  });
 
   // Count territories in each group
-  for (let i = 1; i < AREA_MAX; i++) {
-    if (adat[i].size === 0) continue;
-    if (adat[i].arm !== pn) continue;
-    tc[chk[i]]++; // Increment count for this territory's group
-  }
+  playerAreas.forEach(areaId => {
+    const groupId = findRoot(areaId);
+    tc[groupId]++;
+  });
 
   // Find the largest group
-  for (let i = 0; i < AREA_MAX; i++) {
-    if (player[pn].area_tc < tc[i]) {
-      player[pn].area_tc = tc[i];
-    }
-  }
-}
+  player[pn].area_tc = Math.max(...tc);
+});
