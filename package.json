@@ -1,0 +1,36 @@
+{
+  "name": "dicewarsjs",
+  "version": "1.0.0",
+  "description": "A JavaScript implementation of the Dice Wars game",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "test": "echo \"No tests specified yet\" && exit 0"
+  },
+  "keywords": [
+    "game",
+    "strategy",
+    "dice"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "babel-loader": "^9.1.2",
+    "copy-webpack-plugin": "^11.0.0",
+    "html-webpack-plugin": "^5.5.1",
+    "webpack": "^5.84.0",
+    "webpack-cli": "^5.1.1",
+    "webpack-dev-server": "^4.15.0"
+  },
+  "dependencies": {
+    "core-js": "^3.30.2"
+  },
+  "browserslist": [
+    ">0.25%",
+    "not dead",
+    "not ie <= 11"
+  ]
+}

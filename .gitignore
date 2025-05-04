@@ -3,6 +3,8 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+yarn.lock
 
 # Environment variables
 .env
@@ -21,6 +23,15 @@ Thumbs.db
 dist/
 build/
 *.min.js
+.cache/
+.parcel-cache/
+
+# Webpack
+.webpack/
+webpack-stats.json
+
+# Babel cache
+.babel-cache/
 
 # Logs
 logs/
@@ -28,11 +39,21 @@ logs/
 
 # Testing
 coverage/
+.nyc_output/
+test-results/
 
 # Temporary files
 *.tmp
 *.temp
 
+# ES Module cache
+.esm-cache/
+
 # Specific files to ignore
 CLAUDE.md 
 **/.claude/settings.local.json
+ES6_IMPLEMENTATION_STATUS.md
+roadmap_checklist.md
+
+# Don't ignore these files even if they match patterns above
+!.gitkeep

@@ -212,8 +212,13 @@ function start_title_screen() {
     // TODO: Implement title screen
 }
 
-// Initialize when the window loads
-window.addEventListener("load", init);
+/**
+ * Initialize the game - exported function that serves as the public API
+ * This is called by the index.js entry point
+ */
+export function initGame() {
+  init();
+}
 
-// Export for global access
-window.game = game;
+// Export game instance for testing and debugging
+export { game };
