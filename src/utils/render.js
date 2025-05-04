@@ -25,17 +25,17 @@ export const COLORS = {
     '#FF0000'  // Red
   ],
   TERRITORY: {
-    BORDER: '#000000',      // Territory border
+    BORDER: '#000000',           // Territory border
     HIGHLIGHT_ATTACK: '#FF0000', // Attack source highlight
     HIGHLIGHT_TARGET: '#0000FF'  // Attack target highlight
   },
   UI: {
-    BACKGROUND: '#FFFFFF',    // Background color
-    TEXT: '#000000',          // Default text color
-    BUTTON: '#EEEEEE',        // Button background
-    BUTTON_HOVER: '#DDDDDD',  // Button hover state
-    BUTTON_TEXT: '#000000',   // Button text
-    MESSAGE: '#000000'        // Message text
+    BACKGROUND: '#FFFFFF',       // Background color
+    TEXT: '#000000',             // Default text color
+    BUTTON: '#EEEEEE',           // Button background
+    BUTTON_HOVER: '#DDDDDD',     // Button hover state
+    BUTTON_TEXT: '#000000',      // Button text
+    MESSAGE: '#000000'           // Message text
   }
 };
 
@@ -44,10 +44,10 @@ export const COLORS = {
  * @param {number} n - Number to scale
  * @returns {number} Scaled value
  */
-export function scaleValue(n) {
+export const scaleValue = (n) => {
   const cfg = getConfig();
   return n * cfg.displayScale;
-}
+};
 
 /**
  * Create a new CreateJS text object with standard formatting
@@ -59,14 +59,14 @@ export function scaleValue(n) {
  * @param {string} [align='center'] - Text alignment
  * @returns {createjs.Text} The text object
  */
-export function createText(text, x, y, color = '#000000', font = '20px Arial', align = 'center') {
+export const createText = (text, x, y, color = '#000000', font = '20px Arial', align = 'center') => {
   const textObj = new createjs.Text(text, font, color);
   textObj.x = scaleValue(x);
   textObj.y = scaleValue(y);
   textObj.textAlign = align;
   textObj.textBaseline = 'middle';
   return textObj;
-}
+};
 
 /**
  * Create a new CreateJS shape for a button
@@ -78,7 +78,7 @@ export function createText(text, x, y, color = '#000000', font = '20px Arial', a
  * @param {number} [cornerRadius=5] - Corner radius for rounded rectangle
  * @returns {createjs.Shape} The button shape
  */
-export function createButtonShape(x, y, width, height, color = COLORS.UI.BUTTON, cornerRadius = 5) {
+export const createButtonShape = (x, y, width, height, color = COLORS.UI.BUTTON, cornerRadius = 5) => {
   const button = new createjs.Shape();
   const scaledX = scaleValue(x);
   const scaledY = scaleValue(y);
@@ -92,7 +92,7 @@ export function createButtonShape(x, y, width, height, color = COLORS.UI.BUTTON,
   button.y = scaledY;
   
   return button;
-}
+};
 
 /**
  * Create a complete button with text and hover effects
@@ -104,7 +104,7 @@ export function createButtonShape(x, y, width, height, color = COLORS.UI.BUTTON,
  * @param {Function} onClick - Click handler function
  * @returns {createjs.Container} Container with button shape and text
  */
-export function createButton(text, x, y, width, height, onClick) {
+export const createButton = (text, x, y, width, height, onClick) => {
   const container = new createjs.Container();
   const buttonShape = createButtonShape(0, 0, width, height);
   const buttonText = createText(text, width / 2, height / 2, COLORS.UI.BUTTON_TEXT);
@@ -129,7 +129,7 @@ export function createButton(text, x, y, width, height, onClick) {
   container.on('click', onClick);
   
   return container;
-}
+};
 
 /**
  * Draw a hexagonal grid cell
@@ -141,7 +141,7 @@ export function createButton(text, x, y, width, height, onClick) {
  * @param {string} [strokeColor='#000000'] - Stroke color
  * @param {number} [strokeWidth=1] - Stroke width
  */
-export function drawHexCell(graphics, x, y, radius, fillColor = null, strokeColor = '#000000', strokeWidth = 1) {
+export const drawHexCell = (graphics, x, y, radius, fillColor = null, strokeColor = '#000000', strokeWidth = 1) => {
   const sides = 6;
   const angle = Math.PI / 3; // 60 degrees in radians
   
@@ -167,7 +167,7 @@ export function drawHexCell(graphics, x, y, radius, fillColor = null, strokeColo
   
   if (fillColor) graphics.endFill();
   graphics.endStroke();
-}
+};
 
 /**
  * Draw a territory on the map
@@ -178,7 +178,7 @@ export function drawHexCell(graphics, x, y, radius, fillColor = null, strokeColo
  * @param {number} cellWidth - Width of a cell
  * @param {number} cellHeight - Height of a cell
  */
-export function drawTerritory(game, graphics, areaId, cellPositions, cellWidth, cellHeight) {
+export const drawTerritory = (game, graphics, areaId, cellPositions, cellWidth, cellHeight) => {
   const area = game.adat[areaId];
   if (area.size === 0) return; // Skip empty areas
   
@@ -198,14 +198,12 @@ export function drawTerritory(game, graphics, areaId, cellPositions, cellWidth, 
     const y = cellPositions.cellPosY[cellIdx];
     
     // Draw border segment based on direction
-    // Implementation would depend on the specific hex grid visualization approach
-    // This is a simplified placeholder
     drawHexCellBorder(graphics, x, y, cellWidth, cellHeight, dir);
   }
   
   graphics.endFill();
   graphics.endStroke();
-}
+};
 
 /**
  * Draw a border segment for a hexagonal cell
@@ -216,7 +214,7 @@ export function drawTerritory(game, graphics, areaId, cellPositions, cellWidth, 
  * @param {number} cellHeight - Height of cell
  * @param {number} dir - Direction of the border segment (0-5)
  */
-function drawHexCellBorder(graphics, x, y, cellWidth, cellHeight, dir) {
+const drawHexCellBorder = (graphics, x, y, cellWidth, cellHeight, dir) => {
   // This is a placeholder implementation
   // The actual implementation would depend on the specific hex grid visualization
   
@@ -236,7 +234,7 @@ function drawHexCellBorder(graphics, x, y, cellWidth, cellHeight, dir) {
   // Draw line
   graphics.moveTo(startX, startY);
   graphics.lineTo(endX, endY);
-}
+};
 
 /**
  * Create a dice display for a territory
@@ -245,7 +243,7 @@ function drawHexCellBorder(graphics, x, y, cellWidth, cellHeight, dir) {
  * @param {createjs.SpriteSheet} diceSheet - Sprite sheet for dice
  * @returns {createjs.Container} Container with dice display
  */
-export function createDiceDisplay(diceCount, playerIndex, diceSheet) {
+export const createDiceDisplay = (diceCount, playerIndex, diceSheet) => {
   const container = new createjs.Container();
   
   // Create sprite for the appropriate dice count and player color
@@ -255,7 +253,7 @@ export function createDiceDisplay(diceCount, playerIndex, diceSheet) {
   
   container.addChild(diceSprite);
   return container;
-}
+};
 
 /**
  * Create a dice spritesheet with all combinations of players and dice counts
@@ -263,7 +261,7 @@ export function createDiceDisplay(diceCount, playerIndex, diceSheet) {
  * @param {number} maxDice - Maximum dice count
  * @returns {Promise<createjs.SpriteSheet>} Promise resolving to the sprite sheet
  */
-export function createDiceSpriteSheet(playerCount, maxDice) {
+export const createDiceSpriteSheet = (playerCount, maxDice) => {
   return new Promise((resolve) => {
     const builder = new createjs.SpriteSheetBuilder();
     
@@ -285,7 +283,7 @@ export function createDiceSpriteSheet(playerCount, maxDice) {
     const spriteSheet = builder.build();
     resolve(spriteSheet);
   });
-}
+};
 
 /**
  * Draw dice pips in a container
@@ -293,7 +291,7 @@ export function createDiceSpriteSheet(playerCount, maxDice) {
  * @param {number} count - Number of pips to draw
  * @param {string} color - Color of the pips
  */
-function drawDicePips(container, count, color) {
+const drawDicePips = (container, count, color) => {
   const positions = [
     [0, 0],       // Center (for odd numbers)
     [-10, -10],   // Top left
@@ -316,7 +314,7 @@ function drawDicePips(container, count, color) {
     
     container.addChild(pip);
   }
-}
+};
 
 /**
  * Create a player status display
@@ -326,7 +324,7 @@ function drawDicePips(container, count, color) {
  * @param {number} y - Y position
  * @returns {createjs.Container} Container with player status
  */
-export function createPlayerStatus(game, playerIndex, x, y) {
+export const createPlayerStatus = (game, playerIndex, x, y) => {
   const container = new createjs.Container();
   const player = game.player[playerIndex];
   const color = COLORS.PLAYER[playerIndex];
@@ -336,7 +334,7 @@ export function createPlayerStatus(game, playerIndex, x, y) {
   bg.graphics.beginFill(color)
     .drawRoundRect(0, 0, 100, 30, 5);
   
-  // Create text
+  // Create text with template literals
   const areasText = createText(`${player.area_c}`, 25, 15, '#FFFFFF', '16px Arial', 'center');
   const diceText = createText(`${player.dice_c}`, 75, 15, '#FFFFFF', '16px Arial', 'center');
   
@@ -345,7 +343,7 @@ export function createPlayerStatus(game, playerIndex, x, y) {
   container.y = scaleValue(y);
   
   return container;
-}
+};
 
 /**
  * Update player status display
@@ -353,18 +351,19 @@ export function createPlayerStatus(game, playerIndex, x, y) {
  * @param {Object} sprites - Sprite objects
  * @param {number} playerStatusIndex - Starting index for player status sprites
  */
-export function updatePlayerStatus(game, sprites, playerStatusIndex) {
-  for (let i = 0; i < game.pmax; i++) {
+export const updatePlayerStatus = (game, sprites, playerStatusIndex) => {
+  // Use Array.from to create a range to iterate over
+  Array.from({ length: game.pmax }, (_, i) => {
     const player = game.player[i];
     const statusSprite = sprites[playerStatusIndex + i];
     
-    // Update text children
-    if (statusSprite && statusSprite.children && statusSprite.children.length >= 3) {
+    // Update text children using optional chaining for safety
+    if (statusSprite?.children?.length >= 3) {
       const areasText = statusSprite.children[1];
       const diceText = statusSprite.children[2];
       
-      areasText.text = player.area_c.toString();
-      diceText.text = player.dice_c.toString();
+      areasText.text = `${player.area_c}`;
+      diceText.text = `${player.dice_c}`;
     }
-  }
-}
+  });
+};

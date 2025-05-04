@@ -14,6 +14,7 @@
 import './gameUtils.js';
 import './render.js';
 import './sound.js';
+import './ai.js';
 
 // Also export utility modules for ES6 usage
 export * from '../utils/gameUtils.js';
@@ -21,5 +22,8 @@ export * from '../utils/render.js';
 export * from '../utils/sound.js';
 export * from '../utils/config.js';
 
+// Export AI modules for ES6 usage
+export * from '../ai/index.js';
+
 // Log successful bridge initialization
-console.log('ES6 utility bridge modules loaded successfully');
+console.log('ES6 utility and AI bridge modules loaded successfully');
