@@ -19,6 +19,14 @@ yarn.lock
 .DS_Store
 Thumbs.db
 
+# ESLint and Prettier
+.eslintcache
+.stylelintcache
+.prettierignore.bak
+
+# Husky
+.husky/_
+
 # Build output
 dist/
 build/
@@ -50,7 +58,6 @@ test-results/
 .esm-cache/
 
 # Specific files to ignore
-CLAUDE.md 
 **/.claude/settings.local.json
 ES6_IMPLEMENTATION_STATUS.md
 roadmap_checklist.md

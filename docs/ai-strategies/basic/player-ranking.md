@@ -12,13 +12,13 @@ Calculate a "strength ranking" for each player (typically based on total dice co
 // Calculate dice ranking for each player (0 = highest rank)
 for (let i = 0; i < 8; i++) game.player[i].dice_jun = i;
 for (let i = 0; i < 8 - 1; i++) {
-    for (let j = i + 1; j < 8; j++) {
-        if (game.player[i].dice_c < game.player[j].dice_c) {
-            const tmp = game.player[i].dice_jun;
-            game.player[i].dice_jun = game.player[j].dice_jun;
-            game.player[j].dice_jun = tmp;
-        }
+  for (let j = i + 1; j < 8; j++) {
+    if (game.player[i].dice_c < game.player[j].dice_c) {
+      const tmp = game.player[i].dice_jun;
+      game.player[i].dice_jun = game.player[j].dice_jun;
+      game.player[j].dice_jun = tmp;
     }
+  }
 }
 ```
 

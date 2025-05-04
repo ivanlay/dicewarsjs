@@ -12,13 +12,13 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
  */
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
-  
+
   // Base configuration used for both development and production
   const config = {
     entry: './src/index.js',
     output: {
       path: path.resolve(__dirname, 'dist'),
-      clean: true
+      clean: true,
     },
     module: {
       rules: [
@@ -28,11 +28,11 @@ module.exports = (env, argv) => {
           use: {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/preset-env']
-            }
-          }
-        }
-      ]
+              presets: ['@babel/preset-env'],
+            },
+          },
+        },
+      ],
     },
     plugins: [
       new HtmlWebpackPlugin({
@@ -41,11 +41,13 @@ module.exports = (env, argv) => {
         // Don't inject the bundle.js for now - we'll use the legacy script tags
         inject: false,
         // Minify HTML in production
-        minify: isProduction ? {
-          removeComments: true,
-          collapseWhitespace: true,
-          removeAttributeQuotes: true
-        } : false
+        minify: isProduction
+          ? {
+              removeComments: true,
+              collapseWhitespace: true,
+              removeAttributeQuotes: true,
+            }
+          : false,
       }),
       new CopyWebpackPlugin({
         patterns: [
@@ -53,20 +55,20 @@ module.exports = (env, argv) => {
           // Copy all the legacy JS files
           { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js'] } },
           // Copy CSS files if any
-          { from: '*.css', to: '[name][ext]', noErrorOnMissing: true }
-        ]
+          { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
+        ],
       }),
       // Clean the output directory before each build
-      new CleanWebpackPlugin()
-    ]
+      new CleanWebpackPlugin(),
+    ],
   };
-  
+
   // Production-specific configuration
   if (isProduction) {
     // Use chunking and content hashing for bundle files
     config.output.filename = '[name].[contenthash].js';
     config.output.chunkFilename = '[name].[contenthash].js';
-    
+
     // Add optimization settings
     config.optimization = {
       minimize: true,
@@ -75,15 +77,15 @@ module.exports = (env, argv) => {
           terserOptions: {
             compress: {
               drop_console: false, // Keep console logs for now
-              passes: 2 // Multiple optimization passes
+              passes: 2, // Multiple optimization passes
             },
             mangle: true,
             output: {
-              comments: false // Remove comments
-            }
+              comments: false, // Remove comments
+            },
           },
-          extractComments: false // Don't extract comments to separate file
-        })
+          extractComments: false, // Don't extract comments to separate file
+        }),
       ],
       // Enable tree shaking (dead code elimination)
       usedExports: true,
@@ -97,31 +99,31 @@ module.exports = (env, argv) => {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
-            chunks: 'all'
-          }
-        }
-      }
+            chunks: 'all',
+          },
+        },
+      },
     };
-    
+
     // No source maps in production for smaller bundle size
     config.devtool = false;
   } else {
     // Development-specific configuration
     config.output.filename = 'bundle.js';
-    
+
     // Add dev server settings
     config.devServer = {
       static: {
-        directory: path.join(__dirname, 'dist')
+        directory: path.join(__dirname, 'dist'),
       },
       compress: true,
       port: 8080,
-      hot: true
+      hot: true,
     };
-    
+
     // Use source maps for better debugging
     config.devtool = 'source-map';
   }
-  
+
   return config;
 };

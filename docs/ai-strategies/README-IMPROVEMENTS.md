@@ -5,18 +5,21 @@ This documentation suite was created to provide comprehensive guidance for devel
 ## Documentation Structure
 
 1. **Basic Strategies**
+
    - Dice Advantage Analysis
    - Random Selection
    - Player Ranking
    - Territory Connections
 
 2. **Advanced Strategies**
+
    - Neighbor Analysis
    - Border Security
    - Choke Point Control
    - Reinforcement Optimization
 
 3. **Strategy Combinations**
+
    - Balanced Approach
    - Adaptive Strategy
    - Specialized Focus

@@ -26,7 +26,7 @@ global.createjs = {
         moveTo: () => this.graphics,
         lineTo: () => this.graphics,
         closePath: () => this.graphics,
-        setStrokeStyle: () => this.graphics
+        setStrokeStyle: () => this.graphics,
       };
       this.x = 0;
       this.y = 0;
@@ -61,11 +61,11 @@ global.createjs = {
     registerSounds: () => {},
     play: () => ({}),
     stop: () => {},
-    INTERRUPT_ANY: 'interrupt'
+    INTERRUPT_ANY: 'interrupt',
   },
   Touch: {
     isSupported: () => false,
-    enable: () => {}
+    enable: () => {},
   },
   Stage: class Stage {
     constructor() {}
@@ -75,12 +75,12 @@ global.createjs = {
   Ticker: {
     timingMode: null,
     RAF: 'raf',
-    addEventListener: () => {}
+    addEventListener: () => {},
   },
   LoadQueue: class LoadQueue {
     constructor() {}
     installPlugin() {}
     loadManifest() {}
     on() {}
-  }
+  },
 };

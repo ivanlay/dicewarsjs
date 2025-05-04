@@ -14,8 +14,8 @@ const n = Math.floor(Math.random() * number_of_moves);
 const move = list_moves[n];
 
 // Set the selected move in the game state
-game.area_from = move["attacker"];
-game.area_to = move["defender"];
+game.area_from = move['attacker'];
+game.area_to = move['defender'];
 ```
 
 ## Example from ai_default.js
@@ -23,8 +23,8 @@ game.area_to = move["defender"];
 ```javascript
 // Build list of valid attacks
 for (let i = 1; i < game.AREA_MAX; i++) {
-    // [Code that finds valid moves and adds them to list_from and list_to arrays]
-    // ...
+  // [Code that finds valid moves and adds them to list_from and list_to arrays]
+  // ...
 }
 
 // End turn if no valid attacks found
@@ -72,15 +72,15 @@ const strongMoves = findMovesWithStrengthAdvantage(game, 2);
 
 // If we have strong moves, pick one randomly
 if (strongMoves.length > 0) {
-    const index = Math.floor(Math.random() * strongMoves.length);
-    return strongMoves[index];
+  const index = Math.floor(Math.random() * strongMoves.length);
+  return strongMoves[index];
 }
 
 // Otherwise, fall back to any valid move with a dice advantage
 const validMoves = findAllValidMoves(game);
 if (validMoves.length > 0) {
-    const index = Math.floor(Math.random() * validMoves.length);
-    return validMoves[index];
+  const index = Math.floor(Math.random() * validMoves.length);
+  return validMoves[index];
 }
 
 // No valid moves, end turn

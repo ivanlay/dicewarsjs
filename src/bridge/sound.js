@@ -1,6 +1,6 @@
 /**
  * Sound Utilities Bridge Module
- * 
+ *
  * This is a bridge module that exports ES6 module functions to the global scope
  * for compatibility with the legacy code while enabling the incremental transition to ES6.
  */
@@ -20,46 +20,46 @@ const defaultSoundManifest = [
   { id: 'fail', src: 'fail.wav' },
   { id: 'myturn', src: 'myturn.wav' },
   { id: 'clear', src: 'clear.wav' },
-  { id: 'over', src: 'over.wav' }
+  { id: 'over', src: 'over.wav' },
 ];
 
 // Create fallback implementations
 const fallbacks = {
-  initSoundSystem: () => { 
-    console.error('initSoundSystem not found in SoundUtils module'); 
-    return false; 
+  initSoundSystem: () => {
+    console.error('initSoundSystem not found in SoundUtils module');
+    return false;
   },
-  playSound: () => { 
-    console.error('playSound not found in SoundUtils module'); 
-    return null; 
+  playSound: () => {
+    console.error('playSound not found in SoundUtils module');
+    return null;
   },
-  stopSound: () => { 
-    console.error('stopSound not found in SoundUtils module'); 
+  stopSound: () => {
+    console.error('stopSound not found in SoundUtils module');
   },
-  stopAllSounds: () => { 
-    console.error('stopAllSounds not found in SoundUtils module'); 
+  stopAllSounds: () => {
+    console.error('stopAllSounds not found in SoundUtils module');
   },
-  setVolume: () => { 
-    console.error('setVolume not found in SoundUtils module'); 
+  setVolume: () => {
+    console.error('setVolume not found in SoundUtils module');
   },
-  setSoundEnabled: () => { 
-    console.error('setSoundEnabled not found in SoundUtils module'); 
+  setSoundEnabled: () => {
+    console.error('setSoundEnabled not found in SoundUtils module');
   },
-  toggleSound: () => { 
-    console.error('toggleSound not found in SoundUtils module'); 
-    return false; 
+  toggleSound: () => {
+    console.error('toggleSound not found in SoundUtils module');
+    return false;
   },
-  preloadSounds: () => { 
-    console.error('preloadSounds not found in SoundUtils module'); 
-    return Promise.resolve(); 
-  }
+  preloadSounds: () => {
+    console.error('preloadSounds not found in SoundUtils module');
+    return Promise.resolve();
+  },
 };
 
 // Export all functions to the global scope for legacy code compatibility
 try {
   // Export the sound manifest to the global scope with fallback
   window.SOUND_MANIFEST = SoundUtils.SOUND_MANIFEST || defaultSoundManifest;
-  
+
   // Export all functions to the global scope for legacy code compatibility with fallbacks
   window.initSoundSystem = SoundUtils.initSoundSystem || fallbacks.initSoundSystem;
   window.playSound = SoundUtils.playSound || fallbacks.playSound;
@@ -69,11 +69,11 @@ try {
   window.setSoundEnabled = SoundUtils.setSoundEnabled || fallbacks.setSoundEnabled;
   window.toggleSound = SoundUtils.toggleSound || fallbacks.toggleSound;
   window.preloadSounds = SoundUtils.preloadSounds || fallbacks.preloadSounds;
-  
+
   console.log('Sound utilities bridge module initialized successfully');
 } catch (error) {
   console.error('Failed to initialize sound utilities bridge module:', error);
-  
+
   // Provide fallback implementations to prevent game crashes
   window.SOUND_MANIFEST = defaultSoundManifest;
   window.initSoundSystem = fallbacks.initSoundSystem;

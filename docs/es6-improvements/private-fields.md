@@ -21,35 +21,35 @@ The PlayerData class is a good example of using private fields for proper encaps
 ```javascript
 export class PlayerData {
   // Private fields using # prefix
-  #areaCount = 0;        // Number of areas owned
+  #areaCount = 0; // Number of areas owned
   #largestTerritory = 0; // Size of largest connected territory group
-  #diceCount = 0;        // Total number of dice across all territories
-  #diceRank = 0;         // Dice count ranking among players
-  #stockedDice = 0;      // Reinforcement dice available for distribution
-  
+  #diceCount = 0; // Total number of dice across all territories
+  #diceRank = 0; // Dice count ranking among players
+  #stockedDice = 0; // Reinforcement dice available for distribution
+
   constructor() {
     // No initialization needed as private fields are pre-initialized
   }
-  
+
   // Public accessor methods for private fields
   get areaCount() {
     return this.#areaCount;
   }
-  
+
   set areaCount(value) {
     if (typeof value !== 'number' || value < 0) {
       throw new Error('Area count must be a non-negative number');
     }
     this.#areaCount = value;
   }
-  
+
   // Other getters/setters and methods...
-  
+
   // Legacy compatibility
   get area_c() {
     return this.#areaCount;
   }
-  
+
   set area_c(value) {
     this.#areaCount = value;
   }
@@ -65,15 +65,19 @@ export class Game {
   // Private fields
   #territoriesMap = new Map();
   #gridData = new GridData(this.XMAX, this.YMAX);
-  
+
   // Public accessors
   getTerritory(id) {
     return this.#territoriesMap.get(id);
   }
-  
+
   // Legacy compatibility
-  get cel() { return this.#gridData.cel; }
-  set cel(value) { this.#gridData.cel = value; }
+  get cel() {
+    return this.#gridData.cel;
+  }
+  set cel(value) {
+    this.#gridData.cel = value;
+  }
 }
 ```
 
@@ -85,9 +89,9 @@ Private fields cannot be accessed from outside the class, ensuring that internal
 
 ```javascript
 const player = new PlayerData();
-player.areaCount = 5;      // Works - uses setter with validation
-player.#areaCount = 5;     // Error - can't access private field
-player._areaCount = 5;     // No error, but no effect on actual private field
+player.areaCount = 5; // Works - uses setter with validation
+player.#areaCount = 5; // Error - can't access private field
+player._areaCount = 5; // No error, but no effect on actual private field
 ```
 
 ### 2. Input Validation
@@ -121,10 +125,10 @@ Private fields prevent accidental or malicious modifications:
 
 ```javascript
 // Without private fields
-game.adat = null;  // Breaks the game
+game.adat = null; // Breaks the game
 
 // With private fields
-game.#territoriesMap = null;  // Error - can't access private field
+game.#territoriesMap = null; // Error - can't access private field
 ```
 
 ## Backward Compatibility
@@ -167,18 +171,20 @@ Since private fields cannot be accessed directly from outside the class (includi
 ```javascript
 test('private fields are properly encapsulated', () => {
   const playerData = new PlayerData();
-  
+
   // Get all enumerable property names
   const propertyNames = Object.getOwnPropertyNames(playerData);
-  
+
   // Check that our private fields are not directly accessible
   expect(propertyNames).not.toContain('areaCount');
-  
+
   // Check that we can still access via getters
   expect(playerData.areaCount).toBe(0);
-  
+
   // Check validation works
-  expect(() => { playerData.areaCount = -1; }).toThrow();
+  expect(() => {
+    playerData.areaCount = -1;
+  }).toThrow();
 });
 ```
 

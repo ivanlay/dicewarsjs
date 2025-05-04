@@ -5,6 +5,7 @@ The neighbor analysis strategy involves evaluating the neighbors of territories 
 ## Core Concept
 
 For each territory, analyze its neighbors to understand:
+
 1. How many friendly vs. enemy neighbors it has
 2. The dice strength of neighboring territories
 3. The threat level posed by enemy neighbors
@@ -14,50 +15,46 @@ For each territory, analyze its neighbors to understand:
 
 ```javascript
 function area_get_info(area_id) {
-    let friendly_neighbors = 0;
-    let unfriendly_neighbors = 0;
-    let highest_friendly_neighbor_dice = 0;
-    let highest_unfriendly_neighbor_dice = 0;
-    let second_highest_unfriendly_neighbor_dice = 0;
-    let num_neighbors = 0;
+  let friendly_neighbors = 0;
+  let unfriendly_neighbors = 0;
+  let highest_friendly_neighbor_dice = 0;
+  let highest_unfriendly_neighbor_dice = 0;
+  let second_highest_unfriendly_neighbor_dice = 0;
+  let num_neighbors = 0;
 
-    for (let i = 0; i < game.AREA_MAX; i++) {
-        if (i == area_id) continue;
+  for (let i = 0; i < game.AREA_MAX; i++) {
+    if (i == area_id) continue;
 
-        // Skip non-adjacent territories
-        if (!game.adat[area_id].join[i])
-            continue;
+    // Skip non-adjacent territories
+    if (!game.adat[area_id].join[i]) continue;
 
-        const num_dice = game.adat[i].dice;
+    const num_dice = game.adat[i].dice;
 
-        if (game.adat[area_id].arm == game.adat[i].arm) {
-            friendly_neighbors += 1;
-            // Track highest dice count among friendly neighbors
-            if (highest_friendly_neighbor_dice < num_dice)
-                highest_friendly_neighbor_dice = num_dice;
-        }
-        else {
-            unfriendly_neighbors += 1;
-            // Track highest and second highest dice counts among enemy neighbors
-            if (highest_unfriendly_neighbor_dice < num_dice) {
-                second_highest_unfriendly_neighbor_dice = highest_unfriendly_neighbor_dice;
-                highest_unfriendly_neighbor_dice = num_dice;
-            }
-            else if (second_highest_unfriendly_neighbor_dice < num_dice)
-                second_highest_unfriendly_neighbor_dice = num_dice;
-        }
+    if (game.adat[area_id].arm == game.adat[i].arm) {
+      friendly_neighbors += 1;
+      // Track highest dice count among friendly neighbors
+      if (highest_friendly_neighbor_dice < num_dice) highest_friendly_neighbor_dice = num_dice;
+    } else {
+      unfriendly_neighbors += 1;
+      // Track highest and second highest dice counts among enemy neighbors
+      if (highest_unfriendly_neighbor_dice < num_dice) {
+        second_highest_unfriendly_neighbor_dice = highest_unfriendly_neighbor_dice;
+        highest_unfriendly_neighbor_dice = num_dice;
+      } else if (second_highest_unfriendly_neighbor_dice < num_dice)
+        second_highest_unfriendly_neighbor_dice = num_dice;
     }
+  }
 
-    num_neighbors = friendly_neighbors + unfriendly_neighbors;
+  num_neighbors = friendly_neighbors + unfriendly_neighbors;
 
-    return {
-        friendly_neighbors,
-        unfriendly_neighbors,
-        highest_friendly_neighbor_dice,
-        highest_unfriendly_neighbor_dice,
-        second_highest_unfriendly_neighbor_dice,
-        num_neighbors
-    };
+  return {
+    friendly_neighbors,
+    unfriendly_neighbors,
+    highest_friendly_neighbor_dice,
+    highest_unfriendly_neighbor_dice,
+    second_highest_unfriendly_neighbor_dice,
+    num_neighbors,
+  };
 }
 ```
 
@@ -118,11 +115,10 @@ The defensive AI tracks not just the highest enemy dice count, but also the seco
 
 ```javascript
 if (highest_unfriendly_neighbor_dice < num_dice) {
-    second_highest_unfriendly_neighbor_dice = highest_unfriendly_neighbor_dice;
-    highest_unfriendly_neighbor_dice = num_dice;
-}
-else if (second_highest_unfriendly_neighbor_dice < num_dice)
-    second_highest_unfriendly_neighbor_dice = num_dice;
+  second_highest_unfriendly_neighbor_dice = highest_unfriendly_neighbor_dice;
+  highest_unfriendly_neighbor_dice = num_dice;
+} else if (second_highest_unfriendly_neighbor_dice < num_dice)
+  second_highest_unfriendly_neighbor_dice = num_dice;
 ```
 
 This allows for more nuanced threat assessment.
@@ -135,21 +131,21 @@ Using neighbor analysis to calculate a "value score" for each territory:
 
 ```javascript
 function calculateTerritoryValue(game, territory_id, area_info) {
-    // Base value is the number of dice
-    let value = game.adat[territory_id].dice;
-    
-    // Strategic value modifiers
-    
-    // Fewer enemy neighbors = more valuable (less vulnerable)
-    value += (6 - area_info[territory_id].unfriendly_neighbors) * 0.5;
-    
-    // Higher friendly support = more valuable
-    value += area_info[territory_id].highest_friendly_neighbor_dice * 0.3;
-    
-    // More connected = more valuable for reinforcements
-    value += area_info[territory_id].friendly_neighbors * 0.2;
-    
-    return value;
+  // Base value is the number of dice
+  let value = game.adat[territory_id].dice;
+
+  // Strategic value modifiers
+
+  // Fewer enemy neighbors = more valuable (less vulnerable)
+  value += (6 - area_info[territory_id].unfriendly_neighbors) * 0.5;
+
+  // Higher friendly support = more valuable
+  value += area_info[territory_id].highest_friendly_neighbor_dice * 0.3;
+
+  // More connected = more valuable for reinforcements
+  value += area_info[territory_id].friendly_neighbors * 0.2;
+
+  return value;
 }
 ```
 
@@ -159,30 +155,30 @@ Identifying chains of vulnerable territories for sequential conquest:
 
 ```javascript
 function findAttackPath(game, start_territory, max_depth = 3) {
-    const path = [];
-    const visited = new Set();
-    
-    function dfs(territory, depth) {
-        if (depth >= max_depth) return;
-        visited.add(territory);
-        
-        // Check all adjacent enemy territories
-        for (let i = 1; i < game.AREA_MAX; i++) {
-            if (game.adat[i].size == 0) continue;
-            if (game.adat[i].arm == game.adat[territory].arm) continue;
-            if (!game.adat[territory].join[i]) continue;
-            if (visited.has(i)) continue;
-            
-            // If we have a strong dice advantage
-            if (game.adat[territory].dice > game.adat[i].dice + 1) {
-                path.push({from: territory, to: i});
-                dfs(i, depth + 1);
-            }
-        }
+  const path = [];
+  const visited = new Set();
+
+  function dfs(territory, depth) {
+    if (depth >= max_depth) return;
+    visited.add(territory);
+
+    // Check all adjacent enemy territories
+    for (let i = 1; i < game.AREA_MAX; i++) {
+      if (game.adat[i].size == 0) continue;
+      if (game.adat[i].arm == game.adat[territory].arm) continue;
+      if (!game.adat[territory].join[i]) continue;
+      if (visited.has(i)) continue;
+
+      // If we have a strong dice advantage
+      if (game.adat[territory].dice > game.adat[i].dice + 1) {
+        path.push({ from: territory, to: i });
+        dfs(i, depth + 1);
+      }
     }
-    
-    dfs(start_territory, 0);
-    return path;
+  }
+
+  dfs(start_territory, 0);
+  return path;
 }
 ```
 

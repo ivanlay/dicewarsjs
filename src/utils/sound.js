@@ -1,6 +1,6 @@
 /**
  * Sound Utilities Module
- * 
+ *
  * Provides utilities for game sound management:
  * - Sound loading and playing
  * - Volume control
@@ -11,14 +11,14 @@ import { getConfig, updateConfig } from './config.js';
 
 // Sound file manifest
 export const SOUND_MANIFEST = [
-  {id: 'snd_button', src: './sound/button.wav'},   // Button click
-  {id: 'snd_clear', src: './sound/clear.wav'},     // Victory sound
-  {id: 'snd_click', src: './sound/click.wav'},     // Area selection
-  {id: 'snd_dice', src: './sound/dice.wav'},       // Dice roll
-  {id: 'snd_fail', src: './sound/fail.wav'},       // Attack failed
-  {id: 'snd_myturn', src: './sound/myturn.wav'},   // Player turn notification
-  {id: 'snd_over', src: './sound/over.wav'},       // Game over
-  {id: 'snd_success', src: './sound/success.wav'}  // Attack succeeded
+  { id: 'snd_button', src: './sound/button.wav' }, // Button click
+  { id: 'snd_clear', src: './sound/clear.wav' }, // Victory sound
+  { id: 'snd_click', src: './sound/click.wav' }, // Area selection
+  { id: 'snd_dice', src: './sound/dice.wav' }, // Dice roll
+  { id: 'snd_fail', src: './sound/fail.wav' }, // Attack failed
+  { id: 'snd_myturn', src: './sound/myturn.wav' }, // Player turn notification
+  { id: 'snd_over', src: './sound/over.wav' }, // Game over
+  { id: 'snd_success', src: './sound/success.wav' }, // Attack succeeded
 ];
 
 // Sound instances cache
@@ -33,7 +33,7 @@ export function initSoundSystem() {
     console.warn('Sound system not supported in this browser');
     return false;
   }
-  
+
   createjs.Sound.registerSounds(SOUND_MANIFEST);
   return true;
 }
@@ -50,21 +50,21 @@ export function initSoundSystem() {
 export function playSound(soundId, options = {}) {
   const config = getConfig();
   if (!config.soundEnabled) return null;
-  
+
   try {
     const instance = createjs.Sound.play(soundId, {
-      volume: options.volume || 1,
-      loop: options.loop || 0,
-      interrupt: createjs.Sound.INTERRUPT_ANY
+      volume: options.volume ?? 1,
+      loop: options.loop ?? 0,
+      interrupt: createjs.Sound.INTERRUPT_ANY,
     });
-    
+
     if (options.onComplete) {
       instance.on('complete', options.onComplete);
     }
-    
+
     // Cache the instance for volume control
     soundInstances[soundId] = instance;
-    
+
     return instance;
   } catch (e) {
     console.warn('Error playing sound:', e);
@@ -93,7 +93,7 @@ export function stopAllSounds() {
  */
 export function setVolume(volume) {
   createjs.Sound.volume = Math.max(0, Math.min(1, volume));
-  
+
   // Update each active sound instance
   Object.values(soundInstances).forEach(instance => {
     if (instance && instance.playState === createjs.Sound.PLAY_SUCCEEDED) {
@@ -109,11 +109,11 @@ export function setVolume(volume) {
 export function setSoundEnabled(enabled) {
   const config = getConfig();
   updateConfig({ soundEnabled: enabled });
-  
+
   if (!enabled) {
     stopAllSounds();
   }
-  
+
   return config.soundEnabled;
 }
 
@@ -136,11 +136,11 @@ export function preloadSounds() {
       reject(new Error('Sound system not supported'));
       return;
     }
-    
+
     const queue = new createjs.LoadQueue();
     queue.installPlugin(createjs.Sound);
     queue.loadManifest(SOUND_MANIFEST);
-    
+
     queue.on('complete', resolve);
     queue.on('error', reject);
   });

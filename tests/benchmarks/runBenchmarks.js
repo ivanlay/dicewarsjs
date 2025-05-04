@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * AI Strategy Benchmark Runner
- * 
+ *
  * Command-line script to run benchmarks and generate reports
  * Run with: node --input-type=module tests/benchmarks/runBenchmarks.js
- * 
+ *
  * @type {module}
  */
 import { AIBenchmark, createBenchmarkGameState } from './AIBenchmark.js';
@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Configuration
-const ITERATIONS = 1000;        // Number of iterations for simple AIs
+const ITERATIONS = 1000; // Number of iterations for simple AIs
 const COMPLEX_ITERATIONS = 200; // Number of iterations for complex AIs
 const WARMUP_RUNS = 10;
 const RESULTS_DIR = path.join(process.cwd(), 'benchmark-results');
@@ -33,13 +33,13 @@ const standardGameState = createBenchmarkGameState();
 const simpleBenchmark = new AIBenchmark({
   iterations: ITERATIONS,
   warmupRuns: WARMUP_RUNS,
-  logResults: true
+  logResults: true,
 });
 
 const complexBenchmark = new AIBenchmark({
   iterations: COMPLEX_ITERATIONS,
   warmupRuns: WARMUP_RUNS,
-  logResults: true
+  logResults: true,
 });
 
 // Run individual benchmarks
@@ -91,15 +91,18 @@ console.log('\n===== Running AI Strategy Comparison =====');
 const comparisonBenchmark = new AIBenchmark({
   iterations: COMPLEX_ITERATIONS, // Use the smaller count for fairness
   warmupRuns: WARMUP_RUNS,
-  logResults: true
+  logResults: true,
 });
 
-const comparisonResults = comparisonBenchmark.compareStrategies([
-  { name: 'Example AI', function: ai_example },
-  { name: 'Default AI', function: ai_default },
-  { name: 'Defensive AI', function: ai_defensive },
-  { name: 'Adaptive AI', function: ai_adaptive }
-], standardGameState);
+const comparisonResults = comparisonBenchmark.compareStrategies(
+  [
+    { name: 'Example AI', function: ai_example },
+    { name: 'Default AI', function: ai_default },
+    { name: 'Defensive AI', function: ai_defensive },
+    { name: 'Adaptive AI', function: ai_adaptive },
+  ],
+  standardGameState
+);
 
 // Save comparison results
 const comparisonFilename = path.join(RESULTS_DIR, 'comparison_results.json');
@@ -107,18 +110,18 @@ fs.writeFileSync(comparisonFilename, JSON.stringify(comparisonResults, null, 2))
 console.log(`\nSaved comparison results to ${comparisonFilename}`);
 
 // Generate HTML report
-const generateHtmlReport = (results) => {
+const generateHtmlReport = results => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const reportFilename = path.join(RESULTS_DIR, `benchmark_report_${timestamp}.html`);
-  
+
   // Create table rows for each strategy
   const strategyRows = Object.entries(results)
     .map(([name, data]) => {
       const consistency = data.decisionConsistency;
-      const mostCommon = consistency.mostCommon ? 
-        `${consistency.mostCommon[0]} (${((consistency.mostCommon[1] / data.iterations) * 100).toFixed(1)}%)` : 
-        'N/A';
-      
+      const mostCommon = consistency.mostCommon
+        ? `${consistency.mostCommon[0]} (${((consistency.mostCommon[1] / data.iterations) * 100).toFixed(1)}%)`
+        : 'N/A';
+
       return `
         <tr>
           <td>${name}</td>
@@ -133,7 +136,7 @@ const generateHtmlReport = (results) => {
       `;
     })
     .join('');
-  
+
   // Create HTML content
   const htmlContent = `
     <!DOCTYPE html>
@@ -311,10 +314,10 @@ const generateHtmlReport = (results) => {
     </body>
     </html>
   `;
-  
+
   fs.writeFileSync(reportFilename, htmlContent);
   console.log(`\nGenerated HTML report: ${reportFilename}`);
-  
+
   return reportFilename;
 };
 

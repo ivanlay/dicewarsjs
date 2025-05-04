@@ -25,7 +25,7 @@ export class AreaData {
     this.arm = 0;
     this.dice = 0;
     // etc...
-    
+
     // Replace join array with Map
     this.adjacencyMap = new Map();
   }
@@ -77,12 +77,12 @@ We've conducted performance tests comparing array-based and map-based implementa
 
 ### Test Results
 
-| Operation | Array Time | Map Time | Notes |
-|-----------|------------|----------|-------|
-| Setting adjacency | 0.22ms | 0.40ms | Arrays are faster for simple sets |
-| Checking adjacency | 0.94ms | 1.54ms | Arrays are faster for simple checks |
-| Finding all adjacent areas | 30.84ms | 4.61ms | Maps are **significantly** faster |
-| Memory usage | 32 slots per area | ~3 entries per area | Maps use ~90% less memory |
+| Operation                  | Array Time        | Map Time            | Notes                               |
+| -------------------------- | ----------------- | ------------------- | ----------------------------------- |
+| Setting adjacency          | 0.22ms            | 0.40ms              | Arrays are faster for simple sets   |
+| Checking adjacency         | 0.94ms            | 1.54ms              | Arrays are faster for simple checks |
+| Finding all adjacent areas | 30.84ms           | 4.61ms              | Maps are **significantly** faster   |
+| Memory usage               | 32 slots per area | ~3 entries per area | Maps use ~90% less memory           |
 
 ### Analysis
 

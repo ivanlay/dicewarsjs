@@ -1,9 +1,9 @@
 /**
  * AI Strategy Benchmark Runner (CommonJS version)
- * 
+ *
  * A simplified version of the benchmark runner using CommonJS module system
  * for better compatibility with the existing project structure.
- * 
+ *
  * Run with: node tests/benchmarks/benchmark.cjs
  */
 
@@ -27,13 +27,11 @@ console.log('This will execute the benchmark tests using Jest\n');
 process.env.NODE_ENV = 'benchmark';
 
 // Run the benchmark tests with increased timeouts
-jest.run([
-  'tests/benchmarks/ai.benchmark.js',
-  '--testTimeout=30000',
-  '--no-coverage'
-]).then(() => {
+jest.run(['tests/benchmarks/ai.benchmark.js', '--testTimeout=30000', '--no-coverage']).then(() => {
   console.log('\n===== Benchmarks Complete =====');
-  console.log(`\nBenchmark tests have completed. To run the full benchmark suite with visualizations:`);
+  console.log(
+    `\nBenchmark tests have completed. To run the full benchmark suite with visualizations:`
+  );
   console.log(`1. Add "type": "module" to your package.json temporarily`);
   console.log(`2. Run: node --experimental-json-modules tests/benchmarks/runBenchmarks.js`);
   console.log(`3. Check the benchmark-results/ directory for detailed reports`);

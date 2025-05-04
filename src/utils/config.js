@@ -74,17 +74,15 @@ export function updateConfig(newConfig) {
     // Handle nested objects separately for deep merge
     display: {
       ...activeConfig.display,
-      ...(newConfig.display || {})
+      ...(newConfig?.display ?? {})
     }
   };
   
   // Save to localStorage if available
-  if (typeof localStorage !== 'undefined') {
-    try {
-      localStorage.setItem('dicewarsConfig', JSON.stringify(activeConfig));
-    } catch (e) {
-      console.warn('Failed to save configuration to localStorage', e);
-    }
+  try {
+    localStorage?.setItem('dicewarsConfig', JSON.stringify(activeConfig));
+  } catch (e) {
+    console.warn('Failed to save configuration to localStorage', e);
   }
   
   return getConfig();
@@ -95,15 +93,13 @@ export function updateConfig(newConfig) {
  * @returns {Object} The loaded or default configuration
  */
 export function loadConfig() {
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const savedConfig = localStorage.getItem('dicewarsConfig');
-      if (savedConfig) {
-        updateConfig(JSON.parse(savedConfig));
-      }
-    } catch (e) {
-      console.warn('Failed to load configuration from localStorage', e);
+  try {
+    const savedConfig = localStorage?.getItem('dicewarsConfig');
+    if (savedConfig) {
+      updateConfig(JSON.parse(savedConfig));
     }
+  } catch (e) {
+    console.warn('Failed to load configuration from localStorage', e);
   }
   return getConfig();
 }
@@ -116,12 +112,10 @@ export function resetConfig() {
   activeConfig = { ...DEFAULT_CONFIG };
   
   // Clear from localStorage if available
-  if (typeof localStorage !== 'undefined') {
-    try {
-      localStorage.removeItem('dicewarsConfig');
-    } catch (e) {
-      console.warn('Failed to clear configuration from localStorage', e);
-    }
+  try {
+    localStorage?.removeItem('dicewarsConfig');
+  } catch (e) {
+    console.warn('Failed to clear configuration from localStorage', e);
   }
   
   return getConfig();
@@ -133,7 +127,7 @@ export function resetConfig() {
  * @param {Object} [config=null] - Optional configuration to apply (uses active config if not provided)
  */
 export function applyConfigToGame(game, config = null) {
-  const cfg = config || activeConfig;
+  const cfg = config ?? activeConfig;
   
   // Game rules
   game.pmax = cfg.playerCount;
@@ -146,7 +140,7 @@ export function applyConfigToGame(game, config = null) {
   game.AREA_MAX = cfg.territoriesCount;
   
   // AI configuration - map string names to function references
-  if (cfg.aiTypes && Array.isArray(cfg.aiTypes) && game.ai) {
+  if (Array.isArray(cfg.aiTypes) && game.ai) {
     // Map AI type strings to actual functions
     for (let i = 0; i < cfg.aiTypes.length && i < game.ai.length; i++) {
       const aiType = cfg.aiTypes[i];

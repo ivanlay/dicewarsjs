@@ -24,22 +24,22 @@ export class GridData {
     this.width = width;
     this.height = height;
     this.cellCount = width * height;
-    
+
     // Cell-to-territory mapping (values 0-32, 0 = no territory)
     // Using Uint8Array since we have at most 32 territories
     this._cellToAreaMap = new Uint8Array(this.cellCount);
-    
+
     // Temporal cell flags for territory growth (values 0-1)
     this._nextFlags = new Uint8Array(this.cellCount);
     this._rCells = new Uint8Array(this.cellCount);
-    
+
     // Serial numbers for randomization (values 0 to cellCount-1)
     this._serialNumbers = new Uint16Array(this.cellCount);
-    
+
     // Initialize direction lookup cache
     this._directionCache = this._initDirectionCache();
   }
-  
+
   // Methods for working with the typed arrays
   // ...
 }
@@ -71,12 +71,12 @@ We've conducted performance tests comparing TypedArray-based and regular array-b
 
 ### Test Results
 
-| Operation | Regular Arrays | TypedArrays | Notes |
-|-----------|----------------|-------------|-------|
-| Setting cell values | 0.05ms | 0.04ms | TypedArrays are slightly faster |
-| Reading cell values | 0.02ms | 0.05ms | Regular arrays are faster for small datasets |
-| Memory usage | ~54KB | ~10KB | TypedArrays use ~80% less memory |
-| Direction lookups | 0.08ms | 0.01ms | Cached directions are significantly faster |
+| Operation           | Regular Arrays | TypedArrays | Notes                                        |
+| ------------------- | -------------- | ----------- | -------------------------------------------- |
+| Setting cell values | 0.05ms         | 0.04ms      | TypedArrays are slightly faster              |
+| Reading cell values | 0.02ms         | 0.05ms      | Regular arrays are faster for small datasets |
+| Memory usage        | ~54KB          | ~10KB       | TypedArrays use ~80% less memory             |
+| Direction lookups   | 0.08ms         | 0.01ms      | Cached directions are significantly faster   |
 
 ### Analysis
 

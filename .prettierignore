@@ -1,0 +1,26 @@
+# Build folder
+dist/
+
+# Node modules
+node_modules/
+
+# Coverage directory
+coverage/
+
+# Legacy files (to be removed later)
+areadice.js
+mc.js
+game.js
+config.js
+ai_default.js
+ai_defensive.js
+ai_example.js
+ai_adaptive.js
+main.js
+
+# Configuration files
+package.json
+package-lock.json
+
+# Generated files
+*.min.js

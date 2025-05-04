@@ -20,11 +20,13 @@ This is a modification of the game [Dice Wars](https://www.gamedesign.jp/games/d
 The project now uses a modern build system with webpack. To run the game:
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Run the development server:
+
    ```bash
    npm run dev
    ```
@@ -49,9 +51,10 @@ Navigate to `file:///Drive:/the/directory/you/cloned/it/to/index.html` in any we
 ### Game Modes
 
 The game offers two main modes:
+
 - **Normal Mode**: Play against AI opponents (default)
 - **AI vs AI Mode**: Watch AI players compete against each other
-  
+
 You can select "AI vs AI" on the title screen to watch the AI players battle without human intervention.
 
 ## Make Your Own AI
@@ -61,6 +64,7 @@ You can select "AI vs AI" on the title screen to watch the AI players battle wit
 1. Create a new file in the `src/ai` directory named `ai_YourName.js` using one of the existing AI files as a template.
 
 2. Export your AI function:
+
    ```javascript
    export function ai_YourName(game) {
      // Your AI implementation here
@@ -69,22 +73,24 @@ You can select "AI vs AI" on the title screen to watch the AI players battle wit
    ```
 
 3. Add your AI to the registry in `src/ai/index.js`:
+
    ```javascript
    export { ai_YourName } from './ai_YourName.js';
    ```
 
 4. Register your AI in the Game class's aiRegistry in `src/Game.js`:
+
    ```javascript
    this.aiRegistry = {
      // Existing AIs...
-     ai_YourName: ai_YourName
+     ai_YourName: ai_YourName,
    };
    ```
 
 5. Assign your AI to a player:
    ```javascript
    this.ai = [
-     null,        // Player 0 (human player)
+     null, // Player 0 (human player)
      ai_YourName, // Player 1
      // Other players...
    ];
@@ -94,24 +100,24 @@ You can select "AI vs AI" on the title screen to watch the AI players battle wit
 
 1. Copy one of the existing AI files, such as `ai_example.js`, and name it `ai_YourName.js`. Change the file's function to also be named `ai_YourName`
 
-2. In `index.html` at line 39 where the other AI scripts are added, add a line for `ai_YourName.js` 
+2. In `index.html` at line 39 where the other AI scripts are added, add a line for `ai_YourName.js`
 
 3. Go to line 42 of `game.js` where the array `this.ai` is defined. Change some of the items in the array to `ai_YourName`, which is the function in your AI's script. The first player is always the human player, so leave it as null.
 
 ### General AI Development Notes
 
-* The index of the array corresponds to the color of the player in the game. The human (first) player is always purple, the second index is always lime, then green, pink, orange, cyan, yellow, and red.
-* The order of play is shuffled in game, but the player colors always correspond to the order of `this.ai`
-* It may be useful to set your AI as the second player so you can play against it in a two player game
+- The index of the array corresponds to the color of the player in the game. The human (first) player is always purple, the second index is always lime, then green, pink, orange, cyan, yellow, and red.
+- The order of play is shuffled in game, but the player colors always correspond to the order of `this.ai`
+- It may be useful to set your AI as the second player so you can play against it in a two player game
 
 #### AI Implementation Guide
 
-* The code and comments in `ai_example.js` give a basic outline for how to declare a move
-* To declare an attack, set `game.area_from` to the id of the attacking region and `game.area_to` to the defending region's id (do not return). Once you have no good moves left, end the player's turn by returning 0.
-* `game.adat` is the array of regions.
-* `game.adat[i].arm` is the id of the player who owns the region, and `game.get_pn()` returns the id of the player whose turn it is.
-* `game.adat[i].dice` is the number of dice the region has
-* `game.adat[i].join[j]` is true (1) when region `i` is adjacent to region `j` and false (0) otherwise.
+- The code and comments in `ai_example.js` give a basic outline for how to declare a move
+- To declare an attack, set `game.area_from` to the id of the attacking region and `game.area_to` to the defending region's id (do not return). Once you have no good moves left, end the player's turn by returning 0.
+- `game.adat` is the array of regions.
+- `game.adat[i].arm` is the id of the player who owns the region, and `game.get_pn()` returns the id of the player whose turn it is.
+- `game.adat[i].dice` is the number of dice the region has
+- `game.adat[i].join[j]` is true (1) when region `i` is adjacent to region `j` and false (0) otherwise.
 
 ## Configuration
 
@@ -123,11 +129,12 @@ The game now supports configuration options through a config file:
 2. You can adjust the game speed in spectator mode using the speed multiplier setting
 
 Sample configuration:
+
 ```javascript
 // In your config file
 const GAME_CONFIG = {
   humanPlayerIndex: null, // Set to null for AI vs AI spectator mode
-  spectatorSpeedMultiplier: 3 // Make the game run 3x faster in spectator mode
+  spectatorSpeedMultiplier: 3, // Make the game run 3x faster in spectator mode
 };
 ```
 
@@ -146,7 +153,19 @@ If you make a cool new AI, let me know!
 
 ## Recent Changes
 
-### Latest Updates (May 2023)
+### Latest Updates (May 2024)
+
+- Set up GitHub Actions for continuous integration
+- Created CI workflow for linting, building, and testing
+- Added CI/CD documentation in docs/CI_CD.md
+- Implemented ESLint and Prettier for consistent code style and quality
+- Added pre-commit hooks with husky and lint-staged
+- Created CODE_STYLE.md with detailed style guidelines
+- Refactored codebase with optional chaining and nullish coalescing
+- Updated npm scripts for linting and formatting
+
+### Previous Updates (May 2023)
+
 - Fixed critical AI initialization timing issues in the bridge modules
 - Enhanced error handling and fallbacks in AI system
 - Added detailed documentation of the bridge architecture
@@ -154,6 +173,7 @@ If you make a cool new AI, let me know!
 - Added comprehensive tests for AI module functions
 
 ### Previous Updates
+
 - Added modern build system with webpack and Babel
 - Implemented ES6 module structure throughout the codebase
 - Added development server with hot reloading
@@ -176,8 +196,41 @@ The project now uses a hybrid architecture that bridges between ES6 modules and 
 2. **Bridge Pattern**: Bridge modules expose ES6 functionality to the global scope
 3. **Legacy Compatibility**: Original code continues to work during the transition
 4. **Modern Build System**: Webpack and Babel handle bundling and transpilation
+5. **Code Quality Tools**: ESLint and Prettier enforce consistent coding standards
 
 For more details about the bridge architecture, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md).
+
+## Development Guidelines
+
+### Code Style and Linting
+
+The project uses ESLint and Prettier to maintain consistent code style and quality:
+
+```bash
+# Check for linting issues
+npm run lint
+
+# Fix linting issues where possible
+npm run lint:fix
+
+# Format code with Prettier
+npm run format
+```
+
+Code style is automatically enforced through pre-commit hooks that format and lint changed files.
+
+For detailed code style guidelines, see [CODE_STYLE.md](./docs/CODE_STYLE.md).
+
+### Continuous Integration
+
+The project uses GitHub Actions for continuous integration:
+
+- Automated testing on every push and pull request
+- Code style and linting verification
+- Build validation to ensure the project compiles correctly
+- Performance benchmarks to detect regressions
+
+For more information about the CI setup, see [CI_CD.md](./docs/CI_CD.md).
 
 ## Development Roadmap
 

@@ -40,6 +40,7 @@ Tests are organized to mirror the source code structure:
 Unit tests focus on testing individual functions and modules in isolation. These tests verify that each unit of code behaves as expected.
 
 Examples:
+
 - Testing game utility functions (dice rolling, attack probability)
 - Testing rendering functions
 - Testing configuration management
@@ -49,6 +50,7 @@ Examples:
 Integration tests verify that different modules work together correctly. These tests ensure that the bridge between ES6 modules and legacy code functions properly.
 
 Examples:
+
 - Testing that the bridge modules correctly expose ES6 functionality to the global scope
 - Testing interactions between game state and rendering
 
@@ -57,6 +59,7 @@ Examples:
 Functional tests verify that the application works correctly from a user's perspective. These tests ensure that the game's features work as expected.
 
 Examples:
+
 - Testing game initialization
 - Testing game mechanics (attacks, turns)
 - Testing AI behavior
@@ -120,10 +123,10 @@ test('calculates attack probability correctly for advantage scenario', () => {
   // Arrange
   const attackerDice = 5;
   const defenderDice = 2;
-  
+
   // Act
   const probability = calculateAttackProbability(attackerDice, defenderDice);
-  
+
   // Assert
   expect(probability).toBeGreaterThan(0.5);
   expect(probability).toBeLessThan(0.95);

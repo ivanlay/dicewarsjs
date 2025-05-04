@@ -1,9 +1,9 @@
 /**
  * Bridge Module Index
- * 
+ *
  * This file serves as the main bridge between the ES6 module system and the legacy global scope.
  * It imports all bridge modules, which in turn expose ES6 module functionality to the global scope.
- * 
+ *
  * This approach allows us to:
  * 1. Incrementally migrate to ES6 modules
  * 2. Keep the legacy code functioning during transition
@@ -29,9 +29,13 @@ export { Game } from '../Game.js';
 import * as Mechanics from '../mechanics/index.js';
 // Selectively re-export to avoid conflicts
 export const {
-  makeMap, setAreaTc, 
-  executeAttack, distributeReinforcements, setPlayerTerritoryData,
-  executeAIMove, AI_REGISTRY
+  makeMap,
+  setAreaTc,
+  executeAttack,
+  distributeReinforcements,
+  setPlayerTerritoryData,
+  executeAIMove,
+  AI_REGISTRY,
 } = Mechanics;
 
 // Export AI modules for ES6 usage
@@ -43,7 +47,7 @@ const moduleStatus = {
   render: 'loaded',
   sound: 'loaded',
   ai: 'loaded',
-  game: 'loaded'
+  game: 'loaded',
 };
 
 // Add a check method to verify all modules are loaded
@@ -53,7 +57,7 @@ window.checkBridgeStatus = () => {
 };
 
 // Set up error handlers for each module
-window.addEventListener('error', (event) => {
+window.addEventListener('error', event => {
   // Extract module name from error message or stack trace
   const errorModule = findModuleFromError(event.error || event.message);
   if (errorModule) {
@@ -65,7 +69,7 @@ window.addEventListener('error', (event) => {
 // Utility function to determine the module from an error
 function findModuleFromError(error) {
   if (!error) return null;
-  
+
   const errorString = error.toString ? error.toString() : String(error);
   const stack = error.stack || '';
 
@@ -81,7 +85,7 @@ function findModuleFromError(error) {
   } else if (errorString.includes('Game') || stack.includes('Game')) {
     return 'game';
   }
-  
+
   return null;
 }
 

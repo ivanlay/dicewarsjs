@@ -1,6 +1,6 @@
 /**
  * Game Mechanics Module Index
- * 
+ *
  * Exports all game mechanics components for easy importing.
  */
 

@@ -1,7 +1,7 @@
 /**
  * Main entry point for the Dice Wars game
  * This file initializes the game and loads all necessary modules
- * 
+ *
  * Note: This is a transition module - it avoids conflicting with the legacy
  * scripts while still setting up the ES6 module system for future use.
  */

@@ -12,9 +12,9 @@ The `set_area_tc` function in the game calculates a player's largest connected t
 
 ```javascript
 set_area_tc(pn) {
-  // ... 
+  // ...
   // Find the largest connected group for a player
-  // ... 
+  // ...
   // Store the size of the largest connected group
   this.player[pn].area_tc = max;
 }
@@ -71,35 +71,35 @@ Bridge territories are critical connections that, if lost, would split your terr
 
 ```javascript
 function findBridgeTerritories(game, player) {
-    const bridges = [];
-    
-    // For each territory owned by the player
-    for (let i = 1; i < game.AREA_MAX; i++) {
-        if (game.adat[i].size == 0) continue;
-        if (game.adat[i].arm != player) continue;
-        
-        // Simulate removing this territory
-        const originalArm = game.adat[i].arm;
-        game.adat[i].arm = -1;
-        
-        // Calculate connected territories without this one
-        const originalSize = game.player[player].area_tc;
-        game.set_area_tc(player);
-        const newSize = game.player[player].area_tc;
-        
-        // If removing this territory reduces the connected size, it's a bridge
-        if (newSize < originalSize - 1) {
-            bridges.push(i);
-        }
-        
-        // Restore the territory
-        game.adat[i].arm = originalArm;
-    }
-    
-    // Restore the original connected territory calculation
+  const bridges = [];
+
+  // For each territory owned by the player
+  for (let i = 1; i < game.AREA_MAX; i++) {
+    if (game.adat[i].size == 0) continue;
+    if (game.adat[i].arm != player) continue;
+
+    // Simulate removing this territory
+    const originalArm = game.adat[i].arm;
+    game.adat[i].arm = -1;
+
+    // Calculate connected territories without this one
+    const originalSize = game.player[player].area_tc;
     game.set_area_tc(player);
-    
-    return bridges;
+    const newSize = game.player[player].area_tc;
+
+    // If removing this territory reduces the connected size, it's a bridge
+    if (newSize < originalSize - 1) {
+      bridges.push(i);
+    }
+
+    // Restore the territory
+    game.adat[i].arm = originalArm;
+  }
+
+  // Restore the original connected territory calculation
+  game.set_area_tc(player);
+
+  return bridges;
 }
 ```
 

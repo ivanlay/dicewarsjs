@@ -35,6 +35,7 @@ src/
 ### Game.js
 
 The core game logic module that manages:
+
 - Map generation and territory layout
 - Game state management
 - Player turns
@@ -44,6 +45,7 @@ The core game logic module that manages:
 ### Models
 
 Separate data structure classes:
+
 - `AreaData`: Represents a territory on the map
 - `PlayerData`: Tracks player stats and resources
 - `JoinData`: Handles grid adjacency information
@@ -53,6 +55,7 @@ Separate data structure classes:
 ### AI Strategies
 
 Modular AI implementations:
+
 - `ai_default`: Balanced strategy from the original game
 - `ai_defensive`: Conservative strategy focused on territory protection
 - `ai_example`: Simple example for learning how to create custom AIs
@@ -60,6 +63,7 @@ Modular AI implementations:
 ### Utility Modules
 
 Helper functions organized by purpose:
+
 - `config.js`: Manages game configuration settings and persistence
 - `gameUtils.js`: Game logic helper functions (attack probability, territory analysis)
 - `render.js`: UI rendering utilities for map, territories, and UI elements
@@ -80,15 +84,15 @@ Example:
 ```javascript
 // ai/ai_custom.js
 export function ai_custom(game) {
-    // Your AI logic here
-    // ...
-    
-    // Return 0 to end turn if no valid attacks
-    if (no_good_moves) return 0;
-    
-    // Set your chosen attack
-    game.area_from = attackerArea;
-    game.area_to = targetArea;
+  // Your AI logic here
+  // ...
+
+  // Return 0 to end turn if no valid attacks
+  if (no_good_moves) return 0;
+
+  // Set your chosen attack
+  game.area_from = attackerArea;
+  game.area_to = targetArea;
 }
 ```
 
@@ -116,11 +120,7 @@ updateConfig(config);
 The gameUtils module provides helpful functions for game logic:
 
 ```javascript
-import { 
-  calculateAttackProbability, 
-  analyzeTerritory, 
-  findBestAttack 
-} from './utils/gameUtils.js';
+import { calculateAttackProbability, analyzeTerritory, findBestAttack } from './utils/gameUtils.js';
 
 // Calculate probability of attack success
 const probability = calculateAttackProbability(5, 3); // 0.65
@@ -142,15 +142,10 @@ if (bestAttack) {
 The render module provides functions for UI elements:
 
 ```javascript
-import { 
-  createButton, 
-  createText, 
-  drawTerritory, 
-  createDiceDisplay 
-} from './utils/render.js';
+import { createButton, createText, drawTerritory, createDiceDisplay } from './utils/render.js';
 
 // Create a button
-const button = createButton("End Turn", x, y, width, height, handleClick);
+const button = createButton('End Turn', x, y, width, height, handleClick);
 stage.addChild(button);
 
 // Draw a territory

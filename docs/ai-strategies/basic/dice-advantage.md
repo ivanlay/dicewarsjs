@@ -18,7 +18,7 @@ if (defending_area.dice >= attacking_area.dice) continue;
 The probability of winning a battle depends on the difference in dice:
 
 | Attacker Dice | Defender Dice | Win Probability |
-|---------------|---------------|-----------------|
+| ------------- | ------------- | --------------- |
 | 2             | 1             | ~75%            |
 | 3             | 2             | ~66%            |
 | 4             | 3             | ~62%            |
@@ -34,30 +34,30 @@ These are approximate values and assume fair dice.
 ```javascript
 // Iterate through all territories to find potential attackers
 for (let i = 1; i < game.AREA_MAX; i++) {
-    const attacking_area = game.adat[i];
+  const attacking_area = game.adat[i];
 
-    if (attacking_area.size == 0) continue;  // Skip empty territories
-    if (attacking_area.arm != current_player) continue;  // Skip enemy territories
-    if (attacking_area.dice <= 1) continue;  // Skip territories with 1 or fewer dice
+  if (attacking_area.size == 0) continue; // Skip empty territories
+  if (attacking_area.arm != current_player) continue; // Skip enemy territories
+  if (attacking_area.dice <= 1) continue; // Skip territories with 1 or fewer dice
 
-    // For each potential attacker, look for valid targets
-    for (let j = 1; j < game.AREA_MAX; j++) {
-        const defending_area = game.adat[j];
+  // For each potential attacker, look for valid targets
+  for (let j = 1; j < game.AREA_MAX; j++) {
+    const defending_area = game.adat[j];
 
-        if (defending_area.size == 0) continue;  // Skip empty territories
-        if (defending_area.arm == current_player) continue;  // Skip own territories
-        if (attacking_area.join[j] == 0) continue;  // Skip non-adjacent territories
+    if (defending_area.size == 0) continue; // Skip empty territories
+    if (defending_area.arm == current_player) continue; // Skip own territories
+    if (attacking_area.join[j] == 0) continue; // Skip non-adjacent territories
 
-        // Skip if defender has equal or more dice (considered a bad move)
-        if (defending_area.dice >= game.adat[i].dice) continue;
+    // Skip if defender has equal or more dice (considered a bad move)
+    if (defending_area.dice >= game.adat[i].dice) continue;
 
-        // Add valid move to the list
-        list_moves[number_of_moves] = {
-            "attacker": i,  // Index of the attacking territory
-            "defender": j   // Index of the defending territory
-        };
-        number_of_moves++;
-    }
+    // Add valid move to the list
+    list_moves[number_of_moves] = {
+      attacker: i, // Index of the attacking territory
+      defender: j, // Index of the defending territory
+    };
+    number_of_moves++;
+  }
 }
 ```
 

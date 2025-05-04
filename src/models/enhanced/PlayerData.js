@@ -1,9 +1,9 @@
 /**
  * Enhanced Player Data Structure
- * 
+ *
  * An ES6+ implementation of the PlayerData class using private fields
  * for better encapsulation and data integrity.
- * 
+ *
  * Tracks a player's game state, including:
  * - Territory ownership
  * - Dice counts and reinforcements
@@ -11,16 +11,16 @@
  */
 export class PlayerData {
   // Private fields using # prefix
-  #areaCount = 0;        // Number of areas owned
+  #areaCount = 0; // Number of areas owned
   #largestTerritory = 0; // Size of largest connected territory group
-  #diceCount = 0;        // Total number of dice across all territories
-  #diceRank = 0;         // Dice count ranking among players
-  #stockedDice = 0;      // Reinforcement dice available for distribution
-  
+  #diceCount = 0; // Total number of dice across all territories
+  #diceRank = 0; // Dice count ranking among players
+  #stockedDice = 0; // Reinforcement dice available for distribution
+
   constructor() {
     // No initialization needed as private fields are pre-initialized
   }
-  
+
   /**
    * Get the number of areas owned by this player
    * @returns {number} Area count
@@ -28,7 +28,7 @@ export class PlayerData {
   get areaCount() {
     return this.#areaCount;
   }
-  
+
   /**
    * Set the number of areas owned by this player
    * @param {number} value - Area count
@@ -39,7 +39,7 @@ export class PlayerData {
     }
     this.#areaCount = value;
   }
-  
+
   /**
    * Get the size of the largest connected territory group
    * @returns {number} Largest territory size
@@ -47,7 +47,7 @@ export class PlayerData {
   get largestTerritory() {
     return this.#largestTerritory;
   }
-  
+
   /**
    * Set the size of the largest connected territory group
    * @param {number} value - Largest territory size
@@ -58,7 +58,7 @@ export class PlayerData {
     }
     this.#largestTerritory = value;
   }
-  
+
   /**
    * Get the total number of dice across all territories
    * @returns {number} Dice count
@@ -66,7 +66,7 @@ export class PlayerData {
   get diceCount() {
     return this.#diceCount;
   }
-  
+
   /**
    * Set the total number of dice across all territories
    * @param {number} value - Dice count
@@ -77,7 +77,7 @@ export class PlayerData {
     }
     this.#diceCount = value;
   }
-  
+
   /**
    * Get the dice count ranking among players
    * @returns {number} Dice rank
@@ -85,7 +85,7 @@ export class PlayerData {
   get diceRank() {
     return this.#diceRank;
   }
-  
+
   /**
    * Set the dice count ranking among players
    * @param {number} value - Dice rank
@@ -96,7 +96,7 @@ export class PlayerData {
     }
     this.#diceRank = value;
   }
-  
+
   /**
    * Get the reinforcement dice available for distribution
    * @returns {number} Stocked dice
@@ -104,7 +104,7 @@ export class PlayerData {
   get stockedDice() {
     return this.#stockedDice;
   }
-  
+
   /**
    * Set the reinforcement dice available for distribution
    * @param {number} value - Stocked dice
@@ -115,7 +115,7 @@ export class PlayerData {
     }
     this.#stockedDice = value;
   }
-  
+
   /**
    * Add stocked dice
    * @param {number} amount - Amount to add
@@ -126,17 +126,17 @@ export class PlayerData {
     if (typeof amount !== 'number' || amount < 0) {
       throw new Error('Amount must be a non-negative number');
     }
-    
+
     this.#stockedDice += amount;
-    
+
     // Cap at max stock
     if (this.#stockedDice > maxStock) {
       this.#stockedDice = maxStock;
     }
-    
+
     return this.#stockedDice;
   }
-  
+
   /**
    * Use stocked dice
    * @param {number} amount - Amount to use
@@ -147,15 +147,15 @@ export class PlayerData {
     if (typeof amount !== 'number' || amount < 0) {
       throw new Error('Amount must be a non-negative number');
     }
-    
+
     if (this.#stockedDice < amount) {
       throw new Error('Not enough dice in stock');
     }
-    
+
     this.#stockedDice -= amount;
     return this.#stockedDice;
   }
-  
+
   /**
    * Update the player state after territory changes
    * @param {number} newAreaCount - New area count
@@ -167,7 +167,7 @@ export class PlayerData {
     this.diceCount = newDiceCount;
     this.largestTerritory = newLargestTerritory;
   }
-  
+
   /**
    * Check if the player is defeated (has no territories)
    * @returns {boolean} True if defeated
@@ -175,7 +175,7 @@ export class PlayerData {
   isDefeated() {
     return this.#areaCount === 0;
   }
-  
+
   /**
    * Calculate the reinforcement amount based on largest territory
    * @returns {number} Reinforcement amount
@@ -184,45 +184,45 @@ export class PlayerData {
     // Larger connected territory groups give more reinforcements
     return Math.max(Math.floor(this.#largestTerritory / 3), this.#areaCount > 0 ? 1 : 0);
   }
-  
+
   // Legacy compatibility getters/setters
-  
+
   get area_c() {
     return this.#areaCount;
   }
-  
+
   set area_c(value) {
     this.#areaCount = value;
   }
-  
+
   get area_tc() {
     return this.#largestTerritory;
   }
-  
+
   set area_tc(value) {
     this.#largestTerritory = value;
   }
-  
+
   get dice_c() {
     return this.#diceCount;
   }
-  
+
   set dice_c(value) {
     this.#diceCount = value;
   }
-  
+
   get dice_jun() {
     return this.#diceRank;
   }
-  
+
   set dice_jun(value) {
     this.#diceRank = value;
   }
-  
+
   get stock() {
     return this.#stockedDice;
   }
-  
+
   set stock(value) {
     this.#stockedDice = value;
   }

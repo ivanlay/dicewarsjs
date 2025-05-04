@@ -155,13 +155,8 @@ export class Game {
       this.player[i] = new PlayerData();
     }
     
-    // Apply configuration if provided
-    if (config) {
-      this.applyConfig(config);
-    } else {
-      // Otherwise load the default config
-      this.applyConfig(getConfig());
-    }
+    // Apply configuration if provided, otherwise load the default config
+    this.applyConfig(config ?? getConfig());
   }
 
   /**
@@ -367,7 +362,7 @@ export class Game {
     this.AREA_MAX = territoriesCount;
     
     // AI configuration - map string names to function references
-    if (aiTypes && Array.isArray(aiTypes) && this.ai) {
+    if (Array.isArray(aiTypes) && this.ai) {
       // Map AI type strings to actual functions
       for (let i = 0; i < aiTypes.length && i < this.ai.length; i++) {
         const aiType = aiTypes[i];
@@ -379,7 +374,7 @@ export class Game {
         }
         
         // Map string names to the imported AI functions
-        this.ai[i] = this.aiRegistry[aiType] || this.aiRegistry.ai_default;
+        this.ai[i] = this.aiRegistry[aiType] ?? this.aiRegistry.ai_default;
         
         if (!this.aiRegistry[aiType]) {
           console.warn(`Unknown AI type: ${aiType}, using default AI`);

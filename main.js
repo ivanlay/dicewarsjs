@@ -475,24 +475,24 @@ function playSound(soundid){
 
 // Handle mouse button press
 function mouseDownListner(e) {
-	if( click_func != null ){ click_func(e); }  // Call current click handler if set
+	click_func?.(e);  // Call current click handler if set
 	canvas.style.cursor="default";  // Reset mouse cursor
 }
 
 // Handle mouse movement
 function mouseMoveListner(e) {
-	if( move_func != null ){ move_func(e); }  // Call current move handler if set
+	move_func?.(e);  // Call current move handler if set
 	canvas.style.cursor="default";  // Reset mouse cursor
 }
 
 // Handle mouse button release
 function mouseUpListner(e) {
-	if( release_func != null ){ release_func(e); }  // Call current release handler if set
+	release_func?.(e);  // Call current release handler if set
 	canvas.style.cursor="default";  // Reset mouse cursor
 	
 	// If a button is active when released, call its function
 	if( activebutton >= 0 ){
-		if( btn_func[activebutton] != null ){
+		if( btn_func[activebutton] ){
 			playSound("snd_button");  // Play button sound
 			
 			// Special check for the TITLE button in spectator mode
@@ -511,7 +511,7 @@ function mouseUpListner(e) {
 
 // Main game loop - called each tick
 function onTick() {
-	if( timer_func != null ){ timer_func(); }  // Call current timer handler if set
+	timer_func?.();  // Call current timer handler if set
 	check_button_hover();  // Check for button hover state changes
 }
 
@@ -584,13 +584,11 @@ function start_title(){
 	// Initialize game speed variables and update spectator mode from config
 	var gameSpeedMultiplier = 1;
 	
-	if (typeof GAME_CONFIG !== 'undefined' && GAME_CONFIG.humanPlayerIndex === null) {
+	if (GAME_CONFIG?.humanPlayerIndex === null) {
 		spectate_mode = true;
 		
 		// Apply speed multiplier if configured
-		if (typeof GAME_CONFIG.spectatorSpeedMultiplier === 'number') {
-			gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier;
-		}
+		gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier ?? 1;
 	} else {
 		spectate_mode = false;
 	}
@@ -1035,7 +1033,7 @@ function start_com(){
 	stage.update();
 	
 	// Reduce wait time in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = spectate_mode ? (window.gameSpeedMultiplier ?? 1) : 1;
 	waitcount = Math.max(1, Math.floor(5/speedMultiplier));
 	timer_func = com_from;
 	click_func = null;
@@ -1045,7 +1043,7 @@ function start_com(){
 
 function com_from(){
 	// Apply speed multiplier in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = spectate_mode ? (window.gameSpeedMultiplier ?? 1) : 1;
 	waitcount -= speedMultiplier;
 	
 	if( waitcount>0 ) return;
@@ -1711,17 +1709,11 @@ function toppage(){
 	window.gameSpeedMultiplier = 2;
 	
 	// Create or update GAME_CONFIG for AI vs AI mode
-	if (typeof GAME_CONFIG === 'undefined') {
-		// Create a global config object if it doesn't exist
-		window.GAME_CONFIG = {
-			humanPlayerIndex: null,
-			spectatorSpeedMultiplier: window.gameSpeedMultiplier
-		};
-	} else {
-		// Update existing config
-		GAME_CONFIG.humanPlayerIndex = null;
-		GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
-	}
+	window.GAME_CONFIG = GAME_CONFIG ?? {};
+	
+	// Update config properties
+	GAME_CONFIG.humanPlayerIndex = null;
+	GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
 	
 	// Start a new game in spectator mode - use the proper function sequence
 	// First generate the map
