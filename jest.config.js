@@ -37,6 +37,37 @@ module.exports = {
   // Specify coverage directory
   coverageDirectory: 'coverage',
   
+  // Coverage thresholds enforcement
+  coverageThreshold: {
+    global: {
+      statements: 70,
+      branches: 60,
+      functions: 70,
+      lines: 70,
+    },
+    './src/utils/': {
+      statements: 80,
+      branches: 70,
+      functions: 80,
+      lines: 80,
+    },
+    './src/models/': {
+      statements: 75,
+      branches: 65,
+      functions: 75,
+      lines: 75,
+    },
+    './src/mechanics/': {
+      statements: 70,
+      branches: 60,
+      functions: 70,
+      lines: 70,
+    }
+  },
+  
+  // Generate coverage reports
+  coverageReporters: ['text', 'lcov', 'html'],
+  
   // Verbosity level (0 = minimal, 1 = normal, 2 = verbose)
   verbose: true,
   

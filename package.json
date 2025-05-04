@@ -8,6 +8,8 @@
     "build": "webpack --mode production",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:coverage:watch": "jest --coverage --watch",
     "benchmark": "node tests/benchmarks/benchmark.cjs",
     "benchmark:full": "node --input-type=module --experimental-json-modules tests/benchmarks/runBenchmarks.js",
     "test:benchmark": "jest tests/benchmarks/ai.benchmark.js"
