@@ -187,9 +187,11 @@ describe('Enhanced PlayerData', () => {
 
   describe('Encapsulation', () => {
     test('private fields are properly encapsulated', () => {
-      // Since private fields can't be accessed directly in tests,
-      // we'll verify encapsulation by checking that the properties
-      // aren't enumerable (they're accessed through getters/setters)
+      /*
+       * Since private fields can't be accessed directly in tests,
+       * we'll verify encapsulation by checking that the properties
+       * aren't enumerable (they're accessed through getters/setters)
+       */
       const propertyNames = Object.getOwnPropertyNames(playerData);
       expect(propertyNames).not.toContain('areaCount');
       expect(propertyNames).not.toContain('largestTerritory');
@@ -197,8 +199,10 @@ describe('Enhanced PlayerData', () => {
       expect(propertyNames).not.toContain('diceRank');
       expect(propertyNames).not.toContain('stockedDice');
 
-      // We can also check that the object doesn't have direct properties
-      // by using hasOwnProperty
+      /*
+       * We can also check that the object doesn't have direct properties
+       * by using hasOwnProperty
+       */
       expect(playerData.hasOwnProperty('areaCount')).toBe(false);
       expect(playerData.hasOwnProperty('largestTerritory')).toBe(false);
       expect(playerData.hasOwnProperty('diceCount')).toBe(false);

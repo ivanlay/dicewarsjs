@@ -113,8 +113,10 @@ export function setAreaLine(gameState, old_cel, old_dir) {
 
   // Follow the boundary until we return to starting point
   for (let i = 0; i < 100; i++) {
-    // Safety limit of 100 segments
-    // Move to next direction
+    /*
+     * Safety limit of 100 segments
+     * Move to next direction
+     */
     d++;
     if (d >= 6) d = 0; // Direction wraps around 0-5
 
@@ -123,8 +125,10 @@ export function setAreaLine(gameState, old_cel, old_dir) {
     if (n >= 0) {
       // If not out of bounds
       if (cel[n] === area) {
-        // If adjacent cell is same territory, move to that cell
-        // and adjust direction to continue following the boundary
+        /*
+         * If adjacent cell is same territory, move to that cell
+         * and adjust direction to continue following the boundary
+         */
         c = n;
         d -= 2;
         if (d < 0) d += 6; // Turn 120° counterclockwise
@@ -159,9 +163,11 @@ export function makeMap(gameState) {
   const { cel, cel_max, XMAX, YMAX, AREA_MAX, num, rcel, join, adat, pmax, chk, put_dice } =
     gameState;
 
-  //--------------------------------------------------------
-  // RANDOMIZATION AND INITIALIZATION
-  //--------------------------------------------------------
+  /*
+   * --------------------------------------------------------
+   *  RANDOMIZATION AND INITIALIZATION
+   * --------------------------------------------------------
+   */
 
   // Randomize cell order for territory generation
   for (let i = 0; i < cel_max; i++) {

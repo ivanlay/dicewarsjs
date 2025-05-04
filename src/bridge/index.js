@@ -16,6 +16,8 @@ import './render.js';
 import './sound.js';
 import './ai.js';
 import './Game.js';
+// Import mechanics but only re-export non-conflicting parts
+import * as Mechanics from '../mechanics/index.js';
 
 // Export utility modules for ES6 usage
 export * from '../utils/gameUtils.js';
@@ -25,8 +27,6 @@ export * from '../utils/config.js';
 
 // Export core modules for ES6 usage
 export { Game } from '../Game.js';
-// Import mechanics but only re-export non-conflicting parts
-import * as Mechanics from '../mechanics/index.js';
 // Selectively re-export to avoid conflicts
 export const {
   makeMap,
@@ -76,13 +76,17 @@ function findModuleFromError(error) {
   // Check if error mentions a specific module
   if (errorString.includes('gameUtils') || stack.includes('gameUtils')) {
     return 'gameUtils';
-  } else if (errorString.includes('render') || stack.includes('render')) {
+  }
+  if (errorString.includes('render') || stack.includes('render')) {
     return 'render';
-  } else if (errorString.includes('sound') || stack.includes('sound')) {
+  }
+  if (errorString.includes('sound') || stack.includes('sound')) {
     return 'sound';
-  } else if (errorString.includes('ai') || stack.includes('ai')) {
+  }
+  if (errorString.includes('ai') || stack.includes('ai')) {
     return 'ai';
-  } else if (errorString.includes('Game') || stack.includes('Game')) {
+  }
+  if (errorString.includes('Game') || stack.includes('Game')) {
     return 'game';
   }
 

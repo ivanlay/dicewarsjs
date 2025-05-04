@@ -223,8 +223,10 @@ describe('Territory Connectivity Performance', () => {
       console.log(`  - DisjointSet: ${elapsedTimeDisjointSet.toFixed(2)}ms`);
       console.log(`  - Speedup: ${(elapsedTimeOriginal / elapsedTimeDisjointSet).toFixed(2)}x`);
 
-      // Verify correctness: number of groups should be the same
-      // (though they might be in different order)
+      /*
+       * Verify correctness: number of groups should be the same
+       * (though they might be in different order)
+       */
       expect(groupsDisjointSet.length).toBe(groupsOriginal.length);
     }
   );

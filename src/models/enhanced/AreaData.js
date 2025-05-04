@@ -30,8 +30,10 @@ export class AreaData {
     this.line_cel = new Array(100); // Border cell indices
     this.line_dir = new Array(100); // Border directions (0-5 for hexagonal grid)
 
-    // Adjacency map - maps area IDs to adjacency status (1 = adjacent, undefined = not adjacent)
-    // This replaces the join array with a more efficient Map
+    /*
+     * Adjacency map - maps area IDs to adjacency status (1 = adjacent, undefined = not adjacent)
+     * This replaces the join array with a more efficient Map
+     */
     this.adjacencyMap = new Map();
   }
 

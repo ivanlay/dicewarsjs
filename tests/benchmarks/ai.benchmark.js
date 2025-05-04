@@ -104,8 +104,10 @@ describe('AI Strategy Performance Benchmarks', () => {
  * Compares all AI strategies side-by-side
  */
 describe('AI Strategy Comparison Benchmark', () => {
-  // Only skip when running Jest's normal test suite - run it during benchmarks
-  // Run with: NODE_ENV=benchmark jest -t "Compare all AI strategies" --no-coverage
+  /*
+   * Only skip when running Jest's normal test suite - run it during benchmarks
+   * Run with: NODE_ENV=benchmark jest -t "Compare all AI strategies" --no-coverage
+   */
   test(
     process.env.NODE_ENV === 'benchmark'
       ? 'Compare all AI strategies'

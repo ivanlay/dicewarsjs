@@ -306,8 +306,10 @@ export function createBenchmarkGameState() {
     usePlayerDataModel: true,
   });
 
-  // Create a balanced mid-game scenario with 3 players
-  // Player 1 (current player)
+  /*
+   * Create a balanced mid-game scenario with 3 players
+   * Player 1 (current player)
+   */
   mockGame.createTerritory(1, 1, 3, { 2: 1, 6: 1 });
   mockGame.createTerritory(3, 1, 2, { 4: 1, 7: 1 });
   mockGame.createTerritory(5, 1, 4, { 9: 1 });

@@ -17,8 +17,10 @@ describe('Game Utilities', () => {
     test('returns higher probability when attacker has more dice', () => {
       const lowAdvantage = calculateAttackProbability(3, 2);
       const highAdvantage = calculateAttackProbability(8, 2);
-      // Since highAdvantage is capped at 0.95, we should check that it's
-      // greater than or equal to lowAdvantage, not strictly greater
+      /*
+       * Since highAdvantage is capped at 0.95, we should check that it's
+       * greater than or equal to lowAdvantage, not strictly greater
+       */
       expect(highAdvantage).toBeGreaterThanOrEqual(lowAdvantage);
     });
 
@@ -68,17 +70,17 @@ describe('Game Utilities', () => {
     });
 
     test('correctly determines success based on dice sums', () => {
-      // Create a mock implementation of simulateAttack that doesn't depend on rollDice
-      // This allows us to test the logic directly
-      const mockSimulateAttack = (attackerSum, defenderSum) => {
-        return {
-          attackerRolls: [],
-          defenderRolls: [],
-          attackerSum,
-          defenderSum,
-          success: attackerSum > defenderSum,
-        };
-      };
+      /*
+       * Create a mock implementation of simulateAttack that doesn't depend on rollDice
+       * This allows us to test the logic directly
+       */
+      const mockSimulateAttack = (attackerSum, defenderSum) => ({
+        attackerRolls: [],
+        defenderRolls: [],
+        attackerSum,
+        defenderSum,
+        success: attackerSum > defenderSum,
+      });
 
       // Test attacker win scenario
       const attackerWin = mockSimulateAttack(18, 2);

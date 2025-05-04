@@ -240,8 +240,10 @@ export const drawTerritory = (game, graphics, areaId, cellPositions, cellWidth, 
  * @param {number} dir - Direction of the border segment (0-5)
  */
 const drawHexCellBorder = (graphics, x, y, cellWidth, cellHeight, dir) => {
-  // This is a placeholder implementation
-  // The actual implementation would depend on the specific hex grid visualization
+  /*
+   * This is a placeholder implementation
+   * The actual implementation would depend on the specific hex grid visualization
+   */
 
   const radius = Math.min(cellWidth, cellHeight) / 2;
   const angle = Math.PI / 3; // 60 degrees in radians
@@ -286,8 +288,8 @@ export const createDiceDisplay = (diceCount, playerIndex, diceSheet) => {
  * @param {number} maxDice - Maximum dice count
  * @returns {Promise<createjs.SpriteSheet>} Promise resolving to the sprite sheet
  */
-export const createDiceSpriteSheet = (playerCount, maxDice) => {
-  return new Promise(resolve => {
+export const createDiceSpriteSheet = (playerCount, maxDice) =>
+  new Promise(resolve => {
     const builder = new createjs.SpriteSheetBuilder();
 
     // For each player and dice count, create a dice display
@@ -308,7 +310,6 @@ export const createDiceSpriteSheet = (playerCount, maxDice) => {
     const spriteSheet = builder.build();
     resolve(spriteSheet);
   });
-};
 
 /**
  * Draw dice pips in a container

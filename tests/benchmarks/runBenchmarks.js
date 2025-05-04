@@ -7,13 +7,13 @@
  *
  * @type {module}
  */
+import fs from 'fs';
+import path from 'path';
 import { AIBenchmark, createBenchmarkGameState } from './AIBenchmark.js';
 import { ai_example } from '../../src/ai/ai_example.js';
 import { ai_default } from '../../src/ai/ai_default.js';
 import { ai_defensive } from '../../src/ai/ai_defensive.js';
 import { ai_adaptive } from '../../src/ai/ai_adaptive.js';
-import fs from 'fs';
-import path from 'path';
 
 // Configuration
 const ITERATIONS = 1000; // Number of iterations for simple AIs

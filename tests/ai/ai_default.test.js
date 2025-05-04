@@ -167,8 +167,10 @@ describe('Default AI', () => {
     // Run AI
     ai_default(mockGame);
 
-    // With dominant player logic, should attack only territories involving the dominant player
-    // In this case, we expect no attack since current player can't attack dominant player directly
+    /*
+     * With dominant player logic, should attack only territories involving the dominant player
+     * In this case, we expect no attack since current player can't attack dominant player directly
+     */
     expect(mockGame.area_from).toBe(0);
     expect(mockGame.area_to).toBe(0);
   });
@@ -199,10 +201,12 @@ describe('Default AI', () => {
     expect(mockGame.player[2].dice_c).toBe(8);
     expect(mockGame.player[3].dice_c).toBe(3);
 
-    // Dice rankings should be updated (lower rank = better)
-    // Player 2 should be rank 0 (highest)
-    // Player 1 should be rank 1
-    // Player 3 should be rank 2
+    /*
+     * Dice rankings should be updated (lower rank = better)
+     * Player 2 should be rank 0 (highest)
+     * Player 1 should be rank 1
+     * Player 3 should be rank 2
+     */
     expect(mockGame.player[2].dice_jun).toBe(0);
     expect(mockGame.player[1].dice_jun).toBe(1);
     expect(mockGame.player[3].dice_jun).toBe(2);

@@ -93,19 +93,17 @@ export const createInitialState = (config = {}) => {
  * @param {number} playerIndex - Player index
  * @returns {Object} Initial player state
  */
-const createPlayerState = playerIndex => {
-  return {
-    id: playerIndex,
-    isHuman: false, // Set during initialization
-    isActive: playerIndex < 7, // Default to 7 active players
-    territoryCount: 0,
-    diceCount: 0,
-    reserveDice: 0, // Reinforcements
-    largestTerritorySize: 0,
-    eliminated: false,
-    color: playerIndex, // Maps to color index
-  };
-};
+const createPlayerState = playerIndex => ({
+  id: playerIndex,
+  isHuman: false, // Set during initialization
+  isActive: playerIndex < 7, // Default to 7 active players
+  territoryCount: 0,
+  diceCount: 0,
+  reserveDice: 0, // Reinforcements
+  largestTerritorySize: 0,
+  eliminated: false,
+  color: playerIndex, // Maps to color index
+});
 
 /**
  * GameState Manager Class
@@ -174,7 +172,7 @@ export class GameState {
    * @returns {Object} New state after updates
    */
   updateTerritory(territoryId, updates, actionType = 'updateTerritory') {
-    const territories = this._state.territories;
+    const { territories } = this._state;
     const territory = territories.get(territoryId);
 
     if (!territory) {

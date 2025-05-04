@@ -17,7 +17,7 @@ import { deepFreeze, updateObject, addSetItem, deleteSetItem } from './Immutable
  */
 export const createTerritory = (id, props = {}) => {
   const territory = {
-    id: id,
+    id,
     owner: 0, // Player ID who owns this territory
     diceCount: 1, // Number of dice on this territory
     size: 0, // Number of cells in this territory
@@ -117,12 +117,11 @@ export const TerritoryState = {
    * @param {number} diceCount - New dice count (optional)
    * @returns {Object} New territory state with ownership changed
    */
-  changeOwner: (territory, newOwner, diceCount = territory.diceCount) => {
-    return updateObject(territory, {
+  changeOwner: (territory, newOwner, diceCount = territory.diceCount) =>
+    updateObject(territory, {
       owner: newOwner,
-      diceCount: diceCount,
-    });
-  },
+      diceCount,
+    }),
 
   /**
    * Add dice to territory
@@ -131,11 +130,10 @@ export const TerritoryState = {
    * @param {number} count - Number of dice to add
    * @returns {Object} New territory state with updated dice count
    */
-  addDice: (territory, count) => {
-    return updateObject(territory, {
+  addDice: (territory, count) =>
+    updateObject(territory, {
       diceCount: territory.diceCount + count,
-    });
-  },
+    }),
 
   /**
    * Set dice count on territory
@@ -144,9 +142,7 @@ export const TerritoryState = {
    * @param {number} count - New dice count
    * @returns {Object} New territory state with updated dice count
    */
-  setDiceCount: (territory, count) => {
-    return updateObject(territory, { diceCount: count });
-  },
+  setDiceCount: (territory, count) => updateObject(territory, { diceCount: count }),
 
   /**
    * Toggle selection state
@@ -154,9 +150,7 @@ export const TerritoryState = {
    * @param {Object} territory - Original territory state
    * @returns {Object} New territory state with toggled selection
    */
-  toggleSelection: territory => {
-    return updateObject(territory, { isSelected: !territory.isSelected });
-  },
+  toggleSelection: territory => updateObject(territory, { isSelected: !territory.isSelected }),
 
   /**
    * Set selection state
@@ -165,9 +159,7 @@ export const TerritoryState = {
    * @param {boolean} isSelected - New selection state
    * @returns {Object} New territory state with updated selection
    */
-  setSelected: (territory, isSelected) => {
-    return updateObject(territory, { isSelected });
-  },
+  setSelected: (territory, isSelected) => updateObject(territory, { isSelected }),
 
   /**
    * Check if territories are adjacent
@@ -176,9 +168,7 @@ export const TerritoryState = {
    * @param {number} adjacentId - Adjacent territory ID to check
    * @returns {boolean} True if territories are adjacent
    */
-  isAdjacentTo: (territory, adjacentId) => {
-    return territory.adjacentTerritories.has(adjacentId);
-  },
+  isAdjacentTo: (territory, adjacentId) => territory.adjacentTerritories.has(adjacentId),
 
   /**
    * Get all adjacent territory IDs
@@ -186,9 +176,7 @@ export const TerritoryState = {
    * @param {Object} territory - Territory to get adjacencies for
    * @returns {number[]} Array of adjacent territory IDs
    */
-  getAdjacentIds: territory => {
-    return [...territory.adjacentTerritories];
-  },
+  getAdjacentIds: territory => [...territory.adjacentTerritories],
 
   /**
    * Check if territory can attack another
@@ -197,13 +185,10 @@ export const TerritoryState = {
    * @param {Object} target - Target territory
    * @returns {boolean} True if attack is valid
    */
-  canAttack: (territory, target) => {
-    return (
-      territory.owner !== target.owner &&
-      territory.diceCount > 1 &&
-      territory.adjacentTerritories.has(target.id)
-    );
-  },
+  canAttack: (territory, target) =>
+    territory.owner !== target.owner &&
+    territory.diceCount > 1 &&
+    territory.adjacentTerritories.has(target.id),
 
   /**
    * Create a territory state compatible with legacy code

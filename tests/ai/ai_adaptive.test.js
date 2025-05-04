@@ -172,8 +172,10 @@ describe('Adaptive AI', () => {
       // Restore Math.random
       Math.random = originalRandom;
 
-      // The adaptive AI will choose a valid attack based on multiple complex factors
-      // Check that it selects one of the valid targets
+      /*
+       * The adaptive AI will choose a valid attack based on multiple complex factors
+       * Check that it selects one of the valid targets
+       */
       expect(mockGame.area_from).toBe(1);
       expect([2, 3]).toContain(mockGame.area_to);
     });
@@ -348,7 +350,7 @@ describe('Adaptive AI', () => {
       // Setup: Two valid attacks with different connectivity impacts
 
       // First, setup a mock for set_area_tc that simulates connectivity changes
-      let mockConnectivity = {
+      const mockConnectivity = {
         1: 2, // Player 1 has 2 connected territories initially
       };
 

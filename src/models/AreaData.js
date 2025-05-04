@@ -28,8 +28,10 @@ export class AreaData {
     this.line_cel = new Array(100); // Border cell indices
     this.line_dir = new Array(100); // Border directions (0-5 for hexagonal grid)
 
-    // Adjacency array - indices of areas that share a border with this area
-    // Used for determining valid attack targets and territory groups
+    /*
+     * Adjacency array - indices of areas that share a border with this area
+     * Used for determining valid attack targets and territory groups
+     */
     this.join = Array(32).fill(0); // 32 possible adjacent territories
   }
 }

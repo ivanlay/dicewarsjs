@@ -5,6 +5,9 @@
  * like Map objects for better performance and more idiomatic JavaScript.
  */
 
+// Re-export AI handler from main directory as it hasn't been enhanced yet
+import { executeAIMove, AI_REGISTRY } from '../aiHandler.js';
+
 export {
   // Map generation
   makeMap,
@@ -22,7 +25,4 @@ export {
   calculateAttackProbability,
   resolveBattle,
 } from './battleResolution.js';
-
-// Re-export AI handler from main directory as it hasn't been enhanced yet
-import { executeAIMove, AI_REGISTRY } from '../aiHandler.js';
 export { executeAIMove, AI_REGISTRY };

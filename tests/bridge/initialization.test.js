@@ -156,8 +156,10 @@ describe('Bridge Module Initialization', () => {
       // Import module
       const indexModule = require('../../src/bridge/index.js');
 
-      // Access the findModuleFromError function (assuming it's exported for testing)
-      // If it's not exported, we can test indirectly through the error event handler
+      /*
+       * Access the findModuleFromError function (assuming it's exported for testing)
+       * If it's not exported, we can test indirectly through the error event handler
+       */
 
       // Create a mock error with a specific module mentioned
       const gameUtilsError = new Error('Error in gameUtils module');

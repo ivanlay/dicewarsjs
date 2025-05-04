@@ -94,7 +94,8 @@ export class DisjointSet {
     const rank1 = this.rank.get(root1);
     const rank2 = this.rank.get(root2);
 
-    let newRoot, mergedRoot;
+    let newRoot;
+    let mergedRoot;
     if (rank1 > rank2) {
       newRoot = root1;
       mergedRoot = root2;

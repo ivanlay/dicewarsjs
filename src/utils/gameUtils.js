@@ -14,18 +14,20 @@
  * @returns {number} Probability of success (0-1)
  */
 export const calculateAttackProbability = (attackerDice, defenderDice) => {
-  // Using a simplified formula based on dice counts
-  // For exact calculation, you'd need to consider all possible dice combinations
+  /*
+   * Using a simplified formula based on dice counts
+   * For exact calculation, you'd need to consider all possible dice combinations
+   */
 
   if (attackerDice <= 1 || defenderDice <= 0) return 0;
 
   if (attackerDice > defenderDice) {
     return Math.min(0.95, (attackerDice / defenderDice) * 0.65);
-  } else if (attackerDice === defenderDice) {
-    return 0.45;
-  } else {
-    return Math.max(0.05, (attackerDice / defenderDice) * 0.45);
   }
+  if (attackerDice === defenderDice) {
+    return 0.45;
+  }
+  return Math.max(0.05, (attackerDice / defenderDice) * 0.45);
 };
 
 /**
@@ -57,10 +59,9 @@ export const simulateAttack = (attackerDice, defenderDice) => {
  * @param {number} count - Number of dice to roll
  * @returns {Array<number>} Array of dice values (1-6)
  */
-export const rollDice = count => {
+export const rollDice = count =>
   // Use Array.from to create and fill the array in one step
-  return Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
-};
+  Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
 
 /**
  * Analyze a territory to gather information about its neighbors

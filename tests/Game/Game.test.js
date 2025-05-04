@@ -2,7 +2,13 @@
  * Tests for Game.js - Core Game Logic
  */
 
-// Mock the dependencies
+/*
+ * Mock the dependencies
+ * Import after mocks
+ */
+import { Game } from '../../src/Game.js';
+import { AreaData, PlayerData } from '../../src/models/index.js';
+
 jest.mock('../../src/models/index.js', () => ({
   AreaData: jest.fn().mockImplementation(function () {
     this.size = 0;
@@ -30,10 +36,6 @@ jest.mock('../../src/ai/index.js', () => ({
   ai_example: jest.fn(),
   ai_adaptive: jest.fn(),
 }));
-
-// Import after mocks
-import { Game } from '../../src/Game.js';
-import { AreaData, PlayerData } from '../../src/models/index.js';
 
 describe('Game', () => {
   let game;

@@ -67,9 +67,11 @@ describe('Defensive AI', () => {
     mockGame.createTerritory(5, 1, 2, { 1: 1 }); // Our territory
     mockGame.createTerritory(6, 2, 1, { 3: 1 }); // Enemy territory
 
-    // Both territory 1->2 and 3->6 are valid attacks
-    // Note: Based on the implementation, the territory with one enemy neighbor
-    // is always prioritized, regardless of total neighbors, as it scans sequentially
+    /*
+     * Both territory 1->2 and 3->6 are valid attacks
+     * Note: Based on the implementation, the territory with one enemy neighbor
+     * is always prioritized, regardless of total neighbors, as it scans sequentially
+     */
     ai_defensive(mockGame);
 
     expect(mockGame.area_from).toBe(1); // First territory found with one enemy neighbor
@@ -122,8 +124,10 @@ describe('Defensive AI', () => {
     mockGame.createTerritory(2, 2, 1, { 1: 1, 3: 1 }); // Enemy territory
     mockGame.createTerritory(3, 2, 3, { 2: 1 }); // Another enemy territory with high dice
 
-    // The reinforcement check is just one factor in the decision-making
-    // but in this simplified test case, the AI will still attack if it's valid
+    /*
+     * The reinforcement check is just one factor in the decision-making
+     * but in this simplified test case, the AI will still attack if it's valid
+     */
     ai_defensive(mockGame);
 
     // Since the AI decides to attack from territory 1 to territory 2

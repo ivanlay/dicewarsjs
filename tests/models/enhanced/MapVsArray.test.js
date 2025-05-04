@@ -50,8 +50,10 @@ describe('Map vs Array Comparison for AreaData', () => {
     });
 
     test('map-based implementation should handle area IDs larger than 32', () => {
-      // Array-based can only handle indices 0-31
-      // Map-based can handle any valid number as key
+      /*
+       * Array-based can only handle indices 0-31
+       * Map-based can handle any valid number as key
+       */
 
       // Set up adjacency data
       mapBased.setAdjacency(100, 1);

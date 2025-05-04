@@ -61,11 +61,10 @@ export const PlayerState = {
    * @param {number} count - Number of territories to add
    * @returns {Object} New player state with updated territory count
    */
-  addTerritories: (player, count) => {
-    return updateObject(player, {
+  addTerritories: (player, count) =>
+    updateObject(player, {
       territoryCount: player.territoryCount + count,
-    });
-  },
+    }),
 
   /**
    * Remove territories from a player
@@ -93,11 +92,10 @@ export const PlayerState = {
    * @param {number} count - Number of dice to add
    * @returns {Object} New player state with updated reserve
    */
-  addReserveDice: (player, count) => {
-    return updateObject(player, {
+  addReserveDice: (player, count) =>
+    updateObject(player, {
       reserveDice: player.reserveDice + count,
-    });
-  },
+    }),
 
   /**
    * Use dice from a player's reserve
@@ -120,11 +118,10 @@ export const PlayerState = {
    * @param {number} count - New total dice count
    * @returns {Object} New player state with updated dice count
    */
-  setDiceCount: (player, count) => {
-    return updateObject(player, {
+  setDiceCount: (player, count) =>
+    updateObject(player, {
       diceCount: count,
-    });
-  },
+    }),
 
   /**
    * Calculate and update a player's largest territory size
@@ -184,15 +181,14 @@ export const PlayerState = {
    * @param {Object} player - Original player state
    * @returns {Object} New player state marked as eliminated
    */
-  eliminate: player => {
-    return updateObject(player, {
+  eliminate: player =>
+    updateObject(player, {
       eliminated: true,
       territoryCount: 0,
       diceCount: 0,
       reserveDice: 0,
       largestTerritorySize: 0,
-    });
-  },
+    }),
 
   /**
    * Calculate reinforcement dice for a player
@@ -215,14 +211,12 @@ export const PlayerState = {
    * @param {Object} player - Immutable player state
    * @returns {Object} Legacy format player object
    */
-  toLegacyFormat: player => {
-    return {
-      area_c: player.territoryCount,
-      dice_c: player.diceCount,
-      stock: player.reserveDice,
-      area_l: player.largestTerritorySize,
-    };
-  },
+  toLegacyFormat: player => ({
+    area_c: player.territoryCount,
+    dice_c: player.diceCount,
+    stock: player.reserveDice,
+    area_l: player.largestTerritorySize,
+  }),
 
   /**
    * Create an immutable player state from legacy format
@@ -231,13 +225,12 @@ export const PlayerState = {
    * @param {Object} legacyPlayer - Legacy format player
    * @returns {Object} Immutable player state
    */
-  fromLegacyFormat: (id, legacyPlayer) => {
-    return createPlayer(id, {
+  fromLegacyFormat: (id, legacyPlayer) =>
+    createPlayer(id, {
       territoryCount: legacyPlayer.area_c || 0,
       diceCount: legacyPlayer.dice_c || 0,
       reserveDice: legacyPlayer.stock || 0,
       largestTerritorySize: legacyPlayer.area_l || 0,
       eliminated: (legacyPlayer.area_c || 0) === 0,
-    });
-  },
+    }),
 };

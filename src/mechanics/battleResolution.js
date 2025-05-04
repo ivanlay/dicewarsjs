@@ -54,8 +54,10 @@ export function calculateAttackProbability(attackerDice, defenderDice) {
   // Base probability comes from the ratio of dice
   const ratio = attackerDice / defenderDice;
 
-  // Apply sigmoid function to get a probability between 0 and 1
-  // This creates an S-curve that's more realistic than linear
+  /*
+   * Apply sigmoid function to get a probability between 0 and 1
+   * This creates an S-curve that's more realistic than linear
+   */
   const probability = 1 / (1 + Math.exp(-2 * (ratio - 1)));
 
   // Adjust probability for extreme cases
@@ -207,8 +209,10 @@ export function distributeReinforcements(gameState, playerIndex) {
     return gameState;
   }
 
-  // Distribute reinforcements
-  // Strategy: Prioritize border territories with fewer dice
+  /*
+   * Distribute reinforcements
+   * Strategy: Prioritize border territories with fewer dice
+   */
 
   // Find all territories owned by this player
   const territories = [];

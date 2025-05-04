@@ -17,8 +17,10 @@ export class GridData {
     this.height = height;
     this.cellCount = width * height;
 
-    // Cell-to-territory mapping (values 0-32, 0 = no territory)
-    // Using Uint8Array since we have at most 32 territories
+    /*
+     * Cell-to-territory mapping (values 0-32, 0 = no territory)
+     * Using Uint8Array since we have at most 32 territories
+     */
     this._cellToAreaMap = new Uint8Array(this.cellCount);
 
     // Temporal cell flags for territory growth (values 0-1)

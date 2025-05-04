@@ -22,12 +22,16 @@ export class AdjacencyGraph {
    * Create a new adjacency graph
    */
   constructor() {
-    // Maps territory IDs to their adjacency lists
-    // Using Map<number, Set<number>> for O(1) lookup and membership checks
+    /*
+     * Maps territory IDs to their adjacency lists
+     * Using Map<number, Set<number>> for O(1) lookup and membership checks
+     */
     this.adjacencyLists = new Map();
 
-    // Cache for territory groups by player
-    // Map<playerID, Map<groupID, Set<territoryID>>>
+    /*
+     * Cache for territory groups by player
+     * Map<playerID, Map<groupID, Set<territoryID>>>
+     */
     this._groupCache = new Map();
 
     // Cache invalidation flag - true when adjacency changes have been made

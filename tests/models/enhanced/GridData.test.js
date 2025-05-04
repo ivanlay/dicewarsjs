@@ -191,8 +191,10 @@ describe('Enhanced GridData', () => {
       // Randomize
       gridData.randomizeSerialNumbers();
 
-      // Check that the values are different (at least some of them)
-      // We'll verify that at least 50% of values have changed
+      /*
+       * Check that the values are different (at least some of them)
+       * We'll verify that at least 50% of values have changed
+       */
       let changedCount = 0;
       for (let i = 0; i < gridData.cellCount; i++) {
         if (gridData.getSerialNumber(i) !== originalValues[i]) {
@@ -297,7 +299,7 @@ describe('Enhanced GridData', () => {
     test('typed arrays perform better for bulk operations', () => {
       // Create a large grid
       const largeGridData = new GridData(width, height);
-      const cellCount = largeGridData.cellCount;
+      const { cellCount } = largeGridData;
 
       // Create equivalent regular arrays
       const regularCel = new Array(cellCount).fill(0);
@@ -322,15 +324,17 @@ describe('Enhanced GridData', () => {
         `Setting ${cellCount} values - Typed Array: ${typedArrayTime.toFixed(2)}ms, Regular Array: ${regularArrayTime.toFixed(2)}ms`
       );
 
-      // Don't make this a hard assertion because performance varies by environment
-      // Just log the results
+      /*
+       * Don't make this a hard assertion because performance varies by environment
+       * Just log the results
+       */
       expect(true).toBe(true);
     });
 
     test('typed arrays perform better for reading bulk data', () => {
       // Create a large grid
       const largeGridData = new GridData(width, height);
-      const cellCount = largeGridData.cellCount;
+      const { cellCount } = largeGridData;
 
       // Create equivalent regular arrays
       const regularCel = new Array(cellCount).fill(0);

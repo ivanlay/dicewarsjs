@@ -13,9 +13,7 @@
  * @param {Object} updates - Properties to update
  * @returns {Object} New object with updates applied
  */
-export const updateObject = (obj, updates) => {
-  return Object.freeze({ ...obj, ...updates });
-};
+export const updateObject = (obj, updates) => Object.freeze({ ...obj, ...updates });
 
 /**
  * Creates a new array with updated item at specified index
@@ -25,9 +23,8 @@ export const updateObject = (obj, updates) => {
  * @param {*} item - New item value
  * @returns {Array} New array with the item updated
  */
-export const updateArrayItem = (array, index, item) => {
-  return Object.freeze([...array.slice(0, index), item, ...array.slice(index + 1)]);
-};
+export const updateArrayItem = (array, index, item) =>
+  Object.freeze([...array.slice(0, index), item, ...array.slice(index + 1)]);
 
 /**
  * Creates a new array with an item added at the end
@@ -36,9 +33,7 @@ export const updateArrayItem = (array, index, item) => {
  * @param {*} item - Item to add
  * @returns {Array} New array with item added
  */
-export const addArrayItem = (array, item) => {
-  return Object.freeze([...array, item]);
-};
+export const addArrayItem = (array, item) => Object.freeze([...array, item]);
 
 /**
  * Creates a new array with an item removed at specified index
@@ -47,9 +42,8 @@ export const addArrayItem = (array, item) => {
  * @param {number} index - Index to remove
  * @returns {Array} New array with item removed
  */
-export const removeArrayItem = (array, index) => {
-  return Object.freeze([...array.slice(0, index), ...array.slice(index + 1)]);
-};
+export const removeArrayItem = (array, index) =>
+  Object.freeze([...array.slice(0, index), ...array.slice(index + 1)]);
 
 /**
  * Creates a new array by filtering out items
@@ -58,9 +52,7 @@ export const removeArrayItem = (array, index) => {
  * @param {Function} predicate - Function that returns true for items to keep
  * @returns {Array} New filtered array
  */
-export const filterArray = (array, predicate) => {
-  return Object.freeze(array.filter(predicate));
-};
+export const filterArray = (array, predicate) => Object.freeze(array.filter(predicate));
 
 /**
  * Creates a new array by mapping items
@@ -69,9 +61,7 @@ export const filterArray = (array, predicate) => {
  * @param {Function} mapper - Function to transform each item
  * @returns {Array} New mapped array
  */
-export const mapArray = (array, mapper) => {
-  return Object.freeze(array.map(mapper));
-};
+export const mapArray = (array, mapper) => Object.freeze(array.map(mapper));
 
 /**
  * Creates a new Map with updated entry

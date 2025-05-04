@@ -85,11 +85,10 @@ export function executeAIMove(gameState) {
     if (typeof ai_default === 'function') {
       console.log('Using default AI as fallback');
       return ai_default(gameState);
-    } else {
-      // If no fallback available, end the turn
-      console.error('No fallback AI available, ending turn');
-      return 0;
     }
+    // If no fallback available, end the turn
+    console.error('No fallback AI available, ending turn');
+    return 0;
   }
 
   // Call the AI function, passing the game state

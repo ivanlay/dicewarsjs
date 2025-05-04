@@ -107,8 +107,10 @@ describe('HistoryData', () => {
     });
 
     test('can determine the player involved', () => {
-      // In a real game, we would use the area index to look up
-      // the player by checking adat[historyData.from].arm
+      /*
+       * In a real game, we would use the area index to look up
+       * the player by checking adat[historyData.from].arm
+       */
 
       // This is a simplified version for testing
       const mockAreaData = [null, { arm: 1 }, { arm: 2 }, { arm: 3 }, { arm: 1 }];
