@@ -8,8 +8,8 @@
  * This implementation is written for clarity and educational purposes,
  * showing the basic structure needed for any Dice Wars AI.
  */
-export function ai_example(game) {
-    const current_player = game.get_pn();  // Get the index of the current player
+export const ai_example = (game) => {
+    const currentPlayer = game.get_pn();  // Get the index of the current player
     
     /**
      * Create a list of valid moves (attacker/defender pairs)
@@ -19,47 +19,55 @@ export function ai_example(game) {
      * - Defending territory must be adjacent
      * - Attacker must have more dice than defender
      */
-    const list_moves = new Array(game.AREA_MAX * game.AREA_MAX);
-    let number_of_moves = 0;
+    const validMoves = [];
+
+    // Helper function to check if a territory belongs to current player and has multiple dice
+    const isValidAttacker = (area) => 
+        area.size !== 0 && 
+        area.arm === currentPlayer && 
+        area.dice > 1;
+    
+    // Helper function to check if a territory is a valid target
+    const isValidTarget = (attacker, defender, defenderIndex) => 
+        defender.size !== 0 && 
+        defender.arm !== currentPlayer && 
+        attacker.join[defenderIndex] !== 0 && 
+        defender.dice < attacker.dice;
 
     // Iterate through all territories to find potential attackers
     for (let i = 1; i < game.AREA_MAX; i++) {
-        const attacking_area = game.adat[i];
+        const attackingArea = game.adat[i];
 
-        if (attacking_area.size == 0) continue;  // Skip empty territories
-        if (attacking_area.arm != current_player) continue;  // Skip enemy territories
-        if (attacking_area.dice <= 1) continue;  // Skip territories with 1 or fewer dice
+        // Skip invalid attackers
+        if (!isValidAttacker(attackingArea)) continue;
 
         // For each potential attacker, look for valid targets
         for (let j = 1; j < game.AREA_MAX; j++) {
-            const defending_area = game.adat[j];
+            const defendingArea = game.adat[j];
 
-            if (defending_area.size == 0) continue;  // Skip empty territories
-            if (defending_area.arm == current_player) continue;  // Skip own territories
-            if (attacking_area.join[j] == 0) continue;  // Skip non-adjacent territories
-
-            // Skip if defender has equal or more dice (considered a bad move)
-            if (defending_area.dice >= game.adat[i].dice) continue;
+            // Skip invalid targets
+            if (!isValidTarget(attackingArea, defendingArea, j)) continue;
 
             // Add valid move to the list
-            list_moves[number_of_moves] = {
-                "attacker": i,  // Index of the attacking territory
-                "defender": j   // Index of the defending territory
-            };
-            number_of_moves++;
+            validMoves.push({
+                attacker: i,
+                defender: j
+            });
         }
     }
 
     // End turn if no valid moves found
-    if (number_of_moves == 0) return 0;
+    if (validMoves.length === 0) return 0;
 
     // Randomly select a move from the valid options
-    const n = Math.floor(Math.random() * number_of_moves);
-    const move = list_moves[n];
+    const selectedMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+    // Destructure the selected move
+    const { attacker, defender } = selectedMove;
 
     // Set the selected move in the game state
-    game.area_from = move["attacker"];  // Set attacking territory
-    game.area_to = move["defender"];  // Set defending territory
+    game.area_from = attacker;
+    game.area_to = defender;
     
     // Note: This function will be called repeatedly until it returns 0
     // Returning nothing here allows the attack to proceed

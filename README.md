@@ -146,6 +146,14 @@ If you make a cool new AI, let me know!
 
 ## Recent Changes
 
+### Latest Updates (May 2023)
+- Fixed critical AI initialization timing issues in the bridge modules
+- Enhanced error handling and fallbacks in AI system
+- Added detailed documentation of the bridge architecture
+- Updated NEXT_STEPS.md with latest modernization roadmap
+- Added comprehensive tests for AI module functions
+
+### Previous Updates
 - Added modern build system with webpack and Babel
 - Implemented ES6 module structure throughout the codebase
 - Added development server with hot reloading
@@ -160,9 +168,29 @@ If you make a cool new AI, let me know!
 - Added game speed controls for spectator mode
 - Fixed issues with AI player selection
 
+## Architecture
+
+The project now uses a hybrid architecture that bridges between ES6 modules and legacy code:
+
+1. **Modern ES6 Modules**: New code is written using ES6 module syntax
+2. **Bridge Pattern**: Bridge modules expose ES6 functionality to the global scope
+3. **Legacy Compatibility**: Original code continues to work during the transition
+4. **Modern Build System**: Webpack and Babel handle bundling and transpilation
+
+For more details about the bridge architecture, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md).
+
+## Development Roadmap
+
+See [NEXT_STEPS.md](./NEXT_STEPS.md) for the detailed development roadmap.
+
 ## Planned Improvements
 
-I plan to make a version of the game that just plays the AI against themselves quickly so you can get statistics on how well each AI performs.
+- Complete ES6 modernization of all game components
+- Add AI performance testing and statistics gathering
+- Implement additional AI strategies
+- Add online multiplayer capability
+- Create a version of the game that automatically plays AI against each other for statistical analysis
+- Add replay and game state saving functionality
 
 ## License
 

@@ -13,7 +13,7 @@
  * @param {number} defenderDice - Number of defender dice
  * @returns {number} Probability of success (0-1)
  */
-export function calculateAttackProbability(attackerDice, defenderDice) {
+export const calculateAttackProbability = (attackerDice, defenderDice) => {
   // Using a simplified formula based on dice counts
   // For exact calculation, you'd need to consider all possible dice combinations
   
@@ -26,7 +26,7 @@ export function calculateAttackProbability(attackerDice, defenderDice) {
   } else {
     return Math.max(0.05, (attackerDice / defenderDice) * 0.45);
   }
-}
+};
 
 /**
  * Simulate attack result
@@ -34,7 +34,7 @@ export function calculateAttackProbability(attackerDice, defenderDice) {
  * @param {number} defenderDice - Number of defender dice
  * @returns {Object} Result object with dice rolls and outcome
  */
-export function simulateAttack(attackerDice, defenderDice) {
+export const simulateAttack = (attackerDice, defenderDice) => {
   // Generate random rolls for attacker and defender
   const attackerRolls = rollDice(attackerDice);
   const defenderRolls = rollDice(defenderDice);
@@ -42,29 +42,25 @@ export function simulateAttack(attackerDice, defenderDice) {
   const attackerSum = attackerRolls.reduce((a, b) => a + b, 0);
   const defenderSum = defenderRolls.reduce((a, b) => a + b, 0);
   
-  const success = attackerSum > defenderSum;
-  
+  // Use object shorthand properties for cleaner object creation
   return {
     attackerRolls,
     defenderRolls,
     attackerSum,
     defenderSum,
-    success
+    success: attackerSum > defenderSum
   };
-}
+};
 
 /**
  * Roll dice and return an array of values
  * @param {number} count - Number of dice to roll
  * @returns {Array<number>} Array of dice values (1-6)
  */
-export function rollDice(count) {
-  const rolls = [];
-  for (let i = 0; i < count; i++) {
-    rolls.push(Math.floor(Math.random() * 6) + 1);
-  }
-  return rolls;
-}
+export const rollDice = (count) => {
+  // Use Array.from to create and fill the array in one step
+  return Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
+};
 
 /**
  * Analyze a territory to gather information about its neighbors
@@ -72,13 +68,14 @@ export function rollDice(count) {
  * @param {number} areaId - ID of the territory to analyze
  * @returns {Object} Territory analysis data
  */
-export function analyzeTerritory(game, areaId) {
+export const analyzeTerritory = (game, areaId) => {
   const territory = game.adat[areaId];
   if (territory.size === 0) return null;
   
-  const owner = territory.arm;
-  const diceCount = territory.dice;
+  // Use destructuring to get properties from territory
+  const { arm: owner, dice: diceCount } = territory;
   
+  // Initialize neighbor analysis data
   let friendlyNeighbors = 0;
   let enemyNeighbors = 0;
   let strongestFriendlyNeighbor = 0;
@@ -92,9 +89,10 @@ export function analyzeTerritory(game, areaId) {
     if (i === areaId || game.adat[i].size === 0) continue;
     if (territory.join[i] === 0) continue; // Not adjacent
     
-    const neighborDice = game.adat[i].dice;
+    // Use destructuring to get properties from neighbor
+    const { arm: neighborOwner, dice: neighborDice } = game.adat[i];
     
-    if (game.adat[i].arm === owner) {
+    if (neighborOwner === owner) {
       // Friendly neighbor
       friendlyNeighbors++;
       if (neighborDice > strongestFriendlyNeighbor) {
@@ -143,6 +141,7 @@ export function analyzeTerritory(game, areaId) {
     bestTargetId = weakestEnemyNeighborId;
   }
   
+  // Use object shorthand for cleaner return object
   return {
     id: areaId,
     owner,
@@ -157,7 +156,7 @@ export function analyzeTerritory(game, areaId) {
     attackOpportunityRating,
     bestTargetId
   };
-}
+};
 
 /**
  * Find best attack for a player
@@ -165,13 +164,17 @@ export function analyzeTerritory(game, areaId) {
  * @param {number} playerId - Player ID
  * @returns {Object|null} Best attack or null if no valid attacks
  */
-export function findBestAttack(game, playerId) {
+export const findBestAttack = (game, playerId) => {
   let bestAttack = null;
   let bestRating = -1;
   
   // Check all territories owned by player
   for (let i = 1; i < game.AREA_MAX; i++) {
-    if (game.adat[i].size === 0 || game.adat[i].arm !== playerId || game.adat[i].dice <= 1) {
+    // Use destructuring to access area properties
+    const area = game.adat[i];
+    const { size, arm, dice } = area;
+    
+    if (size === 0 || arm !== playerId || dice <= 1) {
       continue;
     }
     
@@ -186,15 +189,17 @@ export function findBestAttack(game, playerId) {
       
       if (combinedRating > bestRating) {
         bestRating = combinedRating;
+        
+        // Destructure to get target dice
+        const { dice: targetDice } = game.adat[analysis.bestTargetId];
+        
+        // Create attack object with shorthand properties
         bestAttack = {
           from: i,
           to: analysis.bestTargetId,
           fromDice: analysis.diceCount,
-          toDice: game.adat[analysis.bestTargetId].dice,
-          probability: calculateAttackProbability(
-            analysis.diceCount, 
-            game.adat[analysis.bestTargetId].dice
-          ),
+          toDice: targetDice,
+          probability: calculateAttackProbability(analysis.diceCount, targetDice),
           rating: combinedRating
         };
       }
@@ -202,7 +207,7 @@ export function findBestAttack(game, playerId) {
   }
   
   return bestAttack;
-}
+};
 
 /**
  * Calculate optimal reinforcement distribution
@@ -210,37 +215,37 @@ export function findBestAttack(game, playerId) {
  * @param {number} playerId - Player ID
  * @returns {Array<number>} Array of area IDs to reinforce, sorted by priority
  */
-export function calculateReinforcements(game, playerId) {
+export const calculateReinforcements = (game, playerId) => {
   const candidates = [];
   
   // Analyze all territories owned by player
   for (let i = 1; i < game.AREA_MAX; i++) {
-    if (game.adat[i].size === 0 || game.adat[i].arm !== playerId) {
+    // Use destructuring for cleaner property access
+    const { size, arm } = game.adat[i];
+    
+    if (size === 0 || arm !== playerId) {
       continue;
     }
     
     const analysis = analyzeTerritory(game, i);
     
     if (analysis) {
-      // Calculate reinforcement priority based on:
-      // 1. Vulnerability (higher = more urgent)
-      // 2. Strategic value (border territories with many enemy neighbors)
-      // 3. Attack potential (territories that could attack with more dice)
+      // Destructure properties from analysis
+      const { vulnerabilityRating, enemyNeighbors, diceCount, weakestEnemyNeighbor } = analysis;
       
+      // Calculate reinforcement priority based on multiple factors
       let priority = 0;
       
       // Vulnerability factor
-      priority += analysis.vulnerabilityRating * 0.5;
+      priority += vulnerabilityRating * 0.5;
       
       // Strategic position factor
-      priority += analysis.enemyNeighbors * 10;
+      priority += enemyNeighbors * 10;
       
       // Attack potential factor
-      if (analysis.diceCount > 1 && analysis.weakestEnemyNeighbor < Infinity) {
+      if (diceCount > 1 && weakestEnemyNeighbor < Infinity) {
         // Prioritize territories that are close to having attack advantage
-        const diceNeeded = Math.max(0, 
-          analysis.weakestEnemyNeighbor - analysis.diceCount + 1
-        );
+        const diceNeeded = Math.max(0, weakestEnemyNeighbor - diceCount + 1);
         
         if (diceNeeded <= 2) {
           priority += (3 - diceNeeded) * 20;
@@ -248,19 +253,18 @@ export function calculateReinforcements(game, playerId) {
       }
       
       // Deprioritize territories that already have many dice
-      if (analysis.diceCount >= 6) {
-        priority -= (analysis.diceCount - 5) * 15;
+      if (diceCount >= 6) {
+        priority -= (diceCount - 5) * 15;
       }
       
-      candidates.push({
-        id: i,
-        priority
-      });
+      // Add to candidates with object shorthand
+      candidates.push({ id: i, priority });
     }
   }
   
   // Sort candidates by priority (highest first)
   candidates.sort((a, b) => b.priority - a.priority);
   
-  return candidates.map(c => c.id);
-}
+  // Extract just the IDs using destructuring in map function
+  return candidates.map(({ id }) => id);
+};

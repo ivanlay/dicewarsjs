@@ -99,17 +99,11 @@ var Game = function(){
 	 * - Other indices: Different AI strategies imported from separate files
 	 * 
 	 * These functions are called during computer player turns to determine moves.
+	 * Note: The AI functions are initialized in start_game to ensure they're available.
 	 */
-	this.ai = [
-		null,            // Player 0 (human player)
-		ai_example,      // Player 1 - Example basic AI
-		ai_defensive,    // Player 2 - Defensive strategy
-		ai_defensive,    // Player 3 - Defensive strategy
-		ai_default,      // Player 4 - Default balanced AI
-		ai_default,      // Player 5 - Default balanced AI
-		ai_default,      // Player 6 - Default balanced AI
-		ai_default       // Player 7 - Default balanced AI
-	];
+	this.ai = [null, null, null, null, null, null, null, null];
+	
+	// Initialize AI array will be properly set up in start_game
 
 	var i,j;  // Loop counters used throughout the game logic
 
@@ -231,6 +225,7 @@ var Game = function(){
 	 * Initialize Game
 	 * 
 	 * Sets up a new game after the map has been created.
+	 * - Initializes AI functions for each player
 	 * - Randomizes player turn order
 	 * - Initializes player data
 	 * - Sets up history tracking for replay
@@ -239,6 +234,19 @@ var Game = function(){
 	 */
 	this.start_game = function(){
 		var i;
+		
+		// Initialize AI strategy array with functions loaded via ES6 modules
+		// These should be available in the global scope via the bridge modules
+		this.ai = [
+			null,            // Player 0 (human player)
+			window.ai_example,      // Player 1 - Example basic AI
+			window.ai_defensive,    // Player 2 - Defensive strategy
+			window.ai_defensive,    // Player 3 - Defensive strategy
+			window.ai_default,      // Player 4 - Default balanced AI
+			window.ai_default,      // Player 5 - Default balanced AI
+			window.ai_default,      // Player 6 - Default balanced AI
+			window.ai_default       // Player 7 - Default balanced AI
+		];
 		
 		// Initialize and randomize player turn order
 		for( i=0; i<8; i++ ) this.jun[i] = i;  // Start with sequential ordering
@@ -669,6 +677,20 @@ var Game = function(){
 	this.com_thinking = function() {
 		// Look up the AI function for the current player
 		var ai_function = this.ai[ this.jun[this.ban] ];
+		
+		// Check if the AI function exists before calling it
+		if (typeof ai_function !== 'function') {
+			console.error('AI function not found for player ' + this.jun[this.ban]);
+			// Use default AI as a fallback if available
+			if (typeof window.ai_default === 'function') {
+				console.log('Using default AI as fallback');
+				ai_function = window.ai_default;
+			} else {
+				// If no fallback available, end the turn
+				console.error('No fallback AI available, ending turn');
+				return 0;
+			}
+		}
 		
 		// Call the AI function, passing the game state
 		return ai_function(this);
