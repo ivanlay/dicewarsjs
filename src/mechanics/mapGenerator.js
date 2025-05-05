@@ -8,8 +8,9 @@
  * @module mechanics/mapGenerator
  */
 
-import { AreaData, JoinData } from '../models/index.js';
-import { withErrorHandling, GameError, TerritoryError } from './errorHandling.js';
+import { AreaData } from '../models/index.js';
+import { withErrorHandling } from './errorHandling.js';
+import { GameError, TerritoryError } from './errors/index.js';
 import { gameEvents, EventType } from './eventSystem.js';
 
 /**
@@ -89,7 +90,9 @@ export const percolate = withErrorHandling(
     };
 
     // Grow until we can't anymore
-    while (growTerritory()) {}
+    while (growTerritory()) {
+      // Continue growing until the condition becomes false
+    }
 
     // Boundary smoothing - add all adjacent cells to avoid single-cell gaps
     const smoothBoundary = () => {
@@ -205,7 +208,9 @@ export const setAreaLine = withErrorHandling((gameState, old_cel, old_dir) => {
   };
 
   // Follow the boundary until we return to starting point (or hit safety limit)
-  for (let i = 0; i < 100 && !addSegmentAndMove(); i++) {}
+  for (let i = 0; i < 100 && !addSegmentAndMove(); i++) {
+    // Continue processing until we complete the boundary or hit the safety limit
+  }
 
   // Store the generated line data in the area data
   segments.forEach((segment, index) => {
@@ -428,12 +433,18 @@ export const makeMap = withErrorHandling(
             const y = Math.abs(adat[areaId].cy - i);
             let len = x + y;
 
-            // Check for adjacency to other territories
-            const adjacencyInfo = Array.from({ length: 6 })
-              .map((_, k) => ({ dir: k, pos: join[c].dir[k] }))
-              .filter(({ pos }) => pos > 0)
-              .map(({ pos }) => ({ pos, areaId: cel[pos] }))
-              .filter(({ areaId: adjAreaId }) => adjAreaId !== areaId && adjAreaId > 0);
+            /*
+             * Check for adjacency to other territories
+             * Create a function outside the loop to check adjacency
+             */
+            const checkAdjacency = (cellIndex, areaIdentifier) =>
+              Array.from({ length: 6 })
+                .map((_, k) => ({ dir: k, pos: join[cellIndex].dir[k] }))
+                .filter(({ pos }) => pos > 0)
+                .map(({ pos }) => ({ pos, areaId: cel[pos] }))
+                .filter(({ areaId: adjAreaId }) => adjAreaId !== areaIdentifier && adjAreaId > 0);
+
+            const adjacencyInfo = checkAdjacency(c, areaId);
 
             // If this cell has adjacent territories, it's on a border
             const isBorder = adjacencyInfo.length > 0;
@@ -459,8 +470,10 @@ export const makeMap = withErrorHandling(
 
     establishAdjacency();
 
-    // Determine area player affiliations (distribute territories among players)
-    // Initialize ownership
+    /*
+     * Determine area player affiliations (distribute territories among players)
+     * Initialize ownership
+     */
     Array.from({ length: AREA_MAX }).forEach((_, i) => {
       adat[i].arm = -1;
     });
@@ -469,14 +482,19 @@ export const makeMap = withErrorHandling(
     const distributeTerritoriesAmongPlayers = () => {
       let arm = 0; // Current player to assign
 
-      while (true) {
+      // Loop until no unassigned territories remain
+      let hasUnassignedTerritories = true;
+      while (hasUnassignedTerritories) {
         // Find unassigned territories
         const unassignedTerritories = Array.from({ length: AREA_MAX })
           .map((_, i) => i)
           .filter(i => i > 0 && adat[i].size > 0 && adat[i].arm < 0);
 
         // All territories have been assigned
-        if (unassignedTerritories.length === 0) break;
+        if (unassignedTerritories.length === 0) {
+          hasUnassignedTerritories = false;
+          break;
+        }
 
         // Randomly select a territory to assign to the current player
         const randomIndex = Math.floor(Math.random() * unassignedTerritories.length);
@@ -516,8 +534,10 @@ export const makeMap = withErrorHandling(
 
     generateBorderData();
 
-    // Place dice
-    // Count valid territories and initialize with 1 die each
+    /*
+     * Place dice
+     * Count valid territories and initialize with 1 die each
+     */
     const validTerritoryCount = Array.from({ length: AREA_MAX })
       .map((_, i) => i)
       .filter(i => i > 0 && adat[i].size > 0)
@@ -570,7 +590,7 @@ export const makeMap = withErrorHandling(
 
     return gameState;
   },
-  (error, gameState) => {
+  error => {
     // Custom error handler for makeMap
     console.error('Map generation failed:', error);
 
@@ -647,21 +667,25 @@ export const setAreaTc = withErrorHandling((gameState, pn) => {
     do {
       mergeOccurred = false;
 
-      // Check each pair of player areas for adjacency
+      // Define a function outside the loop that returns whether a merge occurred
+      const attemptMerge = (areaId, adjAreaId) => unionAreas(areaId, adjAreaId);
+
       for (let i = 0; i < playerAreas.length; i++) {
         const areaId = playerAreas[i];
+        // Extract the filter logic to a predicate function
+        const isAdjacentPlayerArea = j =>
+          j > 0 && adat[j].size > 0 && adat[j].arm === pn && adat[areaId].join[j] === 1;
+
         const adjacentAreas = Array.from({ length: AREA_MAX })
           .map((_, j) => j)
-          .filter(
-            j => j > 0 && adat[j].size > 0 && adat[j].arm === pn && adat[areaId].join[j] === 1
-          );
+          .filter(isAdjacentPlayerArea);
 
         // Try to merge with each adjacent area
-        adjacentAreas.forEach(adjAreaId => {
-          if (unionAreas(areaId, adjAreaId)) {
+        for (const adjAreaId of adjacentAreas) {
+          if (attemptMerge(areaId, adjAreaId)) {
             mergeOccurred = true;
           }
-        });
+        }
       }
     } while (mergeOccurred);
   };

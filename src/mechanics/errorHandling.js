@@ -5,93 +5,8 @@
  * Implements robust error classes and catching mechanisms.
  */
 
-import { gameEvents, EventType } from './eventSystem.js';
-
-/**
- * Base Game Error Class
- *
- * Base class for all game-specific errors with standardized properties.
- */
-export class GameError extends Error {
-  /**
-   * Create a new game error
-   *
-   * @param {string} message - Error message
-   * @param {string} code - Error code for programmatic handling
-   * @param {Object} [data={}] - Additional data relevant to the error
-   */
-  constructor(message, code, data = {}) {
-    super(message);
-    this.name = this.constructor.name;
-    this.code = code;
-    this.data = data;
-    this.timestamp = Date.now();
-
-    // Emit error event
-    gameEvents.emit(EventType.CUSTOM, {
-      type: 'error',
-      error: {
-        name: this.name,
-        message: this.message,
-        code: this.code,
-        data: this.data,
-      },
-    });
-  }
-
-  /**
-   * Get a string representation of the error
-   *
-   * @returns {string} Formatted error string
-   */
-  toString() {
-    return `${this.name} [${this.code}]: ${this.message}`;
-  }
-}
-
-/**
- * Territory Error
- *
- * Represents an error related to territory operations
- */
-export class TerritoryError extends GameError {
-  constructor(message, territoryId, data = {}) {
-    super(message, 'ERR_TERRITORY', { ...data, territoryId });
-  }
-}
-
-/**
- * Battle Error
- *
- * Represents an error related to battle operations
- */
-export class BattleError extends GameError {
-  constructor(message, fromArea, toArea, data = {}) {
-    super(message, 'ERR_BATTLE', { ...data, fromArea, toArea });
-  }
-}
-
-/**
- * Player Error
- *
- * Represents an error related to player operations
- */
-export class PlayerError extends GameError {
-  constructor(message, playerId, data = {}) {
-    super(message, 'ERR_PLAYER', { ...data, playerId });
-  }
-}
-
-/**
- * Game State Error
- *
- * Represents an error related to general game state operations
- */
-export class GameStateError extends GameError {
-  constructor(message, data = {}) {
-    super(message, 'ERR_GAME_STATE', data);
-  }
-}
+// Import only the error classes we use in this file
+import { GameError, TerritoryError, PlayerError } from './errors/index.js';
 
 /**
  * Maps error codes to user-friendly messages
@@ -214,8 +129,9 @@ export const validatePlayer = (gameState, playerId) => {
  * @param {Function} [errorHandler] - Optional custom error handler
  * @returns {Function} Wrapped function with error handling
  */
-export const withErrorHandling = (fn, errorHandler) => {
-  return (...args) => {
+export const withErrorHandling =
+  (fn, errorHandler) =>
+  (...args) => {
     try {
       return fn(...args);
     } catch (error) {
@@ -236,7 +152,6 @@ export const withErrorHandling = (fn, errorHandler) => {
       throw error;
     }
   };
-};
 
 /**
  * Get a user-friendly error message

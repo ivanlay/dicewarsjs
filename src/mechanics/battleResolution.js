@@ -21,13 +21,8 @@ import {
 } from './eventSystem.js';
 
 // Import error handling utilities
-import {
-  validateTerritories,
-  validatePlayer,
-  BattleError,
-  PlayerError,
-  withErrorHandling,
-} from './errorHandling.js';
+import { validateTerritories, validatePlayer, withErrorHandling } from './errorHandling.js';
+import { BattleError, PlayerError } from './errors/index.js';
 
 // Import debug tools (will be auto disabled in production)
 let measurePerformance = fn => fn; // Default no-op

@@ -201,8 +201,17 @@ class EventEmitter {
 
     // Process event through middleware
     let processedData = { ...data };
-    for (const middleware of this.middleware) {
-      processedData = (await middleware(eventType, processedData)) || processedData;
+
+    // Process all middleware in parallel instead of sequentially
+    const middlewareResults = await Promise.all(
+      this.middleware.map(middleware => Promise.resolve(middleware(eventType, processedData)))
+    );
+
+    // Apply middleware results (use the last non-null result)
+    for (const result of middlewareResults) {
+      if (result) {
+        processedData = result;
+      }
     }
 
     // Call all handlers with processed data

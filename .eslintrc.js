@@ -9,17 +9,13 @@ module.exports = {
     'airbnb-base',
     'plugin:import/recommended',
     'plugin:jest/recommended',
-    'plugin:prettier/recommended', // Add Prettier integration
+    'plugin:prettier/recommended',
   ],
   parserOptions: {
-    ecmaVersion: 2021,
+    ecmaVersion: 2022,
     sourceType: 'module',
   },
-  plugins: [
-    'import',
-    'jest',
-    'prettier', // Add Prettier plugin
-  ],
+  plugins: ['import', 'jest', 'prettier'],
   rules: {
     // Prettier integration
     'prettier/prettier': ['error'],

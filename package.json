@@ -16,10 +16,11 @@
     "benchmark": "node tests/benchmarks/benchmark.cjs",
     "benchmark:full": "node --input-type=module --experimental-json-modules tests/benchmarks/runBenchmarks.js",
     "test:benchmark": "jest tests/benchmarks/ai.benchmark.js",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=100",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "fix-warnings": "node scripts/fix-lint-warnings.js",
     "prepare": "husky install"
   },
   "keywords": [

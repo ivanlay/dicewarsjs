@@ -5,6 +5,11 @@
  * Provides a unified interface for map generation, battle resolution, error handling, and event handling.
  */
 
+// Import and re-export mechanics modules
+
+// Import event emitter instance and types
+import { gameEvents, EventType } from './eventSystem.js';
+
 // Export map generator functions
 export * from './mapGenerator.js';
 
@@ -14,15 +19,26 @@ export * from './battleResolution.js';
 // Export AI handling utilities
 export * from './aiHandler.js';
 
-// Export event system
-export * from './eventSystem.js';
+// Export event system (excluding default export to avoid conflicts)
+export {
+  EventType,
+  getTerritoryEventData,
+  emitTerritoryAttack,
+  emitTerritoryCapture,
+  emitDiceRolled,
+  emitTerritoryReinforced,
+  loggingMiddleware,
+  createTimeTravel,
+} from './eventSystem.js';
 
 // Export error handling system
 export * from './errorHandling.js';
 
-// Export default event emitter instance for convenience
-import gameEvents from './eventSystem.js';
-export { gameEvents as default };
+// Export error classes
+export * from './errors/index.js';
+
+// Export the gameEvents instance
+export { gameEvents };
 
 /**
  * Error handler for global mechanics errors
