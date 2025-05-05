@@ -33,11 +33,13 @@ import {
 // Import debug tools (will be auto disabled in production)
 let measurePerformance = fn => fn; // Default no-op
 if (process.env.NODE_ENV === 'development') {
-  import('../utils/debugTools.js').then(module => {
-    if (module.isDebugModeEnabled()) {
-      measurePerformance = module.measurePerformance;
-    }
-  }).catch(err => console.warn('Failed to load debug tools:', err));
+  import('../utils/debugTools.js')
+    .then(module => {
+      if (module.isDebugModeEnabled()) {
+        measurePerformance = module.measurePerformance;
+      }
+    })
+    .catch(err => console.warn('Failed to load debug tools:', err));
 }
 
 /**
@@ -108,10 +110,7 @@ export const calculateAttackProbability = (attackerDice, defenderDice) => {
 };
 
 /**
- * Resolve Battle between Territories
- *
- * Simulates dice battle between attacking and defending territories.
- * Uses functional composition pattern and emits events.
+ * Implementation of battle resolution logic
  *
  * @param {Object} gameState - Game state including territories
  * @param {number} fromArea - Index of attacking territory
@@ -119,9 +118,7 @@ export const calculateAttackProbability = (attackerDice, defenderDice) => {
  * @returns {Object} Battle results including success flag and dice values
  * @throws {BattleError} If battle cannot be resolved
  */
-export const resolveBattle = measurePerformance(resolveBattleImplementation, "battleResolution");
-
-const resolveBattleImplementation = ((gameState, fromArea, toArea) => {
+const resolveBattleImplementation = (gameState, fromArea, toArea) => {
   try {
     const { adat } = gameState;
 
@@ -163,6 +160,20 @@ const resolveBattleImplementation = ((gameState, fromArea, toArea) => {
     throw error;
   }
 };
+
+/**
+ * Resolve Battle between Territories
+ *
+ * Simulates dice battle between attacking and defending territories.
+ * Uses functional composition pattern and emits events.
+ *
+ * @param {Object} gameState - Game state including territories
+ * @param {number} fromArea - Index of attacking territory
+ * @param {number} toArea - Index of defending territory
+ * @returns {Object} Battle results including success flag and dice values
+ * @throws {BattleError} If battle cannot be resolved
+ */
+export const resolveBattle = measurePerformance(resolveBattleImplementation, 'battleResolution');
 
 /**
  * Execute an Attack
@@ -338,8 +349,8 @@ export const distributeReinforcements = withErrorHandling(
     }
 
     // Find all territories owned by this player
-    const findPlayerTerritories = () => {
-      return Array.from({ length: AREA_MAX })
+    const findPlayerTerritories = () =>
+      Array.from({ length: AREA_MAX })
         .map((_, i) => i)
         .filter(
           i => i > 0 && adat[i].size > 0 && adat[i].arm === playerIndex && adat[i].dice < 8 // Skip territories at max dice
@@ -360,8 +371,6 @@ export const distributeReinforcements = withErrorHandling(
           return { id, priority };
         })
         .sort((a, b) => b.priority - a.priority); // Sort by priority (higher first)
-    };
-
     const territories = findPlayerTerritories();
 
     // Distribute available reinforcements to territories based on priority

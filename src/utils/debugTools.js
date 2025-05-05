@@ -28,19 +28,19 @@ const MAX_SAMPLES = 100;
  */
 export function setDebugMode(enabled) {
   debugModeEnabled = enabled;
-  
+
   // Toggle visibility of all debug panels
   debugPanels.forEach(panel => {
     panel.style.display = enabled ? 'block' : 'none';
   });
-  
+
   // Add or remove global keyboard shortcuts
   if (enabled) {
     enableDebugShortcuts();
   } else {
     disableDebugShortcuts();
   }
-  
+
   return debugModeEnabled;
 }
 
@@ -72,25 +72,21 @@ export function isDebugModeEnabled() {
  */
 export function createDebugPanel(id, title, options = {}) {
   if (!isDebugModeEnabled()) return null;
-  
+
   // Default options
-  const {
-    position = 'bottom-right',
-    collapsed = false,
-    draggable = true,
-  } = options;
-  
+  const { position = 'bottom-right', collapsed = false, draggable = true } = options;
+
   // Check if panel already exists
   if (debugPanels.has(id)) {
     return debugPanels.get(id);
   }
-  
+
   // Create panel container
   const panel = document.createElement('div');
   panel.id = `debug-panel-${id}`;
   panel.className = `debug-panel debug-panel-${position}`;
   panel.setAttribute('data-debug-panel-id', id);
-  
+
   // Style the panel
   Object.assign(panel.style, {
     position: 'fixed',
@@ -107,7 +103,7 @@ export function createDebugPanel(id, title, options = {}) {
     overflowY: 'auto',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
   });
-  
+
   // Position the panel
   switch (position) {
     case 'top-left':
@@ -124,7 +120,7 @@ export function createDebugPanel(id, title, options = {}) {
       Object.assign(panel.style, { bottom: '10px', right: '10px' });
       break;
   }
-  
+
   // Create header
   const header = document.createElement('div');
   header.className = 'debug-panel-header';
@@ -137,11 +133,11 @@ export function createDebugPanel(id, title, options = {}) {
     justifyContent: 'space-between',
     alignItems: 'center',
   });
-  
+
   // Title
   const titleEl = document.createElement('span');
   titleEl.textContent = title;
-  
+
   // Toggle button
   const toggleBtn = document.createElement('button');
   toggleBtn.textContent = collapsed ? '+' : '-';
@@ -155,7 +151,7 @@ export function createDebugPanel(id, title, options = {}) {
     cursor: 'pointer',
     padding: '0 5px',
   });
-  
+
   // Content container
   const content = document.createElement('div');
   content.className = 'debug-panel-content';
@@ -163,32 +159,32 @@ export function createDebugPanel(id, title, options = {}) {
     padding: '10px',
     display: collapsed ? 'none' : 'block',
   });
-  
+
   // Assemble panel
   header.appendChild(titleEl);
   header.appendChild(toggleBtn);
   panel.appendChild(header);
   panel.appendChild(content);
-  
+
   // Add panel to document
   document.body.appendChild(panel);
-  
+
   // Add to tracking map
   debugPanels.set(id, panel);
-  
+
   // Set up event handlers
-  toggleBtn.addEventListener('click', (e) => {
+  toggleBtn.addEventListener('click', e => {
     e.stopPropagation();
     const isCollapsed = content.style.display === 'none';
     content.style.display = isCollapsed ? 'block' : 'none';
     toggleBtn.textContent = isCollapsed ? '-' : '+';
   });
-  
+
   // Make draggable if needed
   if (draggable) {
     makeElementDraggable(panel, header);
   }
-  
+
   return panel;
 }
 
@@ -198,38 +194,40 @@ export function createDebugPanel(id, title, options = {}) {
  * @param {HTMLElement} handle - Element to use as drag handle
  */
 function makeElementDraggable(element, handle) {
-  let offsetX = 0, offsetY = 0, isDragging = false;
-  
+  let offsetX = 0;
+  let offsetY = 0;
+  let isDragging = false;
+
   handle.onmousedown = dragStart;
-  
+
   function dragStart(e) {
     e.preventDefault();
     isDragging = true;
-    
+
     // Get initial mouse position
     offsetX = e.clientX - element.getBoundingClientRect().left;
     offsetY = e.clientY - element.getBoundingClientRect().top;
-    
+
     // Add move and end listeners to document
     document.addEventListener('mousemove', dragMove);
     document.addEventListener('mouseup', dragEnd);
   }
-  
+
   function dragMove(e) {
     if (!isDragging) return;
     e.preventDefault();
-    
+
     // Calculate new position
     const x = e.clientX - offsetX;
     const y = e.clientY - offsetY;
-    
+
     // Apply new position
     element.style.left = `${x}px`;
     element.style.right = 'auto';
     element.style.top = `${y}px`;
     element.style.bottom = 'auto';
   }
-  
+
   function dragEnd() {
     isDragging = false;
     document.removeEventListener('mousemove', dragMove);
@@ -244,12 +242,12 @@ function makeElementDraggable(element, handle) {
  */
 export function updateDebugPanel(id, content) {
   if (!isDebugModeEnabled() || !debugPanels.has(id)) return;
-  
+
   const panel = debugPanels.get(id);
   const contentEl = panel.querySelector('.debug-panel-content');
-  
+
   if (!contentEl) return;
-  
+
   // Handle different content types
   if (typeof content === 'function') {
     // Function that returns content
@@ -276,7 +274,7 @@ export function updateDebugPanel(id, content) {
  */
 export function removeDebugPanel(id) {
   if (!debugPanels.has(id)) return;
-  
+
   const panel = debugPanels.get(id);
   panel.parentNode.removeChild(panel);
   debugPanels.delete(id);
@@ -289,10 +287,10 @@ export function removeDebugPanel(id) {
  */
 export function logPerformanceMetric(metricName, value) {
   if (!isDebugModeEnabled() || !performanceMetrics[metricName]) return;
-  
+
   // Add value to array, keeping only the most recent samples
   performanceMetrics[metricName].push(value);
-  
+
   // Limit array size
   if (performanceMetrics[metricName].length > MAX_SAMPLES) {
     performanceMetrics[metricName].shift();
@@ -308,7 +306,7 @@ export function getAverageMetric(metricName) {
   if (!performanceMetrics[metricName] || performanceMetrics[metricName].length === 0) {
     return 0;
   }
-  
+
   const sum = performanceMetrics[metricName].reduce((a, b) => a + b, 0);
   return sum / performanceMetrics[metricName].length;
 }
@@ -318,44 +316,48 @@ export function getAverageMetric(metricName) {
  */
 export function createPerformancePanel() {
   if (!isDebugModeEnabled()) return null;
-  
+
   const panel = createDebugPanel('performance', 'Performance Metrics', {
     position: 'top-right',
     collapsed: false,
   });
-  
+
   // Update the panel every second
   const updateInterval = setInterval(() => {
     if (!isDebugModeEnabled()) {
       clearInterval(updateInterval);
       return;
     }
-    
-    const metrics = Object.entries(performanceMetrics).map(([name, values]) => {
-      const avg = values.length > 0 ? 
-        values.reduce((a, b) => a + b, 0) / values.length : 0;
-      
-      // Format based on metric type
-      let formattedValue = '';
-      if (name === 'fps') {
-        formattedValue = `${avg.toFixed(1)} FPS`;
-      } else {
-        formattedValue = `${avg.toFixed(2)}ms`;
-      }
-      
-      return `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+
+    const metrics = Object.entries(performanceMetrics)
+      .map(([name, values]) => {
+        const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+
+        // Format based on metric type
+        let formattedValue = '';
+        if (name === 'fps') {
+          formattedValue = `${avg.toFixed(1)} FPS`;
+        } else {
+          formattedValue = `${avg.toFixed(2)}ms`;
+        }
+
+        return `<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
         <span>${name}:</span>
         <span>${formattedValue}</span>
       </div>`;
-    }).join('');
-    
-    updateDebugPanel('performance', `
+      })
+      .join('');
+
+    updateDebugPanel(
+      'performance',
+      `
       <div style="font-family: monospace;">
         ${metrics}
       </div>
-    `);
+    `
+    );
   }, 1000);
-  
+
   return panel;
 }
 
@@ -365,31 +367,34 @@ export function createPerformancePanel() {
  */
 export function createStateInspector(gameInstance) {
   if (!isDebugModeEnabled() || !gameInstance) return null;
-  
+
   const panel = createDebugPanel('state-inspector', 'Game State', {
     position: 'top-left',
     collapsed: true,
   });
-  
+
   // Update the panel periodically
   const updateInterval = setInterval(() => {
     if (!isDebugModeEnabled()) {
       clearInterval(updateInterval);
       return;
     }
-    
+
     const stateInfo = `
       <div style="font-family: monospace;">
         <div style="margin-bottom: 10px; font-weight: bold;">Current Turn: Player ${gameInstance.ban} (${gameInstance.player[gameInstance.ban]?.area_c || 0} territories)</div>
         
         <div style="margin-bottom: 10px;">
           <div style="font-weight: bold; margin-bottom: 5px;">Players:</div>
-          ${Array.from({length: gameInstance.pmax}, (_, i) => `
+          ${Array.from(
+            { length: gameInstance.pmax },
+            (_, i) => `
             <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
               <span>Player ${i}:</span>
               <span>${gameInstance.player[i]?.area_c || 0} areas, ${gameInstance.player[i]?.dice_c || 0} dice</span>
             </div>
-          `).join('')}
+          `
+          ).join('')}
         </div>
         
         <div style="margin-bottom: 10px;">
@@ -405,10 +410,10 @@ export function createStateInspector(gameInstance) {
         </div>
       </div>
     `;
-    
+
     updateDebugPanel('state-inspector', stateInfo);
   }, 500);
-  
+
   return panel;
 }
 
@@ -418,32 +423,32 @@ export function createStateInspector(gameInstance) {
  */
 export function measureFPS() {
   if (!isDebugModeEnabled()) return () => {};
-  
+
   let frameCount = 0;
   let lastTimestamp = performance.now();
   let rafId;
-  
+
   function countFrame() {
     frameCount++;
     const now = performance.now();
     const elapsed = now - lastTimestamp;
-    
+
     // Calculate FPS every second
     if (elapsed >= 1000) {
       const fps = (frameCount * 1000) / elapsed;
       logPerformanceMetric('fps', fps);
-      
+
       // Reset counters
       frameCount = 0;
       lastTimestamp = now;
     }
-    
+
     rafId = requestAnimationFrame(countFrame);
   }
-  
+
   // Start measuring
   rafId = requestAnimationFrame(countFrame);
-  
+
   // Return function to stop measuring
   return () => {
     cancelAnimationFrame(rafId);
@@ -458,14 +463,14 @@ export function measureFPS() {
  */
 export function measurePerformance(fn, metricName) {
   if (!isDebugModeEnabled()) return fn;
-  
-  return function(...args) {
+
+  return function (...args) {
     const start = performance.now();
     const result = fn.apply(this, args);
     const elapsed = performance.now() - start;
-    
+
     logPerformanceMetric(metricName, elapsed);
-    
+
     return result;
   };
 }
@@ -492,13 +497,13 @@ function disableDebugShortcuts() {
 function handleDebugShortcuts(e) {
   // Only listen for special key combinations
   if (!e.ctrlKey && !e.metaKey) return;
-  
+
   // Ctrl+Shift+D = Toggle debug panel visibility
   if (e.key === 'D' && e.shiftKey) {
     e.preventDefault();
     togglePanelVisibility();
   }
-  
+
   // Ctrl+Shift+P = Toggle performance panel
   if (e.key === 'P' && e.shiftKey) {
     e.preventDefault();
@@ -520,7 +525,7 @@ function togglePanelVisibility() {
  */
 function togglePerformancePanel() {
   const panelId = 'performance';
-  
+
   if (debugPanels.has(panelId)) {
     removeDebugPanel(panelId);
   } else {
@@ -531,7 +536,7 @@ function togglePerformancePanel() {
 // Initialize debug mode based on environment
 if (process.env.NODE_ENV === 'development') {
   setDebugMode(true);
-  
+
   // Expose debug tools to global scope in development mode
   if (typeof window !== 'undefined') {
     window.__DEBUG_TOOLS = {

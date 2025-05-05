@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
     "build:analyze": "webpack --mode production --env analyze=true",
     "analyze": "webpack --mode production --env analyze=true && open dist/bundle-report.html",
     "test": "jest",

@@ -5,15 +5,17 @@
  * Implements lazy loading, prioritization, and load management.
  */
 
-// Sound priority categories
-// Sounds grouped by when they're most likely needed during gameplay
+/*
+ * Sound priority categories
+ * Sounds grouped by when they're most likely needed during gameplay
+ */
 export const SOUND_PRIORITIES = {
   // Critical sounds needed immediately on startup
   CRITICAL: ['snd_button', 'snd_click'],
-  
+
   // Gameplay sounds needed during regular play
   GAMEPLAY: ['snd_dice', 'snd_success', 'snd_fail', 'snd_myturn'],
-  
+
   // End game sounds only needed at game conclusion
   ENDGAME: ['snd_clear', 'snd_over'],
 };
@@ -101,7 +103,7 @@ export function createLoadingIndicator(container) {
   indicator.className = 'sound-loading-indicator';
   indicator.style.display = 'none';
   indicator.innerHTML = 'Loading sounds...';
-  
+
   // Style the indicator
   Object.assign(indicator.style, {
     position: 'absolute',
@@ -114,15 +116,15 @@ export function createLoadingIndicator(container) {
     fontSize: '12px',
     zIndex: '1000',
   });
-  
+
   // Add to container
   container.appendChild(indicator);
-  
+
   // Set up loading listener
   const removeListener = addLoadListener(isLoading => {
     indicator.style.display = isLoading ? 'block' : 'none';
   });
-  
+
   return {
     // Remove the indicator
     remove: () => {
@@ -130,7 +132,7 @@ export function createLoadingIndicator(container) {
       removeListener();
     },
     // Update indicator text
-    updateText: (text) => {
+    updateText: text => {
       indicator.innerHTML = text;
     },
   };

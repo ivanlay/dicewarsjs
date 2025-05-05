@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       clean: true,
-      assetModuleFilename: 'assets/[name][ext][query]'
+      assetModuleFilename: 'assets/[name][ext][query]',
     },
     module: {
       rules: [
@@ -38,16 +38,10 @@ module.exports = (env, argv) => {
         },
         {
           test: /\.(wav|mp3)$/,
-          type: 'asset',
-          parser: {
-            dataUrlCondition: {
-              // Inline files smaller than 25kb, otherwise use separate files
-              maxSize: 25 * 1024
-            }
-          },
+          type: 'asset/resource', // Force emitting all sound files as resources
           generator: {
-            filename: 'assets/sounds/[name][ext][query]'
-          }
+            filename: 'assets/sounds/[name][ext][query]',
+          },
         },
       ],
     },
@@ -76,20 +70,65 @@ module.exports = (env, argv) => {
           { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js'] } },
           // Copy CSS files if any
           { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
-          // No longer copying sound folder - using asset modules instead
+          // Copy debug HTML
+          { from: 'debug.html', to: 'debug.html', noErrorOnMissing: true },
+          // Copy sound files directly as well to ensure they're available
+          { from: 'sound/*.wav', to: 'assets/sounds/[name][ext]' },
         ],
       }),
       // Clean the output directory before each build
       new CleanWebpackPlugin(),
       // Add bundle analyzer when env.analyze is true
-      ...(analyzeBundle ? [new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        reportFilename: 'bundle-report.html',
-        openAnalyzer: false,
-        generateStatsFile: true,
-        statsFilename: 'bundle-stats.json',
-      })] : []),
+      ...(analyzeBundle
+        ? [
+            new BundleAnalyzerPlugin({
+              analyzerMode: 'static',
+              reportFilename: 'bundle-report.html',
+              openAnalyzer: false,
+              generateStatsFile: true,
+              statsFilename: 'bundle-stats.json',
+            }),
+          ]
+        : []),
     ],
+  };
+
+  // Add common optimization settings
+  config.optimization = {
+    // Enable tree shaking (dead code elimination)
+    usedExports: true,
+    // Runtime code for dynamic imports
+    runtimeChunk: 'single',
+    // Split code into chunks
+    splitChunks: {
+      chunks: 'all',
+      maxInitialRequests: 6,
+      maxAsyncRequests: 30,
+      minSize: 20000,
+      cacheGroups: {
+        // Create a chunk for vendor code
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          priority: 20,
+          chunks: 'all',
+        },
+        // Group sound-related code together
+        sound: {
+          test: /[\\/]sound[\\/]|[\\/]assets[\\/]sounds[\\/]/,
+          name: 'sound-assets',
+          priority: 10,
+          chunks: 'async',
+        },
+        // Group mechanics-related code together
+        mechanics: {
+          test: /[\\/]mechanics[\\/]/,
+          name: 'game-mechanics',
+          priority: 5,
+          chunks: 'async',
+        },
+      },
+    },
   };
 
   // Production-specific configuration
@@ -98,69 +137,29 @@ module.exports = (env, argv) => {
     config.output.filename = '[name].[contenthash].js';
     config.output.chunkFilename = '[name].[contenthash].js';
 
-    // Add optimization settings
-    config.optimization = {
-      minimize: true,
-      minimizer: [
-        new TerserPlugin({
-          terserOptions: {
-            compress: {
-              drop_console: false, // Keep console logs for now
-              passes: 2, // Multiple optimization passes
-            },
-            mangle: true,
-            output: {
-              comments: false, // Remove comments
-            },
+    // Add production optimization settings
+    config.optimization.minimize = true;
+    config.optimization.minimizer = [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: false, // Keep console logs for now
+            passes: 2, // Multiple optimization passes
           },
-          extractComments: false, // Don't extract comments to separate file
-        }),
-      ],
-      // Enable tree shaking (dead code elimination)
-      usedExports: true,
-      // Runtime code for dynamic imports
-      runtimeChunk: 'single',
-      // Split code into chunks
-      splitChunks: {
-        chunks: 'all',
-        maxInitialRequests: 6,
-        maxAsyncRequests: 30,
-        minSize: 20000,
-        cacheGroups: {
-          // Create a separate chunk for vendor code
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module) {
-              // Extract vendor name from module path
-              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
-              return `vendor.${packageName.replace('@', '')}`;
-            },
-            priority: 20,
-            chunks: 'all',
-          },
-          // Group sound-related code together
-          sound: {
-            test: /[\\/]sound[\\/]|[\\/]assets[\\/]sounds[\\/]/,
-            name: 'sound-assets',
-            priority: 10,
-            chunks: 'async',
-          },
-          // Group mechanics-related code together
-          mechanics: {
-            test: /[\\/]mechanics[\\/]/,
-            name: 'game-mechanics',
-            priority: 5,
-            chunks: 'async',
+          mangle: true,
+          output: {
+            comments: false, // Remove comments
           },
         },
-      },
-    };
+        extractComments: false, // Don't extract comments to separate file
+      }),
+    ];
 
     // No source maps in production for smaller bundle size
     config.devtool = false;
   } else {
     // Development-specific configuration
-    config.output.filename = 'bundle.js';
+    config.output.filename = '[name].bundle.js';
 
     // Add dev server settings
     config.devServer = {
@@ -168,28 +167,12 @@ module.exports = (env, argv) => {
         directory: path.join(__dirname, 'dist'),
       },
       compress: true,
-      port: 8080,
+      port: 8081,
       hot: true,
     };
 
     // Use detailed source maps for better debugging
     config.devtool = 'eval-source-map';
-    
-    // Add optimization for development
-    config.optimization = {
-      runtimeChunk: true,
-      // Development-focused code splitting
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendors: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      },
-    };
   }
 
   return config;

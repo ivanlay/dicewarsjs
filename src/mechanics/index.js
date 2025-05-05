@@ -5,7 +5,12 @@
  * Provides a unified interface for map generation, battle resolution, error handling, and event handling.
  */
 
-// Export map generator functions
+/*
+ * Export map generator functions
+ * Export default event emitter instance for convenience
+ */
+import gameEvents from './eventSystem.js';
+
 export * from './mapGenerator.js';
 
 // Export battle resolution functions
@@ -19,9 +24,6 @@ export * from './eventSystem.js';
 
 // Export error handling system
 export * from './errorHandling.js';
-
-// Export default event emitter instance for convenience
-import gameEvents from './eventSystem.js';
 export { gameEvents as default };
 
 /**

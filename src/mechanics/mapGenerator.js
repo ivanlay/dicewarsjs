@@ -459,8 +459,10 @@ export const makeMap = withErrorHandling(
 
     establishAdjacency();
 
-    // Determine area player affiliations (distribute territories among players)
-    // Initialize ownership
+    /*
+     * Determine area player affiliations (distribute territories among players)
+     * Initialize ownership
+     */
     Array.from({ length: AREA_MAX }).forEach((_, i) => {
       adat[i].arm = -1;
     });
@@ -516,8 +518,10 @@ export const makeMap = withErrorHandling(
 
     generateBorderData();
 
-    // Place dice
-    // Count valid territories and initialize with 1 die each
+    /*
+     * Place dice
+     * Count valid territories and initialize with 1 die each
+     */
     const validTerritoryCount = Array.from({ length: AREA_MAX })
       .map((_, i) => i)
       .filter(i => i > 0 && adat[i].size > 0)

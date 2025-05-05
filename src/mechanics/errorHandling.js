@@ -214,8 +214,9 @@ export const validatePlayer = (gameState, playerId) => {
  * @param {Function} [errorHandler] - Optional custom error handler
  * @returns {Function} Wrapped function with error handling
  */
-export const withErrorHandling = (fn, errorHandler) => {
-  return (...args) => {
+export const withErrorHandling =
+  (fn, errorHandler) =>
+  (...args) => {
     try {
       return fn(...args);
     } catch (error) {
@@ -236,7 +237,6 @@ export const withErrorHandling = (fn, errorHandler) => {
       throw error;
     }
   };
-};
 
 /**
  * Get a user-friendly error message

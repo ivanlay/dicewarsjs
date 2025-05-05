@@ -65,7 +65,7 @@ const fallbacks = {
  * Legacy-compatible async wrapper for playSound
  * Converts async promise-based function to a synchronous-looking function
  * that works with the legacy code expectation.
- * 
+ *
  * @param {string} soundId - ID of the sound to play
  * @param {Object} options - Sound options
  * @returns {Object} A placeholder sound instance object
@@ -94,13 +94,14 @@ function playSoundLegacyWrapper(soundId, options = {}) {
           });
       }
       return placeholderInstance;
-    }
+    },
   };
-  
+
   // Start playing asynchronously
-  SoundUtils.playSound(soundId, options)
-    .catch(err => console.warn(`Error playing sound in wrapper: ${soundId}`, err));
-  
+  SoundUtils.playSound(soundId, options).catch(err =>
+    console.warn(`Error playing sound in wrapper: ${soundId}`, err)
+  );
+
   // Return the placeholder immediately
   return placeholderInstance;
 }
@@ -114,11 +115,11 @@ let loadingInitialized = false;
 function initSoundLoading() {
   if (loadingInitialized) return;
   loadingInitialized = true;
-  
+
   // Start loading sounds by priority
   if (SoundUtils.loadSound) {
     loadSoundsByPriority(SoundUtils.loadSound);
-    
+
     // Create loading indicator if we're in a browser
     if (typeof document !== 'undefined') {
       // Initialize after DOM is fully loaded
@@ -136,8 +137,8 @@ function initSoundLoading() {
 // Export all functions to the global scope for legacy code compatibility
 try {
   // Export the sound manifest to the global scope with fallback
-  window.SOUND_MANIFEST = SoundUtils.SOUND_MANIFEST.length > 0 ? 
-    SoundUtils.SOUND_MANIFEST : defaultSoundManifest;
+  window.SOUND_MANIFEST =
+    SoundUtils.SOUND_MANIFEST.length > 0 ? SoundUtils.SOUND_MANIFEST : defaultSoundManifest;
 
   // Export all functions to the global scope for legacy code compatibility with fallbacks
   window.initSoundSystem = SoundUtils.initSoundSystem || fallbacks.initSoundSystem;
@@ -151,7 +152,7 @@ try {
   window.loadSound = SoundUtils.loadSound || fallbacks.loadSound;
 
   console.log('Sound utilities bridge module initialized successfully');
-  
+
   // Start loading sounds with priority
   initSoundLoading();
 } catch (error) {

@@ -31,11 +31,11 @@ if (process.env.NODE_ENV !== 'production') {
   try {
     // Export debug tools to global scope for legacy code
     window.DEBUG_TOOLS = DebugTools;
-    
+
     // Add specific global functions
     window.toggleDebugMode = DebugTools.toggleDebugMode;
     window.createDebugPanel = DebugTools.createDebugPanel;
-    
+
     // Add debug status indicator to page
     const initDebugStatusIndicator = () => {
       if (document.readyState === 'complete') {
@@ -62,13 +62,13 @@ if (process.env.NODE_ENV !== 'production') {
         window.addEventListener('load', initDebugStatusIndicator);
       }
     };
-    
+
     initDebugStatusIndicator();
-    
+
     console.log('Debug tools bridge initialized in development mode');
   } catch (error) {
     console.error('Failed to initialize debug tools bridge:', error);
-    
+
     // Provide fallback implementations
     window.DEBUG_TOOLS = fallbacks;
     window.toggleDebugMode = fallbacks.toggleDebugMode;

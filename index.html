@@ -10,15 +10,16 @@
     <title>DICEWARS</title>
 
     <!-- Resource hints for faster loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://code.createjs.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://code.createjs.com" />
 
     <!-- Preload critical assets -->
-    <link rel="preload" href="assets/sounds/button.wav" as="audio">
-    <link rel="preload" href="assets/sounds/click.wav" as="audio">
-    <link rel="preload" href="bundle.js" as="script">
-    <link rel="preload" href="https://code.createjs.com/1.0.0/createjs.min.js" as="script">
+    <link rel="preload" href="assets/sounds/button.wav" as="audio" />
+    <link rel="preload" href="assets/sounds/click.wav" as="audio" />
+    <link rel="preload" href="main.bundle.js" as="script" />
+    <link rel="preload" href="runtime.bundle.js" as="script" />
+    <link rel="preload" href="https://code.createjs.com/1.0.0/createjs.min.js" as="script" />
 
     <!-- Favicon -->
     <link rel="apple-touch-icon-precomposed" href="https://www.gamedesign.jp/img/icon.png" />
@@ -83,6 +84,19 @@
     <canvas id="myCanvas"></canvas>
 
     <!-- Bundled ES6 Modules -->
-    <script src="bundle.js"></script>
+    <script src="runtime.bundle.js"></script>
+    <!-- Conditionally load vendors bundle if present (dev server) -->
+    <script>
+      (function () {
+        const vendorsScript = document.createElement('script');
+        vendorsScript.src = 'vendors.bundle.js';
+        vendorsScript.onerror = function () {
+          console.log('Vendors bundle not found, continuing without it');
+        };
+        document.body.appendChild(vendorsScript);
+      })();
+    </script>
+    <script src="main.bundle.js"></script>
+    <script src="sound-assets.bundle.js"></script>
   </body>
 </html>

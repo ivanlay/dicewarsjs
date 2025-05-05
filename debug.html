@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DiceWarsJS Debug</title>
+    <style>
+      body {
+        font-family: monospace;
+        margin: 20px;
+      }
+      #console {
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 10px;
+        height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+      .error {
+        color: red;
+      }
+      .warn {
+        color: orange;
+      }
+      .log {
+        color: blue;
+      }
+      .info {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DiceWarsJS Debug Console</h1>
+    <button id="clearConsole">Clear Console</button>
+    <div id="console"></div>
+
+    <!-- Load the bundle scripts -->
+    <script src="runtime.bundle.js"></script>
+    <!-- Conditionally load vendors bundle if present (dev server) -->
+    <script>
+      (function () {
+        const vendorsScript = document.createElement('script');
+        vendorsScript.src = 'vendors.bundle.js';
+        vendorsScript.onerror = function () {
+          console.log('Vendors bundle not found, continuing without it');
+        };
+        document.body.appendChild(vendorsScript);
+      })();
+    </script>
+    <script src="main.bundle.js"></script>
+    <script src="sound-assets.bundle.js"></script>
+
+    <script>
+      // Capture console logs
+      const consoleOutput = document.getElementById('console');
+      const originalConsole = {
+        log: console.log,
+        error: console.error,
+        warn: console.warn,
+        info: console.info,
+      };
+
+      console.log = function () {
+        const args = Array.from(arguments);
+        const line = document.createElement('div');
+        line.className = 'log';
+        line.textContent = args
+          .map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : arg))
+          .join(' ');
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        originalConsole.log.apply(console, args);
+      };
+
+      console.error = function () {
+        const args = Array.from(arguments);
+        const line = document.createElement('div');
+        line.className = 'error';
+        line.textContent = args
+          .map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : arg))
+          .join(' ');
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        originalConsole.error.apply(console, args);
+      };
+
+      console.warn = function () {
+        const args = Array.from(arguments);
+        const line = document.createElement('div');
+        line.className = 'warn';
+        line.textContent = args
+          .map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : arg))
+          .join(' ');
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        originalConsole.warn.apply(console, args);
+      };
+
+      console.info = function () {
+        const args = Array.from(arguments);
+        const line = document.createElement('div');
+        line.className = 'info';
+        line.textContent = args
+          .map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : arg))
+          .join(' ');
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        originalConsole.info.apply(console, args);
+      };
+
+      // Handle window errors
+      window.addEventListener('error', function (event) {
+        const line = document.createElement('div');
+        line.className = 'error';
+        line.textContent = `ERROR: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`;
+        consoleOutput.appendChild(line);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+      });
+
+      // Add clear button functionality
+      document.getElementById('clearConsole').addEventListener('click', function () {
+        consoleOutput.innerHTML = '';
+      });
+
+      // Log a test message
+      console.log('Debug page loaded successfully. Checking for script errors...');
+    </script>
+  </body>
+</html>
