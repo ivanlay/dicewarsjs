@@ -1,37 +1,105 @@
-Transition Plan to ES6 Modular Codebase
+# DiceWarsJS Project Roadmap
 
-1. Set up the Modern Build Environment
+This document outlines the current development status, immediate next steps, and long-term vision for the DiceWarsJS project.
 
-1. Initialize package management:
+## Recent Accomplishments
 
-   - Create a package.json file with dependencies
-   - Set up npm or yarn for package management
+1. **Fixed Development Environment Configuration**
 
-1. Configure module bundler:
+   - Changed package.json `serve` script to use webpack-dev-server
+   - Updated webpack config to use consistent runtime chunk naming
+   - Fixed 404 errors for bundle files and game-loader.js
+   - Fixed sound loading "Type not recognized" errors
+   - Fixed "AI function not found for player 0" in AI vs AI mode
 
-   - Set up webpack, Rollup, or Parcel
-   - Configure entry points and output settings
-   - Add HTML template plugin to inject bundled scripts
+2. **Improved AI Bridge Initialization**
 
-1. Add transpilation support:
+   - Created `game-loader.js` for initializing global AI functions
+   - Updated HTML to load game-loader.js before other scripts
+   - Fixed "AI function not found" warnings
+   - Implemented proper AI configuration in both legacy and modern systems
 
-   - Configure Babel for ES6+ compatibility
-   - Add necessary presets and plugins
-   - Set up browserslist for target browsers
+3. **Sound System Enhancement**
+   - Added event listener to initialize AudioContext on user gesture
+   - Implemented proper sound system initialization sequence
+   - Changed dynamic imports to direct file paths
+   - Added explicit file type indication for CreateJS Sound API
 
-1. Set up development workflow:
+## Short-Term Action Items
 
-   - Configure dev server with hot reloading
-   - Add build scripts for development and production
-   - Set up source maps for debugging
+### 1. Optimize Bridge Layer and Legacy Integration
 
-1. Modularize the Codebase
+As the project continues to modernize, consider these steps:
 
-1. Create module structure:
+- Remove bridge dependencies that can be safely migrated
+- Keep stable bridge interfaces for unmigrateable components (like mc.js)
+- Transition global variables to module exports/imports where possible
+- Refactor main.js to use ES6 module structure as much as possible
+- Update AI systems to fully rely on ES6 modules while maintaining compatibility
 
-   - Organize source code into logical directories (already started in /src)
-   - Define clear module boundaries
-   - Establish consistent import/export patterns
+### 2. Update AI Loading System
+
+The current fix is a workaround for the immediate issue. A more robust solution would:
+
+- Modify Game.js to better handle the ES6 module system
+- Create an AIRegistry class to manage different AI strategies
+- Implement a dynamic loading system for AI modules
+- Add unit tests specifically for AI registration and usage
+
+```javascript
+// Example of a more robust AI registry
+class AIRegistry {
+  constructor() {
+    this.strategies = new Map();
+    this.defaultStrategy = null;
+  }
+
+  register(name, aiFunction) {
+    this.strategies.set(name, aiFunction);
+    return this;
+  }
+
+  setDefault(name) {
+    if (this.strategies.has(name)) {
+      this.defaultStrategy = this.strategies.get(name);
+    }
+    return this;
+  }
+
+  get(name) {
+    if (!name || !this.strategies.has(name)) {
+      return this.defaultStrategy;
+    }
+    return this.strategies.get(name);
+  }
+}
+```
+
+### 3. Improve Build System
+
+- Add distinct development and production build configurations
+- Implement proper source maps for easier debugging
+- Add bundle size analysis and optimization
+- Implement code splitting for better performance
+- Consider adding TypeScript for better type safety
+
+### 4. Update Documentation
+
+- Add detailed comments about the bridge layer functionality
+- Create a migration guide for moving to full ES6 modules
+- Consolidate documentation files for better organization
+- Update architecture diagrams for new developers
+
+### 5. Testing Improvements
+
+- Add integration tests for the bridge layer
+- Test AI loading under different conditions
+- Implement automated browser testing with Puppeteer or Playwright
+- Add performance benchmarks for different AI strategies
+
+## Medium-Term Goals
+
+### 1. Complete the Modularization Process
 
 1. Convert main game components to modules:
 
@@ -39,19 +107,18 @@ Transition Plan to ES6 Modular Codebase
    - Refactor rendering logic into separate modules
    - Create dedicated modules for game state management
 
-1. Convert AI implementations:
+2. Convert AI implementations:
 
-   - Migrate AI logic to ES6 modules (in progress with /src/ai/ directory)
+   - Finish migrating AI logic to ES6 modules (in progress with /src/ai/ directory)
    - Standardize AI interface
    - Create a registry for AI strategies
 
-1. Implement utility modules:
-
+3. Implement utility modules:
    - Create utility modules for common functions
    - Implement proper configuration management (started with /src/utils/config.js)
    - Add sound management module
 
-1. Modernize the Code
+### 2. Modernize the Code
 
 1. Update syntax:
 
@@ -60,127 +127,110 @@ Transition Plan to ES6 Modular Codebase
    - Use template literals instead of string concatenation
    - Implement classes for game entities
 
-1. Use modern JavaScript features:
+2. Use modern JavaScript features:
 
    - Implement destructuring assignments
    - Use spread/rest operators
    - Add default parameters
    - Utilize array/object methods like map, filter, reduce
 
-1. Improve data structures:
-
+3. Improve data structures:
    - Replace simple arrays with Maps or Sets where appropriate
    - Consider typed arrays for performance optimization
    - Use proper encapsulation with classes
 
-1. Create a Proper Build Pipeline
+### 3. Create a Proper Build Pipeline
 
 1. Set up asset management:
 
    - Configure loaders for images, sounds, etc.
    - Implement proper asset optimization
 
-1. Add code optimization:
-
+2. Add code optimization:
    - Set up minification for production builds
    - Configure tree-shaking to eliminate unused code
    - Implement code splitting if necessary
 
-1. Implement module loading strategy:
-
-   - Decide between classic ES modules or dynamic imports
-   - Configure proper loading of assets
-
-1. Update Game Infrastructure
+### 4. Update Game Infrastructure
 
 1. Implement proper game loop:
 
    - Refactor from CreateJS timer to requestAnimationFrame
    - Separate render and update loops
 
-1. Modernize rendering:
+2. Modernize rendering:
 
    - Consider canvas API abstractions
    - Implement proper rendering pipeline
 
-1. Add proper event handling:
-
+3. Add proper event handling:
    - Replace direct DOM event handling with a more structured approach
    - Implement an event bus if needed
 
-1. Handle Browser Compatibility
+## Long-Term Vision
 
-1. Define browser targets:
+### 1. Strategy for Unmigrateable Legacy Code
 
-   - Determine minimum browser versions to support
-   - Configure build tools accordingly
+Some files in the codebase (like mc.js) may never be fully migrateable to ES6 modules since they were originally generated from Adobe Flash. To handle this reality:
 
-1. Add polyfills as needed:
+- **Establish clear boundaries**: Create stable interfaces between legacy and modern code
+- **Use the adapter pattern**: Build wrapper classes/functions around legacy components
+- **Implement proxy objects**: Modern ES6 code that communicates with legacy systems
+- **Dependency injection**: Pass modern components into legacy code rather than direct access
+- **Documentation**: Clearly mark which files must remain as legacy code
 
-   - Include only necessary polyfills
-   - Consider using a service like polyfill.io
+```javascript
+// Example of an adapter for mc.js (Flash-generated code)
+export class MCAdapter {
+  constructor() {
+    // Ensure MC is available globally
+    if (!window.MC) {
+      throw new Error('MC not initialized');
+    }
+    this.mc = window.MC;
+  }
 
-1. Transition Strategy
+  // Modern ES6 methods that wrap legacy functionality
+  drawElement(element, properties) {
+    // Call legacy methods with appropriate parameters
+    this.mc.drawElement(element, properties);
+    return this;
+  }
 
-1. Implement bridge layer:
+  // Event system to bridge between legacy and modern code
+  addEventListener(event, callback) {
+    // Set up legacy event handler that calls modern callback
+    this.mc.setEventHandler(event, (...args) => {
+      callback(...args);
+    });
+  }
+}
+```
 
-   - Create compatibility layer between old and new code (like you did with AI bridge files)
-   - Gradually phase out legacy code
+### 2. Complete Transformation and New Features
 
-1. Progressive enhancement:
+- Complete transition to modern ES6 modules where possible
+- Establish stable interfaces for unmigrateable legacy code
+- Remove dependency on global variables where possible
+- Improve code organization with proper separation of concerns
+- Enhance AI strategies with more sophisticated algorithms
+- Consider implementing multiplayer capabilities
+- Add AI championship mode for comparing strategy performance
+- Create a version of the game that automatically plays AI against each other for statistical analysis
+- Add replay and game state saving functionality
 
-   - Start with core game logic
-   - Progressively modernize UI components
-   - Add new features using the new architecture
-
-1. Testing strategy:
-
-   - Add unit tests for modules
-   - Implement integration tests
-   - Set up continuous integration
-
-1. Documentation updates:
-
-   - Update README with new build instructions
-   - Document module architecture
-   - Add JSDoc comments throughout codebase
-
-1. Final Migration Steps
+### 3. Final Migration Steps
 
 1. Remove legacy files:
 
    - Once modules are fully implemented, remove old versions
    - Update import references
 
-1. Update index.html:
+2. Update index.html:
 
    - Replace individual script tags with bundled output
    - Add proper meta tags for modern web
 
-1. Clean up transitional code:
-
-   - Remove bridge implementations
+3. Clean up transitional code:
+   - Remove bridge implementations (where possible)
    - Finalize module interfaces
-
-Next Steps
-
-1. Initialize package management:
-
-   - Create a basic package.json with dependencies for ES6 modules
-   - Add scripts for development and building
-
-2. Set up a basic build process:
-
-   - Configure webpack/rollup with a simple setup
-   - Create a development server configuration
-
-3. Continue modularization:
-
-   - Finish moving the Game class to ES6 module
-   - Complete the AI module conversions
-   - Create a proper entry point in src/index.js
-
-4. Update the HTML structure:
-
-   - Create a template that the bundler can use
-   - Prepare for the transition from direct script loading to bundle loading

@@ -151,43 +151,6 @@ The repository includes several AI implementations with different strategies:
 
 If you make a cool new AI, let me know!
 
-## Recent Changes
-
-### Latest Updates (May 2024)
-
-- Set up GitHub Actions for continuous integration
-- Created CI workflow for linting, building, and testing
-- Added CI/CD documentation in docs/CI_CD.md
-- Implemented ESLint and Prettier for consistent code style and quality
-- Added pre-commit hooks with husky and lint-staged
-- Created CODE_STYLE.md with detailed style guidelines
-- Refactored codebase with optional chaining and nullish coalescing
-- Updated npm scripts for linting and formatting
-
-### Previous Updates (May 2023)
-
-- Fixed critical AI initialization timing issues in the bridge modules
-- Enhanced error handling and fallbacks in AI system
-- Added detailed documentation of the bridge architecture
-- Updated NEXT_STEPS.md with latest modernization roadmap
-- Added comprehensive tests for AI module functions
-
-### Previous Updates
-
-- Added modern build system with webpack and Babel
-- Implemented ES6 module structure throughout the codebase
-- Added development server with hot reloading
-- Updated README with new build instructions
-- Added direct "AI vs AI" button on the title screen for easy spectator mode access
-- Fixed TITLE button positioning and functionality in AI vs AI mode
-- Ensured proper game mode separation between normal play and AI vs AI
-- Fixed compatibility issues with module structure by adding bridge files
-- Added adaptive AI strategy with improved decision-making
-- Refactored to use modern ES6 structure
-- Added configuration system and spectator mode
-- Added game speed controls for spectator mode
-- Fixed issues with AI player selection
-
 ## Architecture
 
 The project now uses a hybrid architecture that bridges between ES6 modules and legacy code:
@@ -199,6 +162,19 @@ The project now uses a hybrid architecture that bridges between ES6 modules and 
 5. **Code Quality Tools**: ESLint and Prettier enforce consistent coding standards
 
 For more details about the bridge architecture, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md).
+
+## Documentation
+
+The project documentation is organized as follows:
+
+- **[docs/ROADMAP.md](./docs/ROADMAP.md)**: Development roadmap and future plans
+- **[docs/BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md)**: Details of the bridge pattern implementation
+- **[docs/CODE_STYLE.md](./docs/CODE_STYLE.md)**: Code standards and style guide
+- **[docs/CI_CD.md](./docs/CI_CD.md)**: Continuous integration setup
+- **[docs/TESTING.md](./docs/TESTING.md)**: Testing strategy and implementation
+- **[docs/fixes/WEBPACK_DEVELOPMENT_FIX.md](./docs/fixes/WEBPACK_DEVELOPMENT_FIX.md)**: Webpack configuration fixes
+- **[docs/ai/DEVELOPER_GUIDE.md](./docs/ai/DEVELOPER_GUIDE.md)**: Comprehensive guide for AI development
+- **[docs/ai-strategies/](./docs/ai-strategies/)**: Detailed AI strategy documentation
 
 ## Development Guidelines
 
@@ -234,7 +210,7 @@ For more information about the CI setup, see [CI_CD.md](./docs/CI_CD.md).
 
 ## Development Roadmap
 
-See [NEXT_STEPS.md](./NEXT_STEPS.md) for the detailed development roadmap.
+See [docs/ROADMAP.md](./docs/ROADMAP.md) for the detailed development roadmap.
 
 ## Planned Improvements
 
