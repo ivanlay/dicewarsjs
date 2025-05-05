@@ -1,26 +1,28 @@
 /**
  * Main entry point for the Dice Wars game
  * This file initializes the game and loads all necessary modules
- *
- * Note: This is a transition module - it avoids conflicting with the legacy
- * scripts while still setting up the ES6 module system for future use.
  */
 
-/*
- * Log that the ES6 module was loaded
- * Import bridge modules to expose ES6 functionality to legacy code
- */
-import './bridge/index.js';
+// Import the modern ES6 modules directly
+import { initGame } from './main.js';
+import { Game } from './Game.js';
+import { initSoundSystem, preloadSounds } from './utils/sound.js';
 
-console.log('Dice Wars ES6 module system loaded');
-
-/*
- * We're not initializing the game from here in the hybrid approach
- * The game will be initialized by the legacy main.js script
- */
-
-// Export modules for reference and future use
+// Export modules for external usage (testing, debugging, etc.)
 export * from './models/index.js';
 export * from './ai/index.js';
 export * from './utils/config.js';
+export * from './utils/sound.js';
+export * from './utils/render.js';
+export * from './mechanics/index.js';
 export { Game } from './Game.js';
+
+// Initialize sound system
+initSoundSystem();
+preloadSounds();
+
+// Initialize the game
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Starting Dice Wars ES6 edition');
+  initGame();
+});

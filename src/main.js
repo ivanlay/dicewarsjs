@@ -4,6 +4,23 @@
  * Handles initialization, rendering, and UI interactions
  */
 import { Game } from './Game.js';
+import { 
+  initSoundSystem, 
+  playSound, 
+  SOUND_MANIFEST, 
+  preloadSounds 
+} from './utils/sound.js';
+import {
+  loadConfig,
+  applyConfigToGame,
+  getConfig
+} from './utils/config.js';
+import { 
+  renderMap, 
+  renderDice, 
+  renderUI,
+  renderBattleAnimation
+} from './utils/render.js';
 
 // Global variables
 let canvas, stage;        // CreateJS canvas and stage objects
@@ -20,11 +37,6 @@ let stat = 0;             // General state variable used in state machines
 
 // Main game object - contains all game logic and state
 const game = new Game();
-
-// Import and apply configuration
-import { applyConfigToGame, loadConfig } from './utils/config.js';
-const config = loadConfig();
-applyConfigToGame(game, config);
 
 // Display position and scaling parameters
 const original_config = {
@@ -104,16 +116,6 @@ let spectate_mode = false;     // Flag for spectator mode (AI vs AI)
 
 // Sound system
 let sound_on = true;           // Flag for sound enabled/disabled
-const sound_manifest = [       // Sound file manifest for CreateJS sound system
-    {"src":"./sound/button.wav", "id":"snd_button"},  // Button click
-    {"src":"./sound/clear.wav",  "id":"snd_clear"},   // Victory sound
-    {"src":"./sound/click.wav",  "id":"snd_click"},   // Area selection
-    {"src":"./sound/dice.wav",   "id":"snd_dice"},    // Dice roll
-    {"src":"./sound/fail.wav",   "id":"snd_fail"},    // Attack failed
-    {"src":"./sound/myturn.wav", "id":"snd_myturn"},  // Player turn notification
-    {"src":"./sound/over.wav",   "id":"snd_over"},    // Game over
-    {"src":"./sound/success.wav","id":"snd_success"}  // Attack succeeded
-];
 
 /**
  * Utility function to apply scaling ratio to any number
@@ -128,37 +130,162 @@ function resize(n) {
  * Initialize the game on window load
  */
 function init() {
+    console.log('Initializing game...');
+    
+    // Load configuration
+    const config = loadConfig();
+    applyConfigToGame(game, config);
+    
     // Initialize canvas
     canvas = document.getElementById("myCanvas");
-    
-    // Setup event listeners
-    if (createjs.Touch.isSupported()) {
-        createjs.Touch.enable(stage);
-        touchdev = true;
+    if (!canvas) {
+        console.error("Cannot find canvas element with ID 'myCanvas'");
+        return;
     }
     
     // Initialize CreateJS stage
     stage = new createjs.Stage(canvas);
+    if (!stage) {
+        console.error("Failed to create CreateJS stage");
+        return;
+    }
+    
     stage.enableMouseOver();
     
+    // Setup touch support
+    if (createjs.Touch.isSupported()) {
+        createjs.Touch.enable(stage);
+        touchdev = true;
+        
+        // Touch devices may have autoplay restrictions
+        if (touchdev) {
+            sound_on = false;
+        }
+    }
+    
     // Set up update tick
+    createjs.Ticker.framerate = 60;
     createjs.Ticker.timingMode = createjs.Ticker.RAF;
     createjs.Ticker.addEventListener("tick", tick);
     
-    // Load sounds for desktop browsers
-    if (!createjs.Sound.initializeDefaultPlugins()) {
-        console.log("Sound not supported in this browser");
+    // Initialize sound system
+    if (initSoundSystem()) {
+        preloadSounds();
     } else {
-        createjs.Sound.registerSounds(sound_manifest);
+        console.warn("Sound system not available");
+        sound_on = false;
+    }
+    
+    // Calculate responsive scaling based on window dimensions
+    calculateResponsiveScaling();
+    
+    // Apply scaling to display dimensions
+    applyScalingToDisplayElements();
+    
+    // Initialize battle objects
+    for (let i = 0; i < 2; i++) {
+        battle_data[i] = new Battle();
     }
     
     // Set up event listeners
     canvas.addEventListener("mousedown", mouseDownListener);
     canvas.addEventListener("mousemove", mouseMoveListener);
     canvas.addEventListener("mouseup", mouseUpListener);
+    window.addEventListener("resize", handleWindowResize);
+    
+    // Initialize UI elements
+    initializeGameUI();
     
     // Start the title screen
     start_title_screen();
+    
+    console.log('Game initialization complete');
+}
+
+/**
+ * Calculate responsive scaling based on window dimensions
+ */
+function calculateResponsiveScaling() {
+    const inner_width = window.innerWidth;
+    const inner_height = window.innerHeight;
+    
+    // Use the smaller ratio to ensure the game fits completely
+    if (inner_width / original_config.view_w < inner_height / original_config.view_h) {
+        // Width is the constraining factor
+        scale_numerator = inner_width;
+        scale_denominator = original_config.view_w;
+    } else {
+        // Height is the constraining factor
+        scale_numerator = inner_height;
+        scale_denominator = original_config.view_h;
+    }
+}
+
+/**
+ * Apply scaling to all display dimensions
+ */
+function applyScalingToDisplayElements() {
+    view_w = Math.floor(original_config.view_w * scale_numerator / scale_denominator);
+    view_h = Math.floor(original_config.view_h * scale_numerator / scale_denominator);
+    
+    // Set canvas dimensions
+    canvas.width = view_w;
+    canvas.height = view_h;
+    
+    // Apply scaling to other display elements
+    cell_w = original_config.cel_w * scale_numerator / scale_denominator;
+    cell_h = original_config.cel_h * scale_numerator / scale_denominator;
+    ypos_message = original_config.ypos_mes * scale_numerator / scale_denominator;
+    ypos_army_status = original_config.ypos_arm * scale_numerator / scale_denominator;
+    dot_size = 1 * scale_numerator / scale_denominator;
+    
+    // Calculate hexagonal cell positions
+    calculateHexCellPositions();
+}
+
+/**
+ * Calculate positions for each hexagonal cell
+ */
+function calculateHexCellPositions() {
+    let index = 0;
+    for (let y = 0; y < game.YMAX; y++) {
+        for (let x = 0; x < game.XMAX; x++) {
+            cell_pos_x[index] = x * cell_w;
+            // Offset every other row to create hexagonal grid pattern
+            if (y % 2) {
+                cell_pos_x[index] += cell_w / 2;
+            }
+            cell_pos_y[index] = y * cell_h;
+            index++;
+        }
+    }
+}
+
+/**
+ * Handle window resize event
+ */
+function handleWindowResize() {
+    // Recalculate scaling
+    calculateResponsiveScaling();
+    applyScalingToDisplayElements();
+    
+    // Redraw all visible elements
+    redrawGameElements();
+}
+
+/**
+ * Redraw all visible game elements with new scaling
+ */
+function redrawGameElements() {
+    // TODO: Implement redrawing based on current game state
+    stage.update();
+}
+
+/**
+ * Initialize UI elements for the game
+ */
+function initializeGameUI() {
+    // TODO: Implement UI initialization
 }
 
 /**
@@ -171,8 +298,53 @@ function tick(event) {
         timer_func();
     }
     
+    // Check button hover states
+    check_button_hover();
+    
     // Update the stage
     stage.update();
+}
+
+/**
+ * Check which button the mouse is hovering over
+ */
+function check_button_hover() {
+    let new_active_button = -1;
+    
+    // Check each button for hover
+    for (let i = 0; i < button_max; i++) {
+        const sprite_index = SPRITE_INDEX.BTN + i;
+        if (!sprites[sprite_index] || !sprites[sprite_index].visible) continue;
+        
+        // Convert mouse coordinates to button's local space
+        const pt = sprites[sprite_index].globalToLocal(stage.mouseX, stage.mouseY);
+        
+        // Check if point is within button bounds
+        if (sprites[sprite_index].hitTest(pt.x, pt.y)) {
+            new_active_button = i;
+            break;
+        }
+    }
+    
+    // If hover state hasn't changed, no need to update
+    if (active_button_index === new_active_button) return;
+    
+    // Update active button index and appearance
+    active_button_index = new_active_button;
+    
+    // Update appearance of all buttons
+    for (let i = 0; i < button_max; i++) {
+        const button_sprite = sprites[SPRITE_INDEX.BTN + i];
+        if (!button_sprite) continue;
+        
+        if (i === active_button_index) {
+            // Pressed appearance for hovered button
+            button_sprite.getChildAt(0).gotoAndStop("press");
+        } else {
+            // Normal appearance for non-hovered buttons
+            button_sprite.getChildAt(0).gotoAndStop("btn");
+        }
+    }
 }
 
 /**
@@ -183,6 +355,7 @@ function mouseDownListener(e) {
     if (click_func !== null) {
         click_func(e);
     }
+    canvas.style.cursor = "default";
 }
 
 /**
@@ -193,6 +366,7 @@ function mouseMoveListener(e) {
     if (move_func !== null) {
         move_func(e);
     }
+    canvas.style.cursor = "default";
 }
 
 /**
@@ -203,13 +377,37 @@ function mouseUpListener(e) {
     if (release_func !== null) {
         release_func(e);
     }
+    canvas.style.cursor = "default";
+    
+    // If a button is active when released, call its function
+    if (active_button_index >= 0 && button_functions[active_button_index]) {
+        playSound("snd_button");
+        button_functions[active_button_index]();
+    }
 }
 
 /**
  * Initialize the title screen display
  */
 function start_title_screen() {
-    // TODO: Implement title screen
+    console.log('Starting title screen');
+    
+    // Hide all sprites initially
+    for (let i = 0; i < SPRITE_INDEX.MAX; i++) {
+        if (sprites[i]) sprites[i].visible = false;
+    }
+    
+    // TODO: Show and position title screen elements
+    // This is a placeholder for the title screen implementation
+    
+    // Update the stage
+    stage.update();
+    
+    // Setup event handlers for title screen
+    timer_func = null;
+    click_func = null; // To be implemented: click_title_screen
+    move_func = null;
+    release_func = null;
 }
 
 /**
@@ -217,8 +415,18 @@ function start_title_screen() {
  * This is called by the index.js entry point
  */
 export function initGame() {
-  init();
+    // Initialize the game when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 }
 
-// Export game instance for testing and debugging
-export { game };
+// Export game instance and functions for testing and debugging
+export { 
+    game,
+    sprites,
+    stage,
+    SPRITE_INDEX
+};
