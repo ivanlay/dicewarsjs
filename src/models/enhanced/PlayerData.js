@@ -12,14 +12,14 @@
 export class PlayerData {
   // Private fields using # prefix
   #areaCount = 0; // Number of areas owned
-  #largestTerritory = 0; // Size of largest connected territory group
-  #diceCount = 0; // Total number of dice across all territories
-  #diceRank = 0; // Dice count ranking among players
-  #stockedDice = 0; // Reinforcement dice available for distribution
 
-  constructor() {
-    // No initialization needed as private fields are pre-initialized
-  }
+  #largestTerritory = 0; // Size of largest connected territory group
+
+  #diceCount = 0; // Total number of dice across all territories
+
+  #diceRank = 0; // Dice count ranking among players
+
+  #stockedDice = 0; // Reinforcement dice available for distribution
 
   /**
    * Get the number of areas owned by this player
