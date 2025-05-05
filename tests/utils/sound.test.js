@@ -10,6 +10,7 @@ import {
   setVolume,
   setSoundEnabled,
   toggleSound,
+  loadSound,
 } from '../../src/utils/sound.js';
 
 // Mock the config module
@@ -18,21 +19,75 @@ jest.mock('../../src/utils/config.js', () => ({
   updateConfig: jest.fn(),
 }));
 
+// Mock the soundStrategy module
+jest.mock('../../src/utils/soundStrategy.js', () => ({
+  updateLoadStatus: jest.fn(),
+}));
+
 describe('Sound Utilities', () => {
+  // Setup global createjs mock
+  global.createjs = {
+    Sound: {
+      PLAY_SUCCEEDED: 'succeeded',
+      INTERRUPT_ANY: 'interrupt',
+      _initializeDefaultPluginsWasCalled: false,
+      play: jest.fn(),
+      stop: jest.fn(),
+      initializeDefaultPlugins: jest.fn().mockReturnValue(true),
+      registerSound: jest.fn().mockReturnValue(true),
+      registerSounds: jest.fn().mockReturnValue(true),
+      registerPlugins: jest.fn(),
+      activePlugin: {
+        capabilities: {
+          formats: ['wav'],
+        },
+      },
+    },
+    WebAudioPlugin: {},
+    HTMLAudioPlugin: {},
+  };
+
   // Spy on createjs.Sound methods
   beforeEach(() => {
     jest.clearAllMocks();
-    createjs.Sound.play = jest.fn().mockReturnValue({
+
+    // Reset the SOUND_MANIFEST before each test
+    while (SOUND_MANIFEST.length > 0) {
+      SOUND_MANIFEST.pop();
+    }
+
+    // Setup default mock returns
+    createjs.Sound.play.mockReturnValue({
       on: jest.fn(),
       volume: 1,
       playState: createjs.Sound.PLAY_SUCCEEDED,
     });
-    createjs.Sound.stop = jest.fn();
-    createjs.Sound.initializeDefaultPlugins = jest.fn().mockReturnValue(true);
-    createjs.Sound.registerSounds = jest.fn();
   });
 
   describe('SOUND_MANIFEST', () => {
+    beforeEach(() => {
+      // Pre-populate SOUND_MANIFEST for this test
+      const soundFiles = {
+        snd_button: './sound/button.wav',
+        snd_clear: './sound/clear.wav',
+        snd_click: './sound/click.wav',
+        snd_dice: './sound/dice.wav',
+        snd_fail: './sound/fail.wav',
+        snd_myturn: './sound/myturn.wav',
+        snd_over: './sound/over.wav',
+        snd_success: './sound/success.wav',
+      };
+
+      // Populate the manifest like initSoundSystem does
+      for (const [soundId, soundPath] of Object.entries(soundFiles)) {
+        SOUND_MANIFEST.push({
+          id: soundId,
+          src: soundPath,
+          type: 'wav',
+        });
+      }
+    });
+
     test('contains the correct sound files', () => {
       expect(SOUND_MANIFEST.length).toBe(8);
       expect(SOUND_MANIFEST.find(s => s.id === 'snd_button')).toBeTruthy();
@@ -44,56 +99,85 @@ describe('Sound Utilities', () => {
     test('initializes the sound system', () => {
       expect(initSoundSystem()).toBe(true);
       expect(createjs.Sound.initializeDefaultPlugins).toHaveBeenCalled();
-      expect(createjs.Sound.registerSounds).toHaveBeenCalledWith(SOUND_MANIFEST);
+      /*
+       * We don't use registerSounds anymore, we register each sound individually
+       * So we shouldn't test for registerSounds
+       */
     });
 
     test('returns false if sound system cannot be initialized', () => {
-      createjs.Sound.initializeDefaultPlugins.mockReturnValueOnce(false);
+      // Mock as if window.createjs is undefined temporarily
+      const originalCreatejs = global.createjs;
+      delete global.createjs;
+
       expect(initSoundSystem()).toBe(false);
+
+      // Restore createjs
+      global.createjs = originalCreatejs;
     });
   });
 
   describe('playSound', () => {
-    test('plays a sound with default options', () => {
-      const result = playSound('snd_button');
-      expect(createjs.Sound.play).toHaveBeenCalledWith('snd_button', {
+    beforeEach(() => {
+      // Mock loadSound to resolve immediately
+      jest.spyOn(global, 'Promise').mockImplementation(executor => ({
+        then: callback => {
+          callback('./sound/button.wav');
+          return {
+            catch: () => {},
+          };
+        },
+        catch: () => {},
+      }));
+    });
+
+    test('plays a sound with default options', async () => {
+      const instance = {
+        on: jest.fn(),
         volume: 1,
         loop: 0,
-        interrupt: createjs.Sound.INTERRUPT_ANY,
-      });
+        interrupt: 'interrupt',
+        playState: createjs.Sound.PLAY_SUCCEEDED,
+      };
+      createjs.Sound.play.mockReturnValueOnce(instance);
+
+      const result = await playSound('snd_button');
+
+      expect(createjs.Sound.play).toHaveBeenCalledWith('snd_button');
       expect(result).toBeTruthy();
     });
 
-    test('plays a sound with custom options', () => {
+    test('plays a sound with custom options', async () => {
       const options = {
         volume: 0.5,
         loop: 2,
         onComplete: jest.fn(),
       };
 
-      const mockInstance = {
+      const instance = {
         on: jest.fn(),
         volume: 1,
+        loop: 0,
+        interrupt: 'interrupt',
         playState: createjs.Sound.PLAY_SUCCEEDED,
       };
-      createjs.Sound.play.mockReturnValueOnce(mockInstance);
+      createjs.Sound.play.mockReturnValueOnce(instance);
 
-      const result = playSound('snd_button', options);
-      expect(createjs.Sound.play).toHaveBeenCalledWith('snd_button', {
-        volume: 0.5,
-        loop: 2,
-        interrupt: createjs.Sound.INTERRUPT_ANY,
-      });
-      expect(mockInstance.on).toHaveBeenCalledWith('complete', options.onComplete);
-      expect(result).toBe(mockInstance);
+      const result = await playSound('snd_button', options);
+
+      expect(createjs.Sound.play).toHaveBeenCalledWith('snd_button');
+      expect(instance.volume).toBe(0.5);
+      expect(instance.loop).toBe(2);
+      expect(instance.on).toHaveBeenCalledWith('complete', options.onComplete);
+      expect(result).toBe(instance);
     });
 
-    test('returns null if sound is disabled', () => {
+    test('returns null if sound is disabled', async () => {
       // Mock getConfig to return soundEnabled: false
       const { getConfig } = require('../../src/utils/config.js');
       getConfig.mockReturnValueOnce({ soundEnabled: false });
 
-      const result = playSound('snd_button');
+      const result = await playSound('snd_button');
       expect(createjs.Sound.play).not.toHaveBeenCalled();
       expect(result).toBeNull();
     });

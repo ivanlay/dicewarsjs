@@ -82,7 +82,12 @@ function findGroupsOriginal(territories, playerId) {
       const territory = territories.get(territoryId);
       const groupId = territoryToGroup.get(territoryId);
 
-      for (const adjacentId of territory.getAdjacentAreas()) {
+      // Handle case when territory doesn't have getAdjacentAreas method
+      const adjacentAreas = territory.getAdjacentAreas
+        ? territory.getAdjacentAreas()
+        : [...(territory.adjacencyMap?.keys() || [])];
+
+      for (const adjacentId of adjacentAreas) {
         const adjacentTerritory = territories.get(adjacentId);
 
         // Skip if not owned by the player
@@ -94,10 +99,6 @@ function findGroupsOriginal(territories, playerId) {
 
         // If different groups, merge them
         if (groupId !== adjacentGroupId) {
-          const group = groups.get(groupId);
-          const adjacentGroup = groups.get(adjacentGroupId);
-
-          // Merge into the lower group ID
           const targetGroupId = Math.min(groupId, adjacentGroupId);
           const sourceGroupId = Math.max(groupId, adjacentGroupId);
 
@@ -105,15 +106,17 @@ function findGroupsOriginal(territories, playerId) {
           const sourceGroup = groups.get(sourceGroupId);
 
           // Update all territories in the source group
-          for (const id of sourceGroup) {
-            targetGroup.add(id);
-            territoryToGroup.set(id, targetGroupId);
+          if (sourceGroup && targetGroup) {
+            for (const id of sourceGroup) {
+              targetGroup.add(id);
+              territoryToGroup.set(id, targetGroupId);
+            }
+
+            // Remove the source group
+            groups.delete(sourceGroupId);
+
+            changed = true;
           }
-
-          // Remove the source group
-          groups.delete(sourceGroupId);
-
-          changed = true;
         }
       }
     }

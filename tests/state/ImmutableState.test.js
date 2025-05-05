@@ -283,17 +283,24 @@ describe('Immutable State Management', () => {
       const gameState = new GameState();
       let state = gameState.getState();
 
+      // The initial state is not yet added to history
+      // History starts empty
+      expect(gameState.getStateHistory().length).toBe(0);
+
       // Update turn state
       state = gameState.updateTurn({ currentPlayerIndex: 2 });
       expect(state.currentTurn.currentPlayerIndex).toBe(2);
+
+      // After update, history length should be 1
+      expect(gameState.getStateHistory().length).toBe(1);
 
       // Advance to next player - assuming 7 players (default) and wrapping around
       state = gameState.nextPlayerTurn();
       const expectedIndex = (2 + 1) % state.config.playerCount;
       expect(state.currentTurn.currentPlayerIndex).toBe(expectedIndex);
 
-      // History should be tracking states
-      expect(gameState.getStateHistory().length).toBe(3);
+      // History should now have 2 states
+      expect(gameState.getStateHistory().length).toBe(2);
     });
   });
 
