@@ -117,6 +117,8 @@ module.exports = {
   globals: {
     // CreateJS library globals
     createjs: 'readonly',
+    // Global functions available in newer Node.js versions
+    structuredClone: 'readonly',
   },
   // Ignore legacy files that will be removed later
   ignorePatterns: [
