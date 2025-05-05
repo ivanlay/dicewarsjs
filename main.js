@@ -1,17 +1,33 @@
-var canvas, stage;        // CreateJS canvas and stage objects
-var builder;              // CreateJS SpriteSheetBuilder for dice graphics
-var touchdev = false;     // Flag indicating touch device detection
+// Use existing globals if defined by game-loader.js, otherwise create new ones
+var canvas = window.canvas || null;  // CreateJS canvas 
+var stage = window.stage || null;    // CreateJS stage objects
+var builder;                         // CreateJS SpriteSheetBuilder for dice graphics
+var touchdev = false;                // Flag indicating touch device detection
 
 // Event handler functions - set dynamically based on game state
-var timer_func = new Function();	timer_func = null;    // Called on each tick
-var click_func = new Function();	click_func = null;      // Called on mouse down
-var move_func = new Function();		move_func = null;       // Called on mouse move
-var release_func = new Function();	release_func = null;   // Called on mouse up
-var waitcount=0;          // Counter for timing/animation delays
-var stat=0;               // General state variable used in state machines
+var timer_func = window.timer_func || null;    // Called on each tick
+var click_func = window.click_func || null;    // Called on mouse down
+var move_func = window.move_func || null;      // Called on mouse move
+var release_func = window.release_func || null; // Called on mouse up
+var waitcount = window.waitcount || 0;         // Counter for timing/animation delays
+var stat = window.stat || 0;                   // General state variable used in state machines
+
+// Make sure Game constructor exists
+if (typeof window.Game !== 'function') {
+    console.error('Game constructor is not defined! Check if game-loader.js is loaded properly.');
+    // Create a temporary Game constructor to prevent errors
+    window.Game = function() {
+        this.XMAX = 28;
+        this.YMAX = 32;
+        this.cel_max = this.XMAX * this.YMAX;
+        this.AREA_MAX = 32;
+        this.pmax = 7;
+        console.log('Temporary Game instance created in main.js');
+    };
+}
 
 // Main game object - contains all game logic and state
-var game = new Game();
+var game = new window.Game();
 
 // Apply configuration if available
 if (typeof applyGameConfig === 'function') {
@@ -19,7 +35,7 @@ if (typeof applyGameConfig === 'function') {
 }
 
 // Display position and scaling parameters
-var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size configuration
+var org = window.org || {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size configuration
 var nume = 1;        // Numerator for scaling ratio (scales up)
 var deno = 1;        // Denominator for scaling ratio (scales down)
 var view_w,view_h;   // Actual display dimensions after scaling
@@ -55,8 +71,8 @@ var sn_btn = 0;        // Button sprites
 var sn_max = 0;        // Total number of sprites
 
 // Area ordering and mapping arrays
-var prio = new Array();		// Display order of area dice (for proper z-ordering)
-var an2sn = new Array();	// Maps area numbers to sprite indices for quick lookup
+var prio = window.prio || []; // Display order of area dice (for proper z-ordering)
+var an2sn = new Array();	  // Maps area numbers to sprite indices for quick lookup
 
 // Button system variables
 var bmax = 0;              // Total number of buttons
@@ -197,7 +213,9 @@ function init() {
 	
 	// Initialize area display order array (for proper z-ordering of dice)
 	for( i=0; i<game.AREA_MAX; i++ ){
-		prio[i] = new Object();
+		if (!prio[i]) {
+			prio[i] = new Object();
+		}
 		prio[i].an = i;  // Area number
 		prio[i].cpos = 0;  // Center position (will be set later during map generation)
 	}

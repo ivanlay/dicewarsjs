@@ -23,6 +23,7 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       clean: true,
       assetModuleFilename: 'assets/[name][ext][query]',
+      publicPath: '/',
     },
     module: {
       rules: [
@@ -53,8 +54,8 @@ module.exports = (env, argv) => {
       new HtmlWebpackPlugin({
         template: './index.html',
         filename: 'index.html',
-        // Don't inject the bundle.js for now - we'll use the legacy script tags
-        inject: false,
+        // Allow webpack to inject the bundle scripts but specifically control order
+        inject: false, // We will manually control script injection
         // Minify HTML in production
         minify: isProduction
           ? {
@@ -63,17 +64,29 @@ module.exports = (env, argv) => {
               removeAttributeQuotes: true,
             }
           : false,
+        // Ensure scripts are loaded in the correct order
+        templateParameters: {
+          createJsScript: 'https://code.createjs.com/1.0.0/createjs.min.js',
+          gameLoaderScript: 'game-loader.js',
+          areadiceScript: 'areadice.js',
+          mcScript: 'mc.js',
+          // Other scripts will be injected by HtmlWebpackPlugin
+        }
       }),
       new CopyWebpackPlugin({
         patterns: [
           // Copy all the legacy JS files
-          { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js'] } },
+          { from: '*.js', to: '[name].js', globOptions: { ignore: ['webpack.config.js'] } },
+          // Copy game-loader.js specifically
+          { from: 'src/game-loader.js', to: 'game-loader.js' },
           // Copy CSS files if any
-          { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
+          { from: '*.css', to: '[name].css', noErrorOnMissing: true },
           // Copy debug HTML
           { from: 'debug.html', to: 'debug.html', noErrorOnMissing: true },
           // Copy sound files directly as well to ensure they're available
-          { from: 'sound/*.wav', to: 'assets/sounds/[name][ext]' },
+          { from: 'sound/*.wav', to: 'assets/sounds/[name].wav' },
+          // Copy serve.json for development server
+          { from: 'serve.json', to: 'serve.json', noErrorOnMissing: true },
         ],
       }),
       // Clean the output directory before each build
@@ -160,15 +173,19 @@ module.exports = (env, argv) => {
   } else {
     // Development-specific configuration
     config.output.filename = '[name].bundle.js';
+    config.output.publicPath = '';  // Use relative paths for dev to make static serve work
 
-    // Add dev server settings
+    // Add dev server settings - keeping this for reference
     config.devServer = {
       static: {
-        directory: path.join(__dirname, 'dist'),
+        directory: path.join(__dirname, './'),
       },
       compress: true,
       port: 8081,
       hot: true,
+      devMiddleware: {
+        publicPath: '/',
+      },
     };
 
     // Use detailed source maps for better debugging

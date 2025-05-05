@@ -46,7 +46,10 @@ export const DEFAULT_CONFIG = {
     cellHeight: 18,       // Cell height before scaling
     messageYPos: 688,     // Y-position for messages
     armyYPos: 770         // Y-position for player status
-  }
+  },
+  
+  // Spectator mode
+  spectatorSpeedMultiplier: 2  // Speed multiplier for AI vs AI games
 };
 
 /**
@@ -123,6 +126,39 @@ export function resetConfig() {
 
 /**
  * Apply configuration to a game instance
+ * Legacy compatibility function for main.js
+ * 
+ * @param {Object} game - Game instance to configure
+ */
+export function applyGameConfig(game) {
+  // Use the global GAME_CONFIG if available, or use activeConfig otherwise
+  const config = window.GAME_CONFIG || activeConfig;
+  
+  // Apply simple config properties directly
+  if (game) {
+    try {
+      if (config.humanPlayerIndex !== undefined) {
+        game.user = config.humanPlayerIndex;
+      }
+      if (config.playerCount !== undefined) {
+        game.pmax = config.playerCount;
+      }
+      
+      // AI configuration for legacy game
+      if (typeof game.start_game === 'function') {
+        // The legacy game object has its own method to initialize AI
+        // We'll handle this in start_game
+      }
+    } catch (e) {
+      console.error('Error applying config to game object:', e);
+    }
+  }
+  
+  return game;
+}
+
+/**
+ * Apply configuration to a game instance
  * @param {Game} game - The game instance to configure
  * @param {Object} [config=null] - Optional configuration to apply (uses active config if not provided)
  */
@@ -153,20 +189,20 @@ export function applyConfigToGame(game, config = null) {
       // Map string names to the imported AI functions
       switch (aiType) {
         case 'ai_default':
-          game.ai[i] = game.aiRegistry.ai_default;
+          game.ai[i] = game.aiRegistry?.ai_default || window.ai_default;
           break;
         case 'ai_defensive':
-          game.ai[i] = game.aiRegistry.ai_defensive;
+          game.ai[i] = game.aiRegistry?.ai_defensive || window.ai_defensive;
           break;
         case 'ai_example':
-          game.ai[i] = game.aiRegistry.ai_example;
+          game.ai[i] = game.aiRegistry?.ai_example || window.ai_example;
           break;
         case 'ai_adaptive':
-          game.ai[i] = game.aiRegistry.ai_adaptive;
+          game.ai[i] = game.aiRegistry?.ai_adaptive || window.ai_adaptive;
           break;
         default:
           console.warn(`Unknown AI type: ${aiType}, using default AI`);
-          game.ai[i] = game.aiRegistry.ai_default;
+          game.ai[i] = game.aiRegistry?.ai_default || window.ai_default;
       }
     }
   }

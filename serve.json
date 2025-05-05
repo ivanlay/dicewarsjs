@@ -1,0 +1,44 @@
+{
+  "cleanUrls": false,
+  "trailingSlash": true,
+  "directoryListing": false,
+  "public": ".",
+  "headers": [
+    {
+      "source": "**/*.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    },
+    {
+      "source": "**/*.bundle.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    },
+    {
+      "source": "game-loader.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    },
+    {
+      "source": "**/*.wav",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "audio/wav"
+        }
+      ]
+    }
+  ]
+}

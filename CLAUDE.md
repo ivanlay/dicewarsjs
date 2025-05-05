@@ -4,26 +4,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running the Project
 
-- Open `index.html` in a web browser to run the game
-- No build process is required; this is a pure JavaScript project that runs in the browser
+- Run `npm run serve` to start a local development server
+- Open `http://localhost:3000` in a web browser to run the game
+- A build process is required with `npm run build` for production builds
 - AI vs AI testing can be enabled through the configuration system
+
+## Architecture
+
+The project uses a hybrid architecture combining modern ES6 modules with legacy global scope code:
+
+- Modern code uses ES6 modules with `import`/`export` statements
+- Legacy code uses global variables (attached to the `window` object)
+- A bridge pattern connects these two systems, exposing ES6 module functionality to global scope
+- The initialization sequence is critical - game-loader.js sets up globals before other scripts run
 
 ## File Structure
 
-The project uses a modern module-based structure:
+The project uses a mixed module-based/legacy structure:
 
-- `/src/` - Main source code directory
-  - `/ai/` - AI implementations
-  - `/models/` - Game data structures
+- `/src/` - Modern ES6 module source code
+  - `/ai/` - AI implementations (ES6 modules)
+  - `/bridge/` - Code that bridges modern and legacy systems
+  - `/models/` - Game data structures (ES6 classes)
   - `/utils/` - Utility functions and configuration
-  - `Game.js` - Core game logic and state management
-  - `main.js` - Rendering and UI interaction
+  - `/mechanics/` - Game rules and logic
+  - `Game.js` - Modern game class implementation
+  - `game-loader.js` - Initializes global objects for legacy code
+- Root directory - Legacy code files
+  - `main.js` - Legacy game initialization and rendering
+  - `*.js` files - Legacy game components
 - `/docs/` - Documentation including AI strategy guides
 - `/sound/` - Sound effects
 
 ## Code Style Guidelines
 
-- **Modern JS**: Uses ES modules with import/export
+### Modern and Legacy Code Styles
+
+The project contains both modern and legacy code:
+
+- **Modern Code (in /src/)**:
+  - Uses ES modules with `import`/`export` statements
+  - Uses ES6 classes and modern JS features
+  - Follows structured organization with clear separation of concerns
+  
+- **Legacy Code (in root directory)**:
+  - Uses global scope and attaches to `window` object
+  - Uses traditional constructor functions instead of classes
+  - More procedural in style with less strict organization
+  - Relies on execution order for proper initialization
+
+### General Guidelines
+
 - **ESLint & Prettier**: Project uses ESLint and Prettier for code quality and formatting
 - **ES6+ Features**: Use optional chaining (?.) and nullish coalescing (??) for safer code
 - **Naming**:
@@ -35,14 +66,27 @@ The project uses a modern module-based structure:
 - **Whitespace**: Use 2 spaces for indentation
 - **Classes**: Use ES6 class syntax for new code
 - **Game constants**: Define in the configuration system for flexibility
-- **ESLint Customizations**:
-  - File extensions in imports are allowed (e.g., `import x from './file.js'`)
-  - Underscore dangle for private fields is permitted in enhanced models (e.g., `this._privateField`)
-  - The increment operator (`++`) and `continue` statements are allowed in game logic loops
-  - `for...of` statements are permitted for simpler iteration code
-  - Private class fields with # prefix are used in enhanced models (e.g., `#privateField`)
-  - CreateJS is defined as a global variable for the rendering system
-  - Custom code for a game engine prioritizes readability over strict adherence to all ESLint rules
+
+### Defensive Programming
+
+When working with the bridge between modern and legacy code:
+
+- Use explicit `window.` namespace for global variables
+- Add null checks before accessing properties of global objects
+- Provide fallbacks for critical objects if they aren't defined
+- Use protective initialization patterns like `window.obj = window.obj || {}`
+- Be careful with script loading order to ensure dependencies are met
+- Add explicit type attributes to script tags (`type="text/javascript"`)
+
+### ESLint Customizations
+
+- File extensions in imports are allowed (e.g., `import x from './file.js'`)
+- Underscore dangle for private fields is permitted in enhanced models (e.g., `this._privateField`)
+- The increment operator (`++`) and `continue` statements are allowed in game logic loops
+- `for...of` statements are permitted for simpler iteration code
+- Private class fields with # prefix are used in enhanced models (e.g., `#privateField`)
+- CreateJS is defined as a global variable for the rendering system
+- Custom code for a game engine prioritizes readability over strict adherence to all ESLint rules
 
 Detailed code style guidelines are available in `docs/CODE_STYLE.md`.
 
@@ -74,13 +118,25 @@ Before creating a pull request:
 1. Run `npm run lint` and `npm run format` to ensure code style consistency
 2. Run `npm run build` to verify that the project builds correctly
 3. Run `npm test` to run the test suite
-4. Test with all existing AIs to ensure compatibility
-5. Verify that your changes don't break existing game mechanics
-6. For new AIs, test various game scenarios (early game, mid game, endgame)
-7. Check browser console for any error messages
-8. If adding new features, update relevant documentation
+4. Run `npm run serve` and test the game in the browser
+5. Verify that your changes maintain bridge compatibility between modern and legacy code
+6. Check for console errors during initialization and gameplay
+7. Test with all existing AIs to ensure compatibility
+8. Verify that your changes don't break existing game mechanics
+9. For new AIs, test various game scenarios (early game, mid game, endgame)
+10. If adding new features, update relevant documentation
 
-Note on linting:
+### Important Testing Considerations for Hybrid Architecture
+
+When testing changes to the bridge or initialization code:
+
+1. Check the browser console for initialization errors
+2. Verify that global objects are properly defined in the correct sequence
+3. Test with different browsers to ensure compatibility
+4. Check that the game-loader.js file is properly included in the build
+5. Verify that script loading order is maintained in the generated HTML
+
+### Note on Linting
 
 - Run `npm run lint:fix` to automatically fix linting issues
 - Some linting rules are relaxed to accommodate game development patterns
@@ -88,21 +144,41 @@ Note on linting:
 
 GitHub Actions will automatically run these checks on every push and pull request to ensure code quality.
 
-## Default Code Imports
+## Key Libraries and Dependencies
 
-- Uses ES modules for code organization
-- Uses CreateJS for canvas rendering
+- **CreateJS** - Canvas rendering and animation library
+- **Webpack** - Module bundler for modern code
+- **ESLint/Prettier** - Code quality and formatting
+- **Jest** - Testing framework
+- **serve** - Development server
 
-## Commits and Command Usage
+## Initialization Sequence
 
-- Run `npm run lint` to check for code style issues
-- Run `npm run lint:fix` to automatically fix linting issues
-- Run `npm run format` to format code with Prettier
-- Run `npm test` to run the test suite
-- Run `npm run build` to create a production build
-- Pre-commit hooks will automatically lint and format staged files
-- Follow semantic versioning for commit messages
+The game's initialization sequence is critical:
+
+1. CreateJS loads first (from CDN)
+2. game-loader.js initializes essential global objects
+3. Legacy library scripts (areadice.js, mc.js) load
+4. Webpack bundles with modern code load
+5. main.js initializes the game using objects from all previous scripts
+
+## Commands and Development Workflow
+
+- `npm run serve` - Start a development server at http://localhost:3000
+- `npm run build` - Create a production build in /dist
+- `npm run lint` - Check for code style issues
+- `npm run lint:fix` - Automatically fix linting issues
+- `npm run format` - Format code with Prettier
+- `npm test` - Run the test suite
+- `npm run benchmark` - Run AI performance tests
+
+### Development Tips
+
+- Always check browser console for initialization errors
+- Use the Browser's Developer Tools to debug game-loader.js and script loading
+- When modifying the bridge between modern and legacy code, test thoroughly
 - When implementing new AIs, always test in-game before committing
+- Follow semantic versioning for commit messages
 
 ## Continuous Integration
 

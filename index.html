@@ -17,7 +17,9 @@
     <!-- Preload critical assets -->
     <link rel="preload" href="assets/sounds/button.wav" as="audio" />
     <link rel="preload" href="assets/sounds/click.wav" as="audio" />
-    <link rel="preload" href="https://code.createjs.com/1.0.0/createjs.min.js" as="script" />
+    <link rel="preload" href="<%= createJsScript %>" as="script" />
+    <link rel="preload" href="<%= gameLoaderScript %>" as="script" />
+    <link rel="preload" href="main.bundle.js" as="script" />
 
     <!-- Favicon -->
     <link rel="apple-touch-icon-precomposed" href="https://www.gamedesign.jp/img/icon.png" />
@@ -66,16 +68,41 @@
       }
     </style>
 
-    <!-- Scripts -->
-    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-    <script src="areadice.js"></script>
-    <script src="mc.js"></script>
+    <!-- Scripts - Controlled loading order is critical -->
+    <!-- 1. First load CreateJS -->
+    <script src="<%= createJsScript %>"></script>
     
-    <!-- ES6 Modules - Direct Loading -->
-    <script type="module" src="src/index.js"></script>
+    <!-- 2. Then load game-loader.js which sets up global objects -->
+    <script type="text/javascript" src="<%= gameLoaderScript %>"></script>
+    
+    <!-- 3. Load library scripts -->
+    <script type="text/javascript" src="<%= areadiceScript %>"></script>
+    <script type="text/javascript" src="<%= mcScript %>"></script>
+    
+    <!-- 4. Webpack runtime chunk for better caching -->
+    <script type="text/javascript" src="runtime.bundle.js"></script>
+    
+    <!-- 5. Webpack main bundle with ES6 modules -->
+    <script type="text/javascript" src="main.bundle.js"></script>
   </head>
 
   <body>
     <canvas id="myCanvas"></canvas>
+    <!-- 6. Finally load the main.js script that initializes the game -->
+    <script type="text/javascript" src="main.js"></script>
+    
+    <!-- Debug only: display loader and initialization status -->
+    <script>
+      // Log initialization steps to help with troubleshooting
+      console.log('DiceWarsJS Initialization Status:');
+      console.log('- CreateJS loaded:', typeof createjs !== 'undefined');
+      console.log('- Game constructor available:', typeof window.Game === 'function');
+      console.log('- Game-loader initialized:', window.DiceWars?.initialized === true);
+      
+      // Add on-error handler to show issues
+      window.addEventListener('error', function(e) {
+        console.error('Script error detected:', e.message);
+      });
+    </script>
   </body>
 </html>

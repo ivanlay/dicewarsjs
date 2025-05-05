@@ -1,76 +1,41 @@
 {
   "name": "dicewarsjs",
   "version": "1.0.0",
-  "description": "A JavaScript implementation of the Dice Wars game",
-  "main": "src/index.js",
+  "description": "Dice Wars game implemented in JavaScript",
+  "main": "index.js",
   "scripts": {
-    "dev": "webpack serve --mode development",
-    "build": "webpack --mode production",
-    "build:dev": "webpack --mode development",
-    "build:analyze": "webpack --mode production --env analyze=true",
-    "analyze": "webpack --mode production --env analyze=true && open dist/bundle-report.html",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:coverage:watch": "jest --coverage --watch",
-    "benchmark": "node tests/benchmarks/benchmark.cjs",
-    "benchmark:full": "node --input-type=module --experimental-json-modules tests/benchmarks/runBenchmarks.js",
-    "test:benchmark": "jest tests/benchmarks/ai.benchmark.js",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development",
+    "serve": "serve -p 3000 ./dist",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "prepare": "husky install"
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\""
   },
   "keywords": [
     "game",
-    "strategy",
-    "dice"
+    "dice",
+    "strategy"
   ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.22.0",
-    "@babel/preset-env": "^7.22.0",
-    "babel-jest": "^29.7.0",
-    "babel-loader": "^9.1.2",
-    "clean-webpack-plugin": "^4.0.0",
-    "copy-webpack-plugin": "^11.0.0",
-    "eslint": "^8.57.1",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jest": "^28.11.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^5.3.1",
-    "html-webpack-plugin": "^5.5.1",
-    "husky": "^8.0.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "jest-watch-typeahead": "^2.2.2",
-    "lint-staged": "^15.5.1",
-    "prettier": "^3.5.3",
-    "terser-webpack-plugin": "^5.3.14",
-    "webpack": "^5.84.0",
-    "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^5.1.1",
-    "webpack-dev-server": "^4.15.0"
-  },
-  "dependencies": {
-    "core-js": "^3.30.2"
-  },
-  "browserslist": [
-    ">0.25%",
-    "not dead",
-    "not ie <= 11"
-  ],
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix --max-warnings=100",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "babel-jest": "^26.6.3",
+    "babel-loader": "^8.2.2",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^7.0.0",
+    "eslint": "^7.17.0",
+    "html-webpack-plugin": "^5.0.0-beta.4",
+    "jest": "^26.6.3",
+    "jest-watch-typeahead": "^0.6.1",
+    "prettier": "^2.2.1",
+    "serve": "^11.3.2",
+    "terser-webpack-plugin": "^5.1.1",
+    "webpack": "^5.11.1",
+    "webpack-bundle-analyzer": "^4.3.0",
+    "webpack-cli": "^4.3.1",
+    "webpack-dev-server": "^3.11.1"
   }
 }
