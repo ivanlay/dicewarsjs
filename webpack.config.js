@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       clean: true,
-      assetModuleFilename: 'assets/[name][ext][query]'
+      assetModuleFilename: 'assets/[name][ext][query]',
     },
     module: {
       rules: [
@@ -42,12 +42,12 @@ module.exports = (env, argv) => {
           parser: {
             dataUrlCondition: {
               // Inline files smaller than 25kb, otherwise use separate files
-              maxSize: 25 * 1024
-            }
+              maxSize: 25 * 1024,
+            },
           },
           generator: {
-            filename: 'assets/sounds/[name][ext][query]'
-          }
+            filename: 'assets/sounds/[name][ext][query]',
+          },
         },
       ],
     },
@@ -85,13 +85,17 @@ module.exports = (env, argv) => {
       // Clean the output directory before each build
       new CleanWebpackPlugin(),
       // Add bundle analyzer when env.analyze is true
-      ...(analyzeBundle ? [new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        reportFilename: 'bundle-report.html',
-        openAnalyzer: false,
-        generateStatsFile: true,
-        statsFilename: 'bundle-stats.json',
-      })] : []),
+      ...(analyzeBundle
+        ? [
+            new BundleAnalyzerPlugin({
+              analyzerMode: 'static',
+              reportFilename: 'bundle-report.html',
+              openAnalyzer: false,
+              generateStatsFile: true,
+              statsFilename: 'bundle-stats.json',
+            }),
+          ]
+        : []),
     ],
   };
 
@@ -179,7 +183,7 @@ module.exports = (env, argv) => {
 
     // Use detailed source maps for better debugging
     config.devtool = 'eval-source-map';
-    
+
     // Add optimization for development
     config.optimization = {
       runtimeChunk: 'single', // Use 'single' instead of naming it to ensure consistent naming

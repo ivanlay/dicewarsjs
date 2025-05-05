@@ -38,7 +38,7 @@ This fork significantly extends the project with:
    npm run dev
    ```
 
-3. Open your browser at `http://localhost:8080`
+3. Open your browser at `http://localhost:3000`
 
 ### Production Build
 

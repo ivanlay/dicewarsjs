@@ -5,7 +5,7 @@
  * Implemented using functional programming patterns and ES6 features.
  */
 
-import { Battle, HistoryData } from '../models/index.js';
+import { HistoryData } from '../models/index.js';
 
 // Import to avoid circular dependency
 import { setAreaTc } from './mapGenerator.js';
@@ -24,7 +24,6 @@ import {
 import {
   validateTerritories,
   validatePlayer,
-  TerritoryError,
   BattleError,
   PlayerError,
   withErrorHandling,
@@ -33,11 +32,13 @@ import {
 // Import debug tools (will be auto disabled in production)
 let measurePerformance = fn => fn; // Default no-op
 if (process.env.NODE_ENV === 'development') {
-  import('../utils/debugTools.js').then(module => {
-    if (module.isDebugModeEnabled()) {
-      measurePerformance = module.measurePerformance;
-    }
-  }).catch(err => console.warn('Failed to load debug tools:', err));
+  import('../utils/debugTools.js')
+    .then(module => {
+      if (module.isDebugModeEnabled()) {
+        measurePerformance = module.measurePerformance;
+      }
+    })
+    .catch(err => console.warn('Failed to load debug tools:', err));
 }
 
 /**
@@ -119,7 +120,7 @@ export const calculateAttackProbability = (attackerDice, defenderDice) => {
  * @returns {Object} Battle results including success flag and dice values
  * @throws {BattleError} If battle cannot be resolved
  */
-export const resolveBattle = measurePerformance(resolveBattleImplementation, "battleResolution");
+export const resolveBattle = measurePerformance(resolveBattleImplementation, 'battleResolution');
 
 function resolveBattleImplementation(gameState, fromArea, toArea) {
   try {
@@ -180,7 +181,7 @@ function resolveBattleImplementation(gameState, fromArea, toArea) {
  */
 export const executeAttack = withErrorHandling(
   (gameState, fromArea, toArea, currentPlayerId) => {
-    const { adat, his, his_c } = gameState;
+    const { adat } = gameState;
 
     // Validate territories and ownership if player ID provided
     validateTerritories(gameState, fromArea, toArea, currentPlayerId);
@@ -207,14 +208,14 @@ export const executeAttack = withErrorHandling(
     updatedGameState.defeat = battle.success ? 1 : 0;
 
     // Ensure history entry exists
-    if (!updatedGameState.his[his_c]) {
-      updatedGameState.his[his_c] = new HistoryData();
+    if (!updatedGameState.his[updatedGameState.his_c]) {
+      updatedGameState.his[updatedGameState.his_c] = new HistoryData();
     }
 
     // Record in history
-    updatedGameState.his[his_c].from = fromArea;
-    updatedGameState.his[his_c].to = toArea;
-    updatedGameState.his[his_c].res = battle.success ? 1 : 0;
+    updatedGameState.his[updatedGameState.his_c].from = fromArea;
+    updatedGameState.his[updatedGameState.his_c].to = toArea;
+    updatedGameState.his[updatedGameState.his_c].res = battle.success ? 1 : 0;
     updatedGameState.his_c++;
 
     // Update territory state based on outcome using pure function pattern
@@ -304,7 +305,7 @@ export const executeAttack = withErrorHandling(
  */
 export const distributeReinforcements = withErrorHandling(
   (gameState, playerIndex) => {
-    const { player, adat, AREA_MAX, STOCK_MAX, his, his_c } = gameState;
+    const { player, adat, AREA_MAX, STOCK_MAX } = gameState;
 
     // Validate player
     validatePlayer(gameState, playerIndex);
@@ -338,11 +339,15 @@ export const distributeReinforcements = withErrorHandling(
     }
 
     // Find all territories owned by this player
-    const findPlayerTerritories = () => {
-      return Array.from({ length: AREA_MAX })
+    const findPlayerTerritories = () =>
+      Array.from({ length: AREA_MAX })
         .map((_, i) => i)
         .filter(
-          i => i > 0 && adat[i].size > 0 && adat[i].arm === playerIndex && adat[i].dice < 8 // Skip territories at max dice
+          areaId =>
+            areaId > 0 &&
+            adat[areaId].size > 0 &&
+            adat[areaId].arm === playerIndex &&
+            adat[areaId].dice < 8 // Skip territories at max dice
         )
         .map(id => {
           // Check if this territory borders an enemy
@@ -351,7 +356,7 @@ export const distributeReinforcements = withErrorHandling(
               .map((_, j) => j)
               .filter(
                 j =>
-                  j > 0 && adat[j].size > 0 && adat[i].join[j] === 1 && adat[j].arm !== playerIndex
+                  j > 0 && adat[j].size > 0 && adat[id].join[j] === 1 && adat[j].arm !== playerIndex
               ).length > 0;
 
           // Calculate priority score - border territories and those with fewer dice get priority
@@ -360,14 +365,13 @@ export const distributeReinforcements = withErrorHandling(
           return { id, priority };
         })
         .sort((a, b) => b.priority - a.priority); // Sort by priority (higher first)
-    };
 
     const territories = findPlayerTerritories();
 
     // Distribute available reinforcements to territories based on priority
     const distributeAvailableDice = () => {
       let remainingStock = player[playerIndex].stock;
-      let currentHistory = his_c;
+      let currentHistory = gameState.his_c;
 
       // Try to distribute to each territory in priority order until stock is depleted
       for (const { id } of territories) {
@@ -379,7 +383,6 @@ export const distributeReinforcements = withErrorHandling(
         }
 
         // Add a die to this territory
-        const previousDice = adat[id].dice;
         adat[id].dice++;
         remainingStock--;
 

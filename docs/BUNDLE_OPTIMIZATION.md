@@ -19,6 +19,7 @@ npm run analyze
 ```
 
 The analyzer will create a visual representation of the bundle contents, showing:
+
 - Each module's size (as raw, minified, and gzipped)
 - How modules relate to each other
 - Which modules might be candidates for optimization
