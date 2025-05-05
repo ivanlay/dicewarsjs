@@ -7,7 +7,7 @@ window.GAME_CONFIG = {
   
   // AI configuration
   aiTypes: [
-    null,                 // Player 0 (human)
+    'ai_adaptive',        // Player 0 (human by default, AI in spectator mode)
     'ai_example',         // Player 1
     'ai_defensive',       // Player 2  
     'ai_adaptive',        // Player 3

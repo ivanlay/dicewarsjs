@@ -675,12 +675,25 @@ var Game = function(){
 	 * @returns {number} Return value from the AI (0 to end turn, non-zero to continue)
 	 */
 	this.com_thinking = function() {
+		// Get the current player number
+		var currentPlayer = this.jun[this.ban];
+		
 		// Look up the AI function for the current player
-		var ai_function = this.ai[ this.jun[this.ban] ];
+		var ai_function = this.ai[currentPlayer];
+		
+		// If player 0 is configured as AI (humanPlayerIndex is null), use the aiTypes 
+		// configuration to determine which AI function to use
+		if (currentPlayer === 0 && window.GAME_CONFIG && window.GAME_CONFIG.humanPlayerIndex === null) {
+			var aiType = window.GAME_CONFIG.aiTypes && window.GAME_CONFIG.aiTypes[currentPlayer];
+			if (aiType && typeof window.getAIFunctionByName === 'function') {
+				console.log('Using AI for player 0: ' + aiType);
+				ai_function = window.getAIFunctionByName(aiType);
+			}
+		}
 		
 		// Check if the AI function exists before calling it
 		if (typeof ai_function !== 'function') {
-			console.error('AI function not found for player ' + this.jun[this.ban]);
+			console.error('AI function not found for player ' + currentPlayer);
 			// Use default AI as a fallback if available
 			if (typeof window.ai_default === 'function') {
 				console.log('Using default AI as fallback');

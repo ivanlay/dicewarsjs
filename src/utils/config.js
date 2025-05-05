@@ -19,7 +19,7 @@ export const DEFAULT_CONFIG = {
   
   // AI configuration
   aiTypes: [
-    null,                 // Player 0 (human)
+    'ai_adaptive',        // Player 0 (human by default, AI in spectator mode)
     'ai_example',         // Player 1
     'ai_defensive',       // Player 2  
     'ai_adaptive',        // Player 3
@@ -144,7 +144,12 @@ export function applyConfigToGame(game, config = null) {
     // Map AI type strings to actual functions
     for (let i = 0; i < cfg.aiTypes.length && i < game.ai.length; i++) {
       const aiType = cfg.aiTypes[i];
-      // Skip null entries (human players)
+      // Special handling for player 0 - only set to null if humanPlayerIndex is player 0
+      if (i === 0 && cfg.humanPlayerIndex === 0) {
+        game.ai[i] = null;
+        continue;
+      }
+      // Skip null entries (human players at other positions)
       if (aiType === null) {
         game.ai[i] = null;
         continue;
@@ -169,6 +174,10 @@ export function applyConfigToGame(game, config = null) {
           game.ai[i] = game.aiRegistry.ai_default;
       }
     }
+    
+    // Log info about AI configuration for debugging
+    console.log(`Game configured with humanPlayerIndex: ${cfg.humanPlayerIndex}`);
+    console.log(`Player 0 AI function: ${game.ai[0] ? 'AI' : 'Human'}`);
   }
   
   return game;
