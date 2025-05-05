@@ -11,17 +11,17 @@
 import { getConfig, updateConfig } from './config.js';
 import { updateLoadStatus } from './soundStrategy.js';
 
-// Import sound assets using webpack asset modules
-// Use a dynamic import approach to enable lazy loading
+// Map of sound IDs to their file paths
+// Using direct paths instead of dynamic imports to avoid MIME type issues
 const soundFiles = {
-  'snd_button': () => import('../../sound/button.wav'),   // Button click
-  'snd_clear': () => import('../../sound/clear.wav'),     // Victory sound
-  'snd_click': () => import('../../sound/click.wav'),     // Area selection
-  'snd_dice': () => import('../../sound/dice.wav'),       // Dice roll
-  'snd_fail': () => import('../../sound/fail.wav'),       // Attack failed
-  'snd_myturn': () => import('../../sound/myturn.wav'),   // Player turn notification
-  'snd_over': () => import('../../sound/over.wav'),       // Game over
-  'snd_success': () => import('../../sound/success.wav'), // Attack succeeded
+  'snd_button': './sound/button.wav',   // Button click
+  'snd_clear': './sound/clear.wav',     // Victory sound
+  'snd_click': './sound/click.wav',     // Area selection
+  'snd_dice': './sound/dice.wav',       // Dice roll
+  'snd_fail': './sound/fail.wav',       // Attack failed
+  'snd_myturn': './sound/myturn.wav',   // Player turn notification
+  'snd_over': './sound/over.wav',       // Game over
+  'snd_success': './sound/success.wav', // Attack succeeded
 };
 
 // Sound file manifest for CreateJS (populated dynamically)
@@ -29,7 +29,7 @@ export const SOUND_MANIFEST = [];
 
 // Caches for sounds and instances
 const soundInstances = {};
-const loadedSounds = new Map();
+export const loadedSounds = new Map();
 
 /**
  * Load a sound file and register it with CreateJS
@@ -52,16 +52,29 @@ export async function loadSound(soundId) {
   updateLoadStatus(1);
 
   try {
-    // Dynamic import the sound file
-    const module = await soundFiles[soundId]();
-    const soundPath = module.default;
+    // Get the sound path directly
+    const soundPath = soundFiles[soundId];
 
     // Store in cache
     loadedSounds.set(soundId, soundPath);
     
     // Register with CreateJS if it's available
     if (typeof createjs !== 'undefined' && createjs.Sound) {
-      createjs.Sound.registerSound(soundPath, soundId);
+      // Ensure correct initialization
+      if (!createjs.Sound._initializeDefaultPluginsWasCalled) {
+        createjs.Sound.initializeDefaultPlugins();
+      }
+      
+      // Use registerSound with explicit type to avoid MIME issues
+      const result = createjs.Sound.registerSound({
+        src: soundPath,
+        id: soundId,
+        type: "wav"  // Explicitly set the file type to avoid MIME detection issues
+      });
+      
+      if (!result) {
+        console.warn(`RegisterSound failed for ${soundId} at ${soundPath}`);
+      }
     }
     
     // Update manifest for future reference
@@ -85,13 +98,44 @@ export async function loadSound(soundId) {
  * @returns {boolean} True if initialization succeeded
  */
 export function initSoundSystem() {
-  if (typeof createjs === 'undefined' || !createjs.Sound || !createjs.Sound.initializeDefaultPlugins()) {
+  if (typeof createjs === 'undefined' || !createjs.Sound) {
     console.warn('Sound system not supported in this browser');
     return false;
   }
+  
+  try {
+    // Initialize default plugins only on user interaction
+    // This avoids AudioContext autoplay issues in browsers
+    if (!createjs.Sound._initializeDefaultPluginsWasCalled) {
+      createjs.Sound.initializeDefaultPlugins();
+    }
+    
+    // Configure CreateJS to use HTML5 audio
+    if (createjs.Sound.activePlugin?.capabilities) {
+      // Explicitly set preferred MIME types and extensions
+      createjs.Sound.registerPlugins([createjs.WebAudioPlugin, createjs.HTMLAudioPlugin]);
+    }
 
-  // We'll register sounds as they're loaded
-  return true;
+    // Pre-create sound instances to avoid undefined issues
+    Object.keys(soundFiles).forEach(soundId => {
+      soundInstances[soundId] = null;
+    });
+    
+    // Pre-load the manifest
+    for (const [soundId, soundPath] of Object.entries(soundFiles)) {
+      SOUND_MANIFEST.push({
+        id: soundId,
+        src: soundPath,
+        type: "wav"
+      });
+    }
+    
+    // We'll register sounds as they're loaded
+    return true;
+  } catch (error) {
+    console.error("Error initializing sound system:", error);
+    return false;
+  }
 }
 
 /**
@@ -111,11 +155,22 @@ export async function playSound(soundId, options = {}) {
   await loadSound(soundId);
 
   try {
-    const instance = createjs.Sound.play(soundId, {
-      volume: options.volume ?? 1,
-      loop: options.loop ?? 0,
-      interrupt: createjs.Sound.INTERRUPT_ANY,
-    });
+    // Initialize sound system if not already done
+    // This helps with AudioContext autoplay restrictions
+    if (typeof createjs !== 'undefined' && createjs.Sound && 
+        !createjs.Sound._initializeDefaultPluginsWasCalled) {
+      createjs.Sound.initializeDefaultPlugins();
+    }
+
+    // Use the modern createjs API to avoid deprecation warnings
+    const instance = createjs.Sound.play(soundId);
+    
+    // Modern approach to setting properties
+    if (instance) {
+      instance.volume = options.volume ?? 1;
+      if (options.loop) instance.loop = options.loop;
+      instance.interrupt = createjs.Sound.INTERRUPT_ANY;
+    }
 
     if (options.onComplete) {
       instance.on('complete', options.onComplete);

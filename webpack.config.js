@@ -76,7 +76,10 @@ module.exports = (env, argv) => {
           { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js'] } },
           // Copy CSS files if any
           { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
-          // No longer copying sound folder - using asset modules instead
+          // Copy sound files for legacy code
+          { from: 'sound', to: 'sound' },
+          // Copy game-loader.js from src directory
+          { from: 'src/game-loader.js', to: 'game-loader.js' },
         ],
       }),
       // Clean the output directory before each build
@@ -160,7 +163,9 @@ module.exports = (env, argv) => {
     config.devtool = false;
   } else {
     // Development-specific configuration
-    config.output.filename = 'bundle.js';
+    config.output.filename = '[name].bundle.js';
+    // Ensure chunks have consistent naming in development
+    config.output.chunkFilename = '[name].bundle.js';
 
     // Add dev server settings
     config.devServer = {
@@ -168,7 +173,7 @@ module.exports = (env, argv) => {
         directory: path.join(__dirname, 'dist'),
       },
       compress: true,
-      port: 8080,
+      port: 3000,
       hot: true,
     };
 
@@ -177,7 +182,7 @@ module.exports = (env, argv) => {
     
     // Add optimization for development
     config.optimization = {
-      runtimeChunk: true,
+      runtimeChunk: 'single', // Use 'single' instead of naming it to ensure consistent naming
       // Development-focused code splitting
       splitChunks: {
         chunks: 'all',
@@ -186,6 +191,7 @@ module.exports = (env, argv) => {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
             chunks: 'all',
+            enforce: true, // Force creation of this chunk
           },
         },
       },

@@ -121,7 +121,7 @@ export const calculateAttackProbability = (attackerDice, defenderDice) => {
  */
 export const resolveBattle = measurePerformance(resolveBattleImplementation, "battleResolution");
 
-const resolveBattleImplementation = ((gameState, fromArea, toArea) => {
+function resolveBattleImplementation(gameState, fromArea, toArea) {
   try {
     const { adat } = gameState;
 
@@ -162,7 +162,7 @@ const resolveBattleImplementation = ((gameState, fromArea, toArea) => {
     }
     throw error;
   }
-};
+}
 
 /**
  * Execute an Attack

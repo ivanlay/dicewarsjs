@@ -4,20 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running the Project
 
-- Open `index.html` in a web browser to run the game
-- No build process is required; this is a pure JavaScript project that runs in the browser
+- Run `npm run serve` or `npm run dev` to start the webpack development server
+- Open `http://localhost:3000` in a web browser to run the game
+- A build process is required with `npm run build` for production builds
 - AI vs AI testing can be enabled through the configuration system
+
+## Architecture
+
+The project uses a hybrid architecture combining modern ES6 modules with legacy global scope code:
+
+- Modern code uses ES6 modules with `import`/`export` statements
+- Legacy code uses global variables (attached to the `window` object)
+- A bridge pattern connects these two systems, exposing ES6 module functionality to global scope
+- The initialization sequence is critical - game-loader.js sets up globals before other scripts run
 
 ## File Structure
 
-The project uses a modern module-based structure:
+The project uses a mixed module-based/legacy structure:
 
-- `/src/` - Main source code directory
-  - `/ai/` - AI implementations
-  - `/models/` - Game data structures
+- `/src/` - Modern ES6 module source code
+  - `/ai/` - AI implementations (ES6 modules)
+  - `/bridge/` - Code that bridges modern and legacy systems
+  - `/models/` - Game data structures (ES6 classes)
   - `/utils/` - Utility functions and configuration
-  - `Game.js` - Core game logic and state management
-  - `main.js` - Rendering and UI interaction
+  - `/mechanics/` - Game rules and logic
+  - `Game.js` - Modern game class implementation
+  - `game-loader.js` - Initializes global objects for legacy code
+- Root directory - Legacy code files
+  - `main.js` - Legacy game initialization and rendering
+  - `*.js` files - Legacy game components
 - `/docs/` - Documentation including AI strategy guides
 - `/sound/` - Sound effects
 

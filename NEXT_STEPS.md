@@ -1,424 +1,96 @@
-# DiceWarsJS: Next Steps
-
-This document outlines the plan for continued ES6 modernization and enhancement of the DiceWarsJS project.
-
-## Short Term Goals (Next Session)
-
-1. **Fix Bridge Implementation Issues**
-
-   - ✅ Fixed AI bridge initialization timing problem
-   - ✅ Add error handling to other bridge modules
-   - ✅ Ensure proper module loading order in webpack config
-   - ✅ Add initialization checks for all bridge components
-
-2. **Modernize Remaining AI Implementations**
-
-   - ✅ Apply ES6 features to ai_defensive.js
-   - ✅ Apply ES6 features to ai_adaptive.js
-   - ✅ Create comprehensive tests for each AI implementation
-   - ✅ Add performance benchmarks for AI strategies
-
-3. **Enhance Game.js Module**
-
-   - ✅ Convert to full ES6 class with proper property definitions
-   - ✅ Use destructuring and spread operators throughout
-   - ✅ Extract core game mechanics into separate modules (map generation, battle resolution, etc.)
-   - ✅ Add proper TypeScript-style JSDoc comments for better editor support
-
-4. **Improve Test Coverage**
-   - ✅ Add integration tests between bridge modules and original code
-   - ✅ Add specific tests for bridge module initialization
-   - ✅ Add coverage reporting to the test suite
-   - ✅ Create unit tests for all model classes
-
-## Current Focus (Next Sprint)
-
-1. **Apply Advanced ES6+ Data Structures**
-
-   - ✅ Replace array-based storage with Map objects for territory data
-   - ✅ Implement typed arrays for grid/map data for better performance
-   - ✅ Use proper encapsulation with private class fields (#)
-   - ✅ Refactor territory adjacency tracking with more efficient data structures
-   - ✅ Apply immutable patterns for state management
-   - ✅ Implement optional chaining and nullish coalescing throughout
-
-2. **Enhance Build Process**
-
-   - ✅ Implement ESLint with modern JavaScript rules
-   - ✅ Add Prettier for consistent code formatting
-   - ✅ Set up GitHub Actions for continuous integration
-   - ✅ Optimize asset loading with modern webpack techniques
-   - ✅ Add advanced debugging tools for development mode
-   - ✅ Implement detailed source maps
-   - ✅ Add bundle analysis to optimize file size
-
-3. **Modernize Mechanics Implementation**
-   - ✅ Refactor the map generation algorithm with modern practices
-   - ✅ Implement battle resolution with functional programming patterns
-   - ✅ Create proper event system for game state changes
-   - ✅ Implement more robust error handling throughout
-   - ✅ Add TypeScript-style JSDoc to all mechanics functions
-
-## Medium Term Goals
-
-1. **Improve Documentation**
-
-   - Create comprehensive JSDoc documentation for all modules
-   - Add inline code comments throughout
-   - Create developer guide for future contributions
-   - Update README with modern development instructions
-   - Add architecture diagrams for better visualization
-   - Create documentation site with TypeDoc
-
-2. **Enhance AI Capabilities**
-
-   - Implement advanced AI strategies using machine learning concepts
-   - Add difficulty levels for existing AI types
-   - Create AI strategy factory for dynamic strategy creation
-   - Add unit tests for new AI capabilities
-   - Implement performance profiling for AI strategies
-   - Create visualization tools for AI decision making
-
-3. **Browser Compatibility and Optimization**
-   - Add polyfills for older browsers if needed
-   - Implement browser feature detection
-   - Add responsive design for mobile devices
-   - Optimize performance for various devices
-   - Implement lazy loading for game assets
-   - Add service worker for offline gameplay
-
-## Long Term Vision
-
-1. **AI Championship Platform**
-
-   - Create a system for users to submit custom AI implementations
-   - Implement ELO rating system for AI performance tracking
-   - Build automated tournament infrastructure for AI competitions
-   - Add match recording and replay functionality for analysis
-   - Create leaderboards and performance statistics
-   - Develop a web interface for submitting and monitoring AIs
-   - Implement containerized execution environment for fair competition
-   - See the full vision in docs/VISION.md
-
-2. **Fully Modular Architecture**
-
-   - Complete the transition from legacy code to ES6 modules
-   - Remove the bridge system when no longer needed
-   - Implement proper separation of concerns throughout
-   - Modernize event handling system
-   - Replace CreateJS with modern Canvas API usage
-
-3. **Enhanced Gameplay Features**
-
-   - Add mobile/touch support
-   - Implement online multiplayer
-   - Create additional game modes and AI difficulty levels
-   - Add game statistics and replay functionality
-   - Implement save/load functionality
-   - Add tournament mode for AI competition
-
-4. **UI/UX Enhancements**
-   - Create responsive design for various screen sizes
-   - Implement accessibility features
-   - Add animation and visual enhancements
-   - Create modern UI elements with better user feedback
-   - Add sound settings and volume controls
-   - Implement theming and customization options
-
-## Progress Tracking
-
-This project follows an incremental approach to modernization:
-
-1. ✅ Set up modern build environment (webpack, Babel)
-2. ✅ Implement bridge architecture for backward compatibility
-3. ✅ Modularize core functionality (utils, AI, models)
-4. ✅ Add comprehensive testing infrastructure
-5. ✅ Modernize utility and AI modules with ES6 features
-6. ✅ Optimize production build process
-7. ✅ Fix runtime errors in AI bridge implementation
-8. ✅ Enhance core Game class with modern ES6 features and modular architecture
-9. ✅ Implement comprehensive test coverage for all components
-
-**Currently In Progress:**
-
-- ✅ Replace array-based storage with Map objects for territory data
-- ✅ Implement typed arrays for grid/map data for better performance
-- ✅ Use proper encapsulation with private class fields (#)
-- ✅ Refactor territory adjacency tracking with more efficient data structures
-- ✅ Apply immutable patterns for state management
-- ✅ Implement optional chaining and nullish coalescing throughout
-- ✅ Enhance build process with code quality tools (ESLint & Prettier)
-- ✅ Set up GitHub Actions for CI
-- ✅ Modernize mechanics implementation with functional programming patterns
-- ✅ Optimize asset loading with modern webpack techniques
-- ✅ Implement advanced debugging and performance tools
-
-**Next Sprint Focus:**
-
-- Improve documentation with comprehensive JSDoc
-- Create developer guide for future contributions
-- Enhance AI capabilities with advanced strategies
-- Add difficulty levels for existing AI types
-
-## Implementation Approach
-
-We will continue with the hybrid approach that has proven successful:
-
-1. Maintain backward compatibility with legacy code via the bridge modules
-2. Update one module at a time with comprehensive testing
-3. Apply modern ES6+ features incrementally
-4. Ensure all changes are well-tested and documented
-5. Focus on robustness and error handling to prevent runtime issues
-
-## Recent Issues and Solutions
-
-1. **AI Function Availability**
-
-   - **Problem**: AI functions were being referenced in Game.js before they were available in the global scope through the bridge module.
-   - **Solution**:
-     - Initialize the AI array with null values in the Game constructor
-     - Set up AI functions in the start_game method, ensuring they're properly loaded
-     - Added error handling in com_thinking for graceful fallbacks if AI functions are missing
-
-2. **Bridge Module Reliability**
-
-   - **Problem**: Bridge modules could fail silently, causing runtime errors or undefined behavior.
-   - **Solution**:
-     - Added comprehensive error handling to all bridge modules (gameUtils, render, sound, ai)
-     - Implemented fallback functions to prevent game crashes when modules fail
-     - Added module loading with proper import/export structure to match ES6 requirements
-     - Implemented a global checkBridgeStatus function to verify module loading status
-     - Added detailed error logging to make debugging easier
-     - Fixed ES6 module syntax to ensure compatibility with Babel and webpack
-
-3. **AI Module Modernization**
-
-   - **Implementation - ai_defensive.js**:
-
-     - Applied ES6 features to ai_defensive.js, including:
-       - Arrow functions for better lexical scoping
-       - Destructuring assignments for cleaner code
-       - Enhanced object literals
-       - Array methods like filter, map, and forEach
-       - Split complex functions into smaller, focused ones
-       - Improved code readability with better variable names and formatting
-     - Maintained the same AI strategy while improving code structure
-     - Added better JSDoc comments for improved editor support
-     - Fixed several potential edge cases in the original implementation
-
-   - **Implementation - ai_adaptive.js**:
-     - Converted all functions to arrow functions
-     - Implemented extensive use of array methods (map, filter, reduce, forEach)
-     - Added destructuring assignments throughout the code
-     - Used template literals for string formatting
-     - Applied spread/rest operators for cleaner object manipulation
-     - Improved object handling with Object.assign and property shorthand
-     - Replaced traditional loops with functional programming approaches
-     - Used modern JavaScript syntax (nullish coalescing, optional chaining)
-     - Reorganized code for better readability and maintainability
-     - Added comments to clarify complex algorithms
-     - Optimized array creation with Array methods
-   - **Comprehensive Tests for AI Implementations**:
-     - Created a reusable game mock helper to streamline test setup
-     - Implemented thorough tests for ai_defensive.js:
-       - Testing territory selection logic
-       - Testing attack validation rules
-       - Testing edge cases like reinforcement situations
-       - Testing prioritization of strategic territories
-     - Implemented extensive tests for ai_adaptive.js:
-       - Testing the complex game phase detection
-       - Testing adaptive strategy selection
-       - Testing strategic territory evaluation
-       - Testing border and connectivity analysis
-       - Testing risk assessment logic
-     - Improved test coverage significantly for AI modules
-     - Tests ensure the AI strategies maintain their intended behavior
-     - Created robust test assertions that accommodate algorithmic variations
-   - **Performance Benchmarks for AI Strategies**:
-     - Created a reusable AI benchmark utility:
-       - Measures execution time with high precision
-       - Calculates min, max, average, and median execution times
-       - Tracks decision consistency and variety
-       - Analyzes which decisions are most common for each AI
-       - Provides comparative metrics between AIs
-     - Implemented benchmark tests for all four AI implementations:
-       - Example AI (simplest implementation)
-       - Default AI (moderate complexity)
-       - Defensive AI (higher complexity with strategic focus)
-       - Adaptive AI (highest complexity with multi-faceted analysis)
-     - Created visualization tools for benchmark results:
-       - HTML reports with performance charts
-       - JSON data output for further analysis
-     - Added NPM scripts for running benchmarks in different modes:
-       - Quick test-based benchmarks for regular testing
-       - Full benchmarks with detailed reports and visualizations
-     - Results showed clear performance differences between strategies:
-       - Example AI: fastest with moderate consistency
-       - Default AI: fast with highest decision variety
-       - Defensive AI: moderate speed with high consistency
-       - Adaptive AI: slowest but most sophisticated decision making
-
-4. **Game.js Module Enhancement**
-
-   - **Implementation - Game.js**:
-     - Converted to full ES6 class with class fields syntax:
-       - Used modern class properties for cleaner declarations
-       - Added proper constructor for initialization
-       - Organized properties by purpose with clear grouping
-     - Applied destructuring and spread operators:
-       - Used destructuring in method parameters
-       - Implemented destructuring for clean object access
-       - Applied spread operators for safer state updates
-     - Extracted core game mechanics into separate modules:
-       - mapGenerator.js for map creation and territory functions
-       - battleResolution.js for attack mechanics and dice rolls
-       - aiHandler.js for AI execution and management
-     - Added comprehensive TypeScript-style JSDoc comments:
-       - Detailed parameter and return type documentation
-       - Described method purposes and behaviors
-       - Used consistent comment formatting
-     - Created bridge module for backward compatibility:
-       - Added Game.js bridge for legacy integration
-       - Implemented fallback implementation for error cases
-       - Updated bridge index to include Game bridge
-     - Designed modular structure for better maintainability:
-       - Clear separation of concerns between modules
-       - Better encapsulation of game mechanics
-       - Reduced circular dependencies
-       - Improved testability
-
-5. **Test Coverage Improvements**
-
-   - **Implementation - Bridge Testing**:
-     - Created comprehensive integration tests for bridge modules:
-       - Verified correct exposure of ES6 functionality to global scope
-       - Tested interaction between bridge modules and ES6 implementations
-       - Verified proper error handling in bridge modules
-     - Implemented specific tests for bridge module initialization:
-       - Tested fallback implementations for error cases
-       - Verified proper error logging and reporting
-       - Tested module loading order and dependencies
-     - Added coverage configuration and reporting:
-       - Set up coverage thresholds for different module types
-       - Added HTML and LCOV coverage report generation
-       - Created coverage-specific test commands
-     - Implemented unit tests for all model classes:
-       - Tested AreaData territory representation
-       - Tested PlayerData player state tracking
-       - Tested JoinData adjacency tracking
-       - Tested HistoryData game action recording
-       - Tested Battle dice rolling and resolution
-     - Improved overall test organization:
-       - Structured tests to mirror source code organization
-       - Applied consistent test naming conventions
-       - Used proper test isolation techniques
-     - Added better test documentation:
-       - Included clear test descriptions
-       - Documented test setup and assumptions
-       - Added AAA pattern (Arrange, Act, Assert) consistently
-
-6. **Implementation Progress - Advanced ES6+ Data Structures**
-
-   - **Optional Chaining and Nullish Coalescing**:
-
-     - ✅ Refactored Game.js to use nullish coalescing for config defaults
-     - ✅ Applied optional chaining to AI configuration in Game.js
-     - ✅ Updated config.js with optional chaining for localStorage access
-     - ✅ Enhanced error handling with nullish coalescing in configs
-     - ✅ Refactored sound.js to use nullish coalescing for sound options
-     - ✅ Updated gameUtils.js bridge with nullish coalescing for default values
-     - ✅ Refactored main.js event handlers with optional chaining
-     - ✅ Simplified GAME_CONFIG handling with optional chaining
-     - ✅ Improved speed multiplier checks with nullish coalescing
-     - ✅ Updated AI bridge with optional chaining and nullish coalescing
-     - ✅ Made code more concise and readable throughout
-     - ✅ Improved error handling and null/undefined checking
-     - ✅ Maintained backward compatibility with legacy code
-
-   - **Immutable State Patterns**:
-     - ✅ Created immutable utility functions for object/array operations
-     - ✅ Implemented core GameState class with immutable state management
-     - ✅ Added TerritoryState for immutable territory operations
-     - ✅ Added PlayerState for immutable player operations
-     - ✅ Implemented history tracking and time travel debugging
-     - ✅ Added performance comparison tests against mutable approaches
-     - ✅ Created comprehensive documentation of immutable patterns
-     - ✅ Maintained compatibility with existing codebase
-     - ✅ Optimized performance critical operations
-   - **Implementing Map for Territory Data**:
-
-     - ✅ Replaced array-based storage with Map objects for better performance
-     - ✅ Created territory lookups by id using Map's direct key-value access
-     - ✅ Implemented Map-based adjacency tracking for faster access
-     - ✅ Added utility methods for Map manipulation to simplify code
-     - ✅ Optimized territory operations with Map methods
-     - ✅ Added backward compatibility with the legacy join array
-     - ✅ Created performance tests comparing Map vs Array implementation
-     - ✅ Demonstrated significant performance improvements for finding adjacent territories
-     - ✅ Added support for unlimited territory IDs (not limited to 32)
-
-   - **Typed Arrays for Grid Data**:
-
-     - ✅ Converted grid cell data to typed arrays for memory efficiency
-     - ✅ Used Int8Array/Uint8Array/Uint16Array for appropriate data types
-     - ✅ Created helper functions for typed array operations
-     - ✅ Optimized grid operations for performance
-     - ✅ Added compatibility layer for legacy code
-     - ✅ Created comprehensive GridData class to manage grid operations
-     - ✅ Added performance tests comparing typed arrays vs regular arrays
-     - ✅ Implemented caching for neighbor calculations to improve performance
-
-   - **Private Class Fields**:
-     - ✅ Added private territoriesMap field in Game class using # prefix
-     - ✅ Added private gridData field in Game class using # prefix
-     - ✅ Implemented comprehensive private fields in PlayerData class
-     - ✅ Implemented accessor methods with validation for all private fields
-     - ✅ Created clear API boundaries with getters/setters for private implementation
-     - ✅ Added modern helper methods with proper encapsulation
-     - ✅ Maintained backward compatibility through legacy property accessors
-     - ✅ Added unit tests verifying proper encapsulation
-     - ✅ Documented the public interface clearly with JSDoc comments
-   - **Efficient Territory Adjacency Tracking**:
-     - ✅ Created AdjacencyGraph class for efficient territory connectivity tracking
-     - ✅ Implemented DisjointSet (Union-Find) data structure for territory grouping
-     - ✅ Added TerritoryGraph class with game-specific connectivity operations
-     - ✅ Implemented efficient algorithms for finding territory groups and connectivity
-     - ✅ Added strategic territory analysis (choke points, connectivity, strategic value)
-     - ✅ Created comprehensive performance tests comparing implementations
-     - ✅ Achieved 10-20x speedup for territory grouping operations
-     - ✅ Maintained backward compatibility with original implementation
-     - ✅ Documented the territory connectivity algorithms and benefits
-
-7. **Implementation Progress - Build Process Enhancement**
-
-   - **ESLint and Prettier Setup**:
-
-     - ✅ Added ESLint with modern JavaScript rules based on airbnb-base
-     - ✅ Configured ESLint for ES6+ features (optional chaining, nullish coalescing, etc.)
-     - ✅ Set up custom rules for game development needs
-     - ✅ Added Prettier for consistent code formatting across the project
-     - ✅ Integrated ESLint with Prettier to avoid conflicts
-     - ✅ Created comprehensive ignore patterns for legacy files
-     - ✅ Added npm scripts for linting and formatting operations
-     - ✅ Set up pre-commit hooks with husky and lint-staged
-     - ✅ Added configuration for automatically formatting code on commit
-     - ✅ Created documentation for code style guidelines in config files
-
-   - **Continuous Integration**:
-     - ✅ Set up GitHub Actions workflow
-     - ✅ Configure automated testing on push/PR
-     - ✅ Add linting and formatting checks to CI pipeline
-     - ✅ Add build verification to CI workflow
-     - ✅ Run unit tests and benchmarks in CI pipeline
-     - ✅ Created documentation for CI/CD setup
-     - Set up deployment preview for PR review
-     - Implement automated version bumping
-
-8. **Additional Optimization Opportunities**
-   - Immutable data patterns for safer state management
-   - Web worker usage for computationally intensive AI calculations
-   - Local storage for game state persistence
-   - Dynamic module loading for smaller initial bundle
-   - Memory usage optimization for long gameplay sessions
-
-This strategy allows for steady progress while maintaining a working game throughout the modernization process.
+# Next Steps for DiceWarsJS Project
+
+## Fixes Implemented
+
+1. **Fixed Development Environment Configuration**
+   - Changed package.json `serve` script to use webpack-dev-server
+   - Updated webpack config to use consistent runtime chunk naming
+   - Fixed 404 errors for bundle files
+
+2. **Implemented AI Bridge Initialization**
+   - Created `game-loader.js` for initializing global AI functions
+   - Updated HTML to load game-loader.js before other scripts
+   - Fixed "AI function not found" warnings
+
+3. **Fixed AudioContext Warnings**
+   - Added event listener to initialize AudioContext on user gesture
+   - Implemented proper sound system initialization sequence
+
+## Recommended Next Steps
+
+### 1. Complete Bridge Layer Removal
+
+As the project is moving towards a full ES6 module system, consider these steps:
+
+- Remove remaining bridge dependencies one by one
+- Transition all global variables to module exports/imports
+- Refactor main.js to use ES6 module structure 
+- Update AI systems to fully rely on ES6 modules
+
+### 2. Update AI Loading System
+
+The current fix is a workaround for the immediate issue. A more robust solution would:
+
+- Modify Game.js to better handle the ES6 module system
+- Create an AIRegistry class to manage different AI strategies
+- Implement a dynamic loading system for AI modules
+- Add unit tests specifically for AI registration and usage
+
+```javascript
+// Example of a more robust AI registry
+class AIRegistry {
+  constructor() {
+    this.strategies = new Map();
+    this.defaultStrategy = null;
+  }
+  
+  register(name, aiFunction) {
+    this.strategies.set(name, aiFunction);
+    return this;
+  }
+  
+  setDefault(name) {
+    if (this.strategies.has(name)) {
+      this.defaultStrategy = this.strategies.get(name);
+    }
+    return this;
+  }
+  
+  get(name) {
+    if (!name || !this.strategies.has(name)) {
+      return this.defaultStrategy;
+    }
+    return this.strategies.get(name);
+  }
+}
+```
+
+### 3. Improve Build System
+
+- Add distinct development and production build configurations
+- Implement proper source maps for easier debugging
+- Add bundle size analysis and optimization
+- Implement code splitting for better performance
+- Consider adding TypeScript for better type safety
+
+### 4. Documentation Updates
+
+- Update CLAUDE.md with more details about the hybrid architecture
+- Document the initialization sequence for new developers
+- Add detailed comments about the bridge layer functionality
+- Create a migration guide for moving to full ES6 modules
+
+### 5. Testing Improvements
+
+- Add integration tests for the bridge layer
+- Test AI loading under different conditions
+- Implement automated browser testing with Puppeteer or Playwright
+- Add performance benchmarks for different AI strategies
+
+## Long-Term Vision
+
+- Complete transition to modern ES6 modules
+- Remove dependency on global variables
+- Improve code organization with proper separation of concerns
+- Enhance AI strategies with more sophisticated algorithms
+- Consider implementing multiplayer capabilities

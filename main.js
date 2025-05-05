@@ -423,7 +423,7 @@ function init() {
 	stage.addEventListener("stagemousemove", mouseMoveListner );  // Mouse move events
 	stage.addEventListener("stagemouseup", mouseUpListner );      // Mouse up events
 	createjs.Ticker.addEventListener("tick", onTick);             // Animation tick
-	createjs.Ticker.setFPS(60);                                   // Set frame rate
+	createjs.Ticker.framerate = 60;                              // Set frame rate
 	
 	// Initialize sound system if enabled
 	if( soundon ){
@@ -433,6 +433,21 @@ function init() {
 		queue.loadManifest(manifest,true);
 		queue.addEventListener("fileload",handleFileLoad);    // Handle each loaded sound
 		queue.addEventListener("complete",handleComplete);    // Handle loading completion
+		
+		// Add click handler to initialize AudioContext on user gesture
+		document.addEventListener('click', function initAudioContext() {
+			if (createjs && createjs.Sound && createjs.Sound.context && 
+				createjs.Sound.context.state !== 'running') {
+				createjs.Sound.context.resume().then(() => {
+					console.log('AudioContext started on user gesture');
+				});
+			}
+			// Only remove the listener once we've successfully started the context
+			if (createjs && createjs.Sound && createjs.Sound.context && 
+				createjs.Sound.context.state === 'running') {
+				document.removeEventListener('click', initAudioContext);
+			}
+		});
 	}else{
 		// Skip sound loading and go directly to fake loading screen
 		waitcount = 60;
@@ -465,8 +480,19 @@ function startSound(soundid){
 // Play a sound effect with the given ID
 function playSound(soundid){
 	if( !soundon ) return;  // Skip if sound is disabled
-	instance[soundid].setVolume(0.5);  // Set volume to 50%
-	instance[soundid].play();  // Play the sound
+	// Check if sound instance exists
+	if (!instance[soundid]) {
+		console.warn(`Sound instance not found: ${soundid}. Creating new instance.`);
+		startSound(soundid);
+	}
+	// Now attempt to play it
+	if (instance[soundid]) {
+		// Use modern volume property instead of deprecated setVolume method
+		instance[soundid].volume = 0.5;  // Set volume to 50%
+		instance[soundid].play();  // Play the sound
+	} else {
+		console.error(`Cannot play sound: ${soundid}`);
+	}
 }
 
 ////////////////////////////////////////////////////

@@ -15,14 +15,14 @@ export * from '../utils/sound.js';
 
 // Default sound manifest if not available in the module
 const defaultSoundManifest = [
-  { id: 'snd_button', src: './assets/sounds/button.wav' },
-  { id: 'snd_click', src: './assets/sounds/click.wav' },
-  { id: 'snd_dice', src: './assets/sounds/dice.wav' },
-  { id: 'snd_success', src: './assets/sounds/success.wav' },
-  { id: 'snd_fail', src: './assets/sounds/fail.wav' },
-  { id: 'snd_myturn', src: './assets/sounds/myturn.wav' },
-  { id: 'snd_clear', src: './assets/sounds/clear.wav' },
-  { id: 'snd_over', src: './assets/sounds/over.wav' },
+  { id: 'snd_button', src: './sound/button.wav', type: "wav" },
+  { id: 'snd_click', src: './sound/click.wav', type: "wav" },
+  { id: 'snd_dice', src: './sound/dice.wav', type: "wav" },
+  { id: 'snd_success', src: './sound/success.wav', type: "wav" },
+  { id: 'snd_fail', src: './sound/fail.wav', type: "wav" },
+  { id: 'snd_myturn', src: './sound/myturn.wav', type: "wav" },
+  { id: 'snd_clear', src: './sound/clear.wav', type: "wav" },
+  { id: 'snd_over', src: './sound/over.wav', type: "wav" },
 ];
 
 // Create fallback implementations
@@ -94,8 +94,18 @@ function playSoundLegacyWrapper(soundId, options = {}) {
           });
       }
       return placeholderInstance;
-    }
+    },
+    // Add missing methods that might be called
+    play: function() { return this; },
+    setVolume: function(vol) { this.volume = vol; return this; }
   };
+  
+  // Initialize the sound if not already loaded
+  if (!SoundUtils.loadedSounds || !SoundUtils.loadedSounds.has(soundId)) {
+    SoundUtils.loadSound(soundId).catch(err => {
+      console.warn(`Failed to load sound: ${soundId}`, err);
+    });
+  }
   
   // Start playing asynchronously
   SoundUtils.playSound(soundId, options)
