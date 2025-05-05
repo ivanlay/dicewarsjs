@@ -16,6 +16,8 @@ import './render.js';
 import './sound.js';
 import './ai.js';
 import './Game.js';
+// Import debug tools (conditionally active in development mode)
+import './debugTools.js';
 // Import mechanics but only re-export non-conflicting parts
 import * as Mechanics from '../mechanics/index.js';
 
@@ -24,6 +26,7 @@ export * from '../utils/gameUtils.js';
 export * from '../utils/render.js';
 export * from '../utils/sound.js';
 export * from '../utils/config.js';
+export * from '../utils/debugTools.js';
 
 // Export core modules for ES6 usage
 export { Game } from '../Game.js';
@@ -48,6 +51,7 @@ const moduleStatus = {
   sound: 'loaded',
   ai: 'loaded',
   game: 'loaded',
+  debugTools: process.env.NODE_ENV !== 'production' ? 'loaded' : 'not loaded (production)',
 };
 
 // Add a check method to verify all modules are loaded
@@ -88,6 +92,9 @@ function findModuleFromError(error) {
   }
   if (errorString.includes('Game') || stack.includes('Game')) {
     return 'game';
+  }
+  if (errorString.includes('debugTools') || stack.includes('debugTools')) {
+    return 'debugTools';
   }
 
   return null;

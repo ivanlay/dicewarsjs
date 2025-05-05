@@ -30,6 +30,16 @@ import {
   withErrorHandling,
 } from './errorHandling.js';
 
+// Import debug tools (will be auto disabled in production)
+let measurePerformance = fn => fn; // Default no-op
+if (process.env.NODE_ENV === 'development') {
+  import('../utils/debugTools.js').then(module => {
+    if (module.isDebugModeEnabled()) {
+      measurePerformance = module.measurePerformance;
+    }
+  }).catch(err => console.warn('Failed to load debug tools:', err));
+}
+
 /**
  * Roll dice for attack or defense
  *
@@ -109,7 +119,9 @@ export const calculateAttackProbability = (attackerDice, defenderDice) => {
  * @returns {Object} Battle results including success flag and dice values
  * @throws {BattleError} If battle cannot be resolved
  */
-export const resolveBattle = (gameState, fromArea, toArea) => {
+export const resolveBattle = measurePerformance(resolveBattleImplementation, "battleResolution");
+
+const resolveBattleImplementation = ((gameState, fromArea, toArea) => {
   try {
     const { adat } = gameState;
 

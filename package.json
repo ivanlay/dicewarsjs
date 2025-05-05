@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
+    "build:analyze": "webpack --mode production --env analyze=true",
+    "analyze": "webpack --mode production --env analyze=true && open dist/bundle-report.html",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -49,6 +51,7 @@
     "prettier": "^3.5.3",
     "terser-webpack-plugin": "^5.3.14",
     "webpack": "^5.84.0",
+    "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.1",
     "webpack-dev-server": "^4.15.0"
   },

@@ -9,13 +9,24 @@
     <meta name="description" content="Dice Wars - A strategic dice game" />
     <title>DICEWARS</title>
 
+    <!-- Resource hints for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://code.createjs.com">
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="assets/sounds/button.wav" as="audio">
+    <link rel="preload" href="assets/sounds/click.wav" as="audio">
+    <link rel="preload" href="bundle.js" as="script">
+    <link rel="preload" href="https://code.createjs.com/1.0.0/createjs.min.js" as="script">
+
     <!-- Favicon -->
     <link rel="apple-touch-icon-precomposed" href="https://www.gamedesign.jp/img/icon.png" />
     <link rel="shortcut icon" href="https://www.gamedesign.jp/img/favicon.ico" />
 
     <!-- Fonts -->
     <link
-      href="https://fonts.googleapis.com/css?family=Anton|Roboto"
+      href="https://fonts.googleapis.com/css?family=Anton|Roboto&display=swap"
       rel="stylesheet"
       type="text/css"
     />
@@ -40,6 +51,20 @@
         color: #aaaaaa;
         text-decoration: none;
       }
+
+      /* Loading indicator styles */
+      .sound-loading-indicator {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-family: 'Roboto', sans-serif;
+        z-index: 1000;
+      }
     </style>
 
     <!-- Scripts -->
@@ -57,7 +82,7 @@
   <body>
     <canvas id="myCanvas"></canvas>
 
-    <!-- Bundled ES6 Modules (for future use) -->
+    <!-- Bundled ES6 Modules -->
     <script src="bundle.js"></script>
   </body>
 </html>

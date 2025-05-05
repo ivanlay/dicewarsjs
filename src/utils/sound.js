@@ -5,51 +5,110 @@
  * - Sound loading and playing
  * - Volume control
  * - Mute/unmute functionality
+ * - Lazy loading and asset optimization
  */
 
 import { getConfig, updateConfig } from './config.js';
+import { updateLoadStatus } from './soundStrategy.js';
 
-// Sound file manifest
-export const SOUND_MANIFEST = [
-  { id: 'snd_button', src: './sound/button.wav' }, // Button click
-  { id: 'snd_clear', src: './sound/clear.wav' }, // Victory sound
-  { id: 'snd_click', src: './sound/click.wav' }, // Area selection
-  { id: 'snd_dice', src: './sound/dice.wav' }, // Dice roll
-  { id: 'snd_fail', src: './sound/fail.wav' }, // Attack failed
-  { id: 'snd_myturn', src: './sound/myturn.wav' }, // Player turn notification
-  { id: 'snd_over', src: './sound/over.wav' }, // Game over
-  { id: 'snd_success', src: './sound/success.wav' }, // Attack succeeded
-];
+// Import sound assets using webpack asset modules
+// Use a dynamic import approach to enable lazy loading
+const soundFiles = {
+  'snd_button': () => import('../../sound/button.wav'),   // Button click
+  'snd_clear': () => import('../../sound/clear.wav'),     // Victory sound
+  'snd_click': () => import('../../sound/click.wav'),     // Area selection
+  'snd_dice': () => import('../../sound/dice.wav'),       // Dice roll
+  'snd_fail': () => import('../../sound/fail.wav'),       // Attack failed
+  'snd_myturn': () => import('../../sound/myturn.wav'),   // Player turn notification
+  'snd_over': () => import('../../sound/over.wav'),       // Game over
+  'snd_success': () => import('../../sound/success.wav'), // Attack succeeded
+};
 
-// Sound instances cache
+// Sound file manifest for CreateJS (populated dynamically)
+export const SOUND_MANIFEST = [];
+
+// Caches for sounds and instances
 const soundInstances = {};
+const loadedSounds = new Map();
+
+/**
+ * Load a sound file and register it with CreateJS
+ * @param {string} soundId - ID of the sound to load
+ * @returns {Promise<string>} Promise that resolves to the sound path
+ */
+export async function loadSound(soundId) {
+  // Return from cache if already loaded
+  if (loadedSounds.has(soundId)) {
+    return loadedSounds.get(soundId);
+  }
+
+  // Check if this sound exists in our manifest
+  if (!soundFiles[soundId]) {
+    console.warn(`Sound not found: ${soundId}`);
+    return null;
+  }
+
+  // Track loading state
+  updateLoadStatus(1);
+
+  try {
+    // Dynamic import the sound file
+    const module = await soundFiles[soundId]();
+    const soundPath = module.default;
+
+    // Store in cache
+    loadedSounds.set(soundId, soundPath);
+    
+    // Register with CreateJS if it's available
+    if (typeof createjs !== 'undefined' && createjs.Sound) {
+      createjs.Sound.registerSound(soundPath, soundId);
+    }
+    
+    // Update manifest for future reference
+    SOUND_MANIFEST.push({
+      id: soundId,
+      src: soundPath
+    });
+    
+    return soundPath;
+  } catch (err) {
+    console.error(`Failed to load sound: ${soundId}`, err);
+    return null;
+  } finally {
+    // Update loading state
+    updateLoadStatus(-1);
+  }
+}
 
 /**
  * Initialize the sound system
  * @returns {boolean} True if initialization succeeded
  */
 export function initSoundSystem() {
-  if (!createjs.Sound.initializeDefaultPlugins()) {
+  if (typeof createjs === 'undefined' || !createjs.Sound || !createjs.Sound.initializeDefaultPlugins()) {
     console.warn('Sound system not supported in this browser');
     return false;
   }
 
-  createjs.Sound.registerSounds(SOUND_MANIFEST);
+  // We'll register sounds as they're loaded
   return true;
 }
 
 /**
- * Play a sound
+ * Play a sound, loading it first if needed
  * @param {string} soundId - ID of the sound to play
  * @param {Object} [options={}] - Sound options
  * @param {number} [options.volume=1] - Volume (0-1)
  * @param {number} [options.loop=0] - Number of times to loop (-1 for infinite)
  * @param {Function} [options.onComplete=null] - Callback when sound completes
- * @returns {createjs.AbstractSoundInstance|null} Sound instance or null if sound disabled
+ * @returns {Promise<createjs.AbstractSoundInstance|null>} Sound instance or null if sound disabled
  */
-export function playSound(soundId, options = {}) {
+export async function playSound(soundId, options = {}) {
   const config = getConfig();
   if (!config.soundEnabled) return null;
+
+  // Ensure the sound is loaded
+  await loadSound(soundId);
 
   try {
     const instance = createjs.Sound.play(soundId, {
@@ -67,7 +126,7 @@ export function playSound(soundId, options = {}) {
 
     return instance;
   } catch (e) {
-    console.warn('Error playing sound:', e);
+    console.warn(`Error playing sound: ${soundId}`, e);
     return null;
   }
 }
@@ -77,14 +136,18 @@ export function playSound(soundId, options = {}) {
  * @param {string} soundId - ID of the sound to stop
  */
 export function stopSound(soundId) {
-  createjs.Sound.stop(soundId);
+  if (typeof createjs !== 'undefined' && createjs.Sound) {
+    createjs.Sound.stop(soundId);
+  }
 }
 
 /**
  * Stop all sounds
  */
 export function stopAllSounds() {
-  createjs.Sound.stop();
+  if (typeof createjs !== 'undefined' && createjs.Sound) {
+    createjs.Sound.stop();
+  }
 }
 
 /**
@@ -92,6 +155,8 @@ export function stopAllSounds() {
  * @param {number} volume - Volume level (0-1)
  */
 export function setVolume(volume) {
+  if (typeof createjs === 'undefined' || !createjs.Sound) return;
+  
   createjs.Sound.volume = Math.max(0, Math.min(1, volume));
 
   // Update each active sound instance
@@ -105,6 +170,7 @@ export function setVolume(volume) {
 /**
  * Enable or disable sound
  * @param {boolean} enabled - Whether sound should be enabled
+ * @returns {boolean} Current sound enabled state
  */
 export function setSoundEnabled(enabled) {
   const config = getConfig();
@@ -130,18 +196,16 @@ export function toggleSound() {
  * Preload all sounds
  * @returns {Promise} Promise that resolves when all sounds are loaded
  */
-export function preloadSounds() {
-  return new Promise((resolve, reject) => {
-    if (!createjs.Sound.initializeDefaultPlugins()) {
-      reject(new Error('Sound system not supported'));
-      return;
-    }
+export async function preloadSounds() {
+  // Load all sounds in the manifest
+  const loadPromises = Object.keys(soundFiles).map(soundId => loadSound(soundId));
+  return Promise.all(loadPromises);
+}
 
-    const queue = new createjs.LoadQueue();
-    queue.installPlugin(createjs.Sound);
-    queue.loadManifest(SOUND_MANIFEST);
-
-    queue.on('complete', resolve);
-    queue.on('error', reject);
-  });
+/**
+ * Get all available sound IDs
+ * @returns {Array<string>} Array of sound IDs
+ */
+export function getAllSoundIds() {
+  return Object.keys(soundFiles);
 }

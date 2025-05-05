@@ -17,6 +17,8 @@ import {
   executeAIMove, AI_REGISTRY
 } from './mechanics/index.js';
 import { getConfig } from './utils/config.js';
+import { loadSoundsByPriority } from './utils/soundStrategy.js';
+import { loadSound, getAllSoundIds } from './utils/sound.js';
 
 /**
  * Game Class
@@ -149,6 +151,9 @@ export class Game {
     for (let i = 0; i < this.cel_max; i++) {
       this.num[i] = i;
     }
+    
+    // Preload assets
+    this.preloadAssets();
     
     // Initialize player data objects
     for (let i = 0; i < 8; i++) {
@@ -383,5 +388,53 @@ export class Game {
     }
     
     return this;
+  }
+  
+  /**
+   * Preload game assets using intelligent loading strategy
+   * 
+   * Loads assets with priority and improves game startup performance
+   */
+  preloadAssets() {
+    // Start loading sounds by priority
+    if (typeof loadSoundsByPriority === 'function' && typeof loadSound === 'function') {
+      loadSoundsByPriority(loadSound);
+    }
+    
+    // Preload game mechanics modules when browser is idle
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        // Preload battle resolution mechanics
+        import('./mechanics/battleResolution.js')
+          .catch(err => console.warn('Error preloading battle mechanics:', err));
+          
+        // Preload map generation for when starting a new game  
+        setTimeout(() => {
+          import('./mechanics/mapGenerator.js')
+            .catch(err => console.warn('Error preloading map generator:', err));
+        }, 1000);
+        
+        // Load debugging tools in development mode
+        if (process.env.NODE_ENV === 'development') {
+          import('./utils/debugTools.js').then(module => {
+            const { createStateInspector, createPerformancePanel, measureFPS } = module;
+            
+            // Initialize debug panels if enabled
+            if (module.isDebugModeEnabled()) {
+              // Create game state inspector
+              createStateInspector(this);
+              
+              // Create performance panel
+              createPerformancePanel();
+              
+              // Start measuring FPS
+              measureFPS();
+              
+              console.log('Debug tools initialized for game instance');
+            }
+          }).catch(err => console.warn('Error loading debug tools:', err));
+        }
+      }, { timeout: 2000 });
+    }
   }
 }
