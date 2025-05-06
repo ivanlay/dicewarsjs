@@ -61,8 +61,8 @@ module.exports = (env, argv) => {
       new HtmlWebpackPlugin({
         template: './index.html',
         filename: 'index.html',
-        // Don't inject the bundle.js for now - we'll use the legacy script tags
-        inject: false,
+        // Inject bundles at the end of the body
+        inject: 'body',
         // Minify HTML in production
         minify: isProduction
           ? {
@@ -106,6 +106,25 @@ module.exports = (env, argv) => {
     // Use chunking and content hashing for bundle files
     config.output.filename = '[name].[contenthash].js';
     config.output.chunkFilename = '[name].[contenthash].js';
+
+    // Update HtmlWebpackPlugin settings for production
+    config.plugins = config.plugins.map(plugin => {
+      if (plugin instanceof HtmlWebpackPlugin) {
+        return new HtmlWebpackPlugin({
+          template: './index.html',
+          filename: 'index.html',
+          inject: true, // Enable script injection
+          minify: isProduction
+            ? {
+                removeComments: true,
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+              }
+            : false,
+        });
+      }
+      return plugin;
+    });
 
     // Add optimization settings
     config.optimization = {
@@ -172,6 +191,19 @@ module.exports = (env, argv) => {
     config.output.filename = '[name].bundle.js';
     // Ensure chunks have consistent naming in development
     config.output.chunkFilename = '[name].bundle.js';
+
+    // Make HtmlWebpackPlugin inject the bundle scripts in development mode
+    config.plugins = config.plugins.map(plugin => {
+      if (plugin instanceof HtmlWebpackPlugin) {
+        return new HtmlWebpackPlugin({
+          template: './index.html',
+          filename: 'index.html',
+          inject: true, // Enable script injection
+          minify: false,
+        });
+      }
+      return plugin;
+    });
 
     // Add dev server settings
     config.devServer = {

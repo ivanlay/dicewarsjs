@@ -10,32 +10,64 @@
 
 console.log('Initializing game-loader.js...');
 
-/*
+/**
  * Create placeholder AI functions
  * These will be replaced by the real implementations via the bridge module
+ *
+ * These placeholder AI functions make simple decisions instead of
+ * just returning 0 (ending turn) immediately
  */
 window.ai_default = function (game) {
-  console.log('Using placeholder ai_default - this will be replaced by ES6 module');
-  // Default implementation that just ends the turn
+  console.warn('Using placeholder ai_default - ES6 module not loaded');
+
+  /**
+   * Simple AI implementation that makes random valid moves
+   * Try to find any territory we own with dice > 1
+   */
+  const myTerritories = [];
+  for (let i = 0; i < game.adat.length; i++) {
+    if (game.adat[i].arm === game.get_pn() && game.adat[i].dice > 1) {
+      myTerritories.push(i);
+    }
+  }
+
+  // No valid moves, end turn
+  if (myTerritories.length === 0) return 0;
+
+  // Try each territory to find valid attacks
+  for (const myArea of myTerritories) {
+    // Check all possible neighbors
+    for (let j = 0; j < game.adat.length; j++) {
+      // If adjacent and owned by enemy
+      if (game.adat[myArea].join[j] && game.adat[j].arm !== game.get_pn()) {
+        // If we have more dice, attack!
+        if (game.adat[myArea].dice > game.adat[j].dice) {
+          game.area_from = myArea;
+          game.area_to = j;
+          return 1; // Return non-zero to continue turn after attack
+        }
+      }
+    }
+  }
+
+  // No good moves found
   return 0;
 };
 
+// Make the other AIs use the default AI implementation
 window.ai_defensive = function (game) {
-  console.log('Using placeholder ai_defensive - this will be replaced by ES6 module');
-  // Default implementation that just ends the turn
-  return 0;
+  console.warn('Using placeholder ai_defensive - ES6 module not loaded');
+  return window.ai_default(game);
 };
 
 window.ai_example = function (game) {
-  console.log('Using placeholder ai_example - this will be replaced by ES6 module');
-  // Default implementation that just ends the turn
-  return 0;
+  console.warn('Using placeholder ai_example - ES6 module not loaded');
+  return window.ai_default(game);
 };
 
 window.ai_adaptive = function (game) {
-  console.log('Using placeholder ai_adaptive - this will be replaced by ES6 module');
-  // Default implementation that just ends the turn
-  return 0;
+  console.warn('Using placeholder ai_adaptive - ES6 module not loaded');
+  return window.ai_default(game);
 };
 
 // Set up placeholder for AI registry

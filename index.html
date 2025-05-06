@@ -17,8 +17,6 @@
     <!-- Preload critical assets -->
     <link rel="preload" href="sound/button.wav" as="audio" />
     <link rel="preload" href="sound/click.wav" as="audio" />
-    <link rel="preload" href="main.bundle.js" as="script" />
-    <link rel="preload" href="runtime.bundle.js" as="script" />
     <link rel="preload" href="https://code.createjs.com/1.0.0/createjs.min.js" as="script" />
 
     <!-- Favicon -->
@@ -83,10 +81,6 @@
 
   <body>
     <canvas id="myCanvas"></canvas>
-
-    <!-- Bundled ES6 Modules -->
-    <script src="runtime.bundle.js"></script>
-    <script src="vendors.bundle.js"></script>
-    <script src="main.bundle.js"></script>
+    <!-- Webpack will inject all needed script tags here -->
   </body>
 </html>

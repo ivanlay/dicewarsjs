@@ -55,19 +55,71 @@ const fallbacks = {
 
 // Export all AI functions to the global scope for legacy code compatibility
 try {
-  // Set AI functions with fallbacks
-  window.ai_default = ai_default ?? fallbacks.ai_default;
-  window.ai_defensive = ai_defensive ?? fallbacks.ai_defensive;
-  window.ai_example = ai_example ?? fallbacks.ai_example;
-  window.ai_adaptive = ai_adaptive ?? fallbacks.ai_adaptive;
+  // Initialize the AI registry if it doesn't exist
+  if (!window.AI_REGISTRY) {
+    window.AI_REGISTRY = {};
+    console.log('Created global AI_REGISTRY');
+  }
+
+  // Set AI functions with fallbacks, and update the AI registry
+  if (typeof ai_default === 'function') {
+    window.ai_default = ai_default;
+    window.AI_REGISTRY.ai_default = ai_default;
+    console.log('ES6 ai_default loaded successfully');
+  } else {
+    console.warn('ES6 ai_default not found, using fallback');
+    window.ai_default = fallbacks.ai_default;
+    window.AI_REGISTRY.ai_default = fallbacks.ai_default;
+  }
+  if (typeof ai_defensive === 'function') {
+    window.ai_defensive = ai_defensive;
+    window.AI_REGISTRY.ai_defensive = ai_defensive;
+    console.log('ES6 ai_defensive loaded successfully');
+  } else {
+    console.warn('ES6 ai_defensive not found, using fallback');
+    window.ai_defensive = fallbacks.ai_defensive;
+    window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
+  }
+
+  if (typeof ai_example === 'function') {
+    window.ai_example = ai_example;
+    window.AI_REGISTRY.ai_example = ai_example;
+    console.log('ES6 ai_example loaded successfully');
+  } else {
+    console.warn('ES6 ai_example not found, using fallback');
+    window.ai_example = fallbacks.ai_example;
+    window.AI_REGISTRY.ai_example = fallbacks.ai_example;
+  }
+
+  if (typeof ai_adaptive === 'function') {
+    window.ai_adaptive = ai_adaptive;
+    window.AI_REGISTRY.ai_adaptive = ai_adaptive;
+    console.log('ES6 ai_adaptive loaded successfully');
+  } else {
+    console.warn('ES6 ai_adaptive not found, using fallback');
+    window.ai_adaptive = fallbacks.ai_adaptive;
+    window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
+  }
 
   console.log('AI bridge module initialized successfully');
 } catch (error) {
   console.error('Failed to initialize AI bridge module:', error);
+
+  // Initialize the AI registry if it doesn't exist
+  if (!window.AI_REGISTRY) {
+    window.AI_REGISTRY = {};
+    console.log('Created global AI_REGISTRY in error handler');
+  }
 
   // Provide fallback implementations to prevent game crashes
   window.ai_default = fallbacks.ai_default;
   window.ai_defensive = fallbacks.ai_defensive;
   window.ai_example = fallbacks.ai_example;
   window.ai_adaptive = fallbacks.ai_adaptive;
+
+  // Also update the registry
+  window.AI_REGISTRY.ai_default = fallbacks.ai_default;
+  window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
+  window.AI_REGISTRY.ai_example = fallbacks.ai_example;
+  window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
 }

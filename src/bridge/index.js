@@ -100,5 +100,31 @@ function findModuleFromError(error) {
   return null;
 }
 
-// Log bridge initialization
-console.log('ES6 utility and AI bridge modules loaded successfully');
+// Add a global verification that can be called to check if ES6 modules loaded properly
+window.ES6_LOADED = true;
+window.verifyES6BridgeStatus = () => {
+  console.log('Checking ES6 Bridge Status:');
+  console.log('- Global ES6_LOADED flag:', window.ES6_LOADED);
+  console.log('- Module status:', moduleStatus);
+
+  // Check each AI function to see if it's the fallback or ES6 version
+  const aiDefault = window.ai_default?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
+  const aiDefensive = window.ai_defensive?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
+  const aiExample = window.ai_example?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
+  const aiAdaptive = window.ai_adaptive?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
+
+  console.log('- AI Functions:');
+  console.log('  - ai_default:', aiDefault);
+  console.log('  - ai_defensive:', aiDefensive);
+  console.log('  - ai_example:', aiExample);
+  console.log('  - ai_adaptive:', aiAdaptive);
+
+  return {
+    loaded: window.ES6_LOADED,
+    moduleStatus,
+    aiStatus: { aiDefault, aiDefensive, aiExample, aiAdaptive },
+  };
+};
+
+// Log bridge initialization with timestamp
+console.log(`[${new Date().toISOString()}] ES6 utility and AI bridge modules loaded successfully`);
