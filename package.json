@@ -76,7 +76,10 @@
       "eslint --fix --max-warnings=100",
       "prettier --write"
     ],
-    "*.{json,md}": [
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    ".github/**/*.{yml,yaml}": [
       "prettier --write"
     ]
   }
