@@ -23,6 +23,8 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       clean: true,
       assetModuleFilename: 'assets/[name][ext][query]',
+      // Add public path for GitHub Pages
+      publicPath: './',
     },
     module: {
       rules: [

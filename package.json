@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "A JavaScript implementation of the Dice Wars game",
   "main": "src/index.js",
+  "homepage": "https://ivanlay.github.io/dicewarsjs/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivanlay/dicewarsjs.git"
+  },
   "scripts": {
     "dev": "webpack serve --mode development",
     "serve": "webpack serve --mode development",
