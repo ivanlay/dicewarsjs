@@ -68,19 +68,19 @@
 
     <!-- Scripts -->
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-    <!-- Load game-loader.js first to initialize global placeholders -->
-    <script src="game-loader.js"></script>
-    <!-- Graphics resources -->
-    <script src="areadice.js"></script>
-    <script src="mc.js"></script>
-    <!-- Game core -->
-    <script src="game.js"></script>
-    <script src="config.js"></script>
-    <script src="main.js"></script>
+    <!-- All script tags need to be in body for proper ordering with webpack -->
   </head>
 
   <body>
     <canvas id="myCanvas"></canvas>
-    <!-- Webpack will inject all needed script tags here -->
+
+    <!-- Legacy scripts need to be loaded in specific order -->
+    <script src="game-loader.js"></script>
+    <script src="areadice.js"></script>
+    <script src="mc.js"></script>
+    <script src="game.js"></script>
+    <script src="config.js"></script>
+    <script src="main.js"></script>
+    <!-- Webpack will inject ES6 module bundles after these scripts -->
   </body>
 </html>

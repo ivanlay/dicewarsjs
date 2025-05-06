@@ -23,8 +23,8 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       clean: true,
       assetModuleFilename: 'assets/[name][ext][query]',
-      // Add public path for GitHub Pages
-      publicPath: './',
+      // Use different publicPath for production vs development
+      publicPath: isProduction ? './' : '/',
     },
     module: {
       rules: [
@@ -61,14 +61,19 @@ module.exports = (env, argv) => {
       new HtmlWebpackPlugin({
         template: './index.html',
         filename: 'index.html',
-        // Inject bundles at the end of the body
+        // Only inject webpack bundles after existing scripts
         inject: 'body',
+        // Use defer to prevent blocking page load
+        scriptLoading: 'defer',
         // Minify HTML in production
         minify: isProduction
           ? {
-              removeComments: true,
+              removeComments: false, // Keep comments to preserve script order
               collapseWhitespace: true,
               removeAttributeQuotes: true,
+              removeRedundantAttributes: false,
+              removeScriptTypeAttributes: false,
+              removeStyleLinkTypeAttributes: false,
             }
           : false,
       }),
@@ -113,12 +118,16 @@ module.exports = (env, argv) => {
         return new HtmlWebpackPlugin({
           template: './index.html',
           filename: 'index.html',
-          inject: true, // Enable script injection
+          inject: 'body', // Inject scripts at end of body
+          scriptLoading: 'defer', // Use defer for better loading order
           minify: isProduction
             ? {
-                removeComments: true,
+                removeComments: false, // Keep comments to preserve script order
                 collapseWhitespace: true,
                 removeAttributeQuotes: true,
+                removeRedundantAttributes: false,
+                removeScriptTypeAttributes: false,
+                removeStyleLinkTypeAttributes: false,
               }
             : false,
         });
@@ -198,7 +207,8 @@ module.exports = (env, argv) => {
         return new HtmlWebpackPlugin({
           template: './index.html',
           filename: 'index.html',
-          inject: true, // Enable script injection
+          inject: 'body', // Inject scripts at end of body
+          scriptLoading: 'defer', // Use defer for better loading order
           minify: false,
         });
       }
@@ -213,6 +223,11 @@ module.exports = (env, argv) => {
       compress: true,
       port: 3000,
       hot: true,
+      historyApiFallback: true,
+      devMiddleware: {
+        publicPath: '/',
+        writeToDisk: true,
+      },
     };
 
     // Use detailed source maps for better debugging

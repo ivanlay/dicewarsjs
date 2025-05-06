@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="description" content="Dice Wars - A strategic dice game" />
     <title>DICEWARS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,7 +15,11 @@
     <link rel="preload" href="sound/click.wav" as="audio" />
     <link rel="preload" href="https://code.createjs.com/1.0.0/createjs.min.js" as="script" />
     <link rel="shortcut icon" href="https://www.gamedesign.jp/img/favicon.ico" />
-    <link href="https://fonts.googleapis.com/css?family=Anton|Roboto&display=swap" rel="stylesheet" type="text/css" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Anton|Roboto&display=swap"
+      rel="stylesheet"
+      type="text/css"
+    />
     <style>
       body {
         background: #eeeeee;
@@ -25,7 +32,8 @@
         display: block;
         margin: auto;
       }
-      a:link, a:visited {
+      a:link,
+      a:visited {
         color: #aaaaaa;
         text-decoration: none;
       }
@@ -45,7 +53,7 @@
         position: fixed;
         top: 10px;
         left: 10px;
-        background: rgba(0,0,0,0.7);
+        background: rgba(0, 0, 0, 0.7);
         color: white;
         padding: 5px;
         font-family: monospace;
@@ -57,7 +65,7 @@
   <body>
     <div id="status">Loading...</div>
     <canvas id="myCanvas"></canvas>
-    
+
     <!-- Load game scripts in the correct order -->
     <script src="game-loader.js"></script>
     <script src="areadice.js"></script>
@@ -65,21 +73,21 @@
     <script src="game.js"></script>
     <script src="config.js"></script>
     <script src="main.js"></script>
-    
+
     <script>
       // Simple debug utility
-      window.addEventListener('load', function() {
+      window.addEventListener('load', function () {
         const status = document.getElementById('status');
-        
+
         // Check for ES6 modules loading
         setTimeout(() => {
           if (window.ES6_LOADED) {
             status.innerHTML = 'ES6 modules loaded ✓<br>';
-            
+
             // Check AI functions
             if (typeof window.verifyES6BridgeStatus === 'function') {
               const bridgeStatus = window.verifyES6BridgeStatus();
-              
+
               status.innerHTML += 'AI functions:<br>';
               status.innerHTML += `- Default: ${bridgeStatus.aiStatus.aiDefault}<br>`;
               status.innerHTML += `- Defensive: ${bridgeStatus.aiStatus.aiDefensive}<br>`;
@@ -89,11 +97,13 @@
           } else {
             status.innerHTML = 'ES6 modules NOT loaded ✗';
           }
-          
+
           // Add hide button
           const hideBtn = document.createElement('button');
           hideBtn.innerText = 'Hide';
-          hideBtn.onclick = () => { status.style.display = 'none'; };
+          hideBtn.onclick = () => {
+            status.style.display = 'none';
+          };
           status.appendChild(hideBtn);
         }, 3000);
       });
