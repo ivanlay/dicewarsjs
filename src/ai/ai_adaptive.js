@@ -290,36 +290,53 @@ const determineStrategy = (game, gameState, pn) => {
                 
             case 'late':
                 // Late game: position-based strategy
-                if (myRanking === 0) {
-                    // Leading - eliminate second place
+                
+                // Special endgame handling with only 2 players left
+                const activePlayerCount = Object.values(game.player).filter(p => p.area_c > 0).length;
+                if (activePlayerCount <= 2) {
+                    // In a two-player endgame, use extremely aggressive tactics to break stalemates
                     Object.assign(strategy, {
-                        aggression: 0.8,
-                        expansion: 0.6,
+                        aggression: 0.95,             // More aggressive
+                        expansion: 0.85,              // Focus on expansion
+                        riskTolerance: 0.9,           // Much higher risk tolerance
                         targetSelection: {
                             ...strategy.targetSelection,
-                            specificPlayer: playerRankings[1]
-                        }
-                    });
-                } else if (myRanking === 1) {
-                    // Second place - target leader
-                    Object.assign(strategy, {
-                        aggression: 0.7,
-                        riskTolerance: 0.6,
-                        targetSelection: {
-                            ...strategy.targetSelection,
-                            specificPlayer: playerRankings[0]
+                            specificPlayer: playerRankings[myRanking === 0 ? 1 : 0]  // Target the other player
                         }
                     });
                 } else {
-                    // Far behind - high risk strategy
-                    Object.assign(strategy, {
-                        aggression: 0.9,
-                        riskTolerance: 0.8,
-                        targetSelection: {
-                            ...strategy.targetSelection,
-                            weakestPlayer: true
-                        }
-                    });
+                    // Normal late game strategy for 3+ players
+                    if (myRanking === 0) {
+                        // Leading - eliminate second place
+                        Object.assign(strategy, {
+                            aggression: 0.8,
+                            expansion: 0.6,
+                            targetSelection: {
+                                ...strategy.targetSelection,
+                                specificPlayer: playerRankings[1]
+                            }
+                        });
+                    } else if (myRanking === 1) {
+                        // Second place - target leader
+                        Object.assign(strategy, {
+                            aggression: 0.8,          // Increased from 0.7
+                            riskTolerance: 0.7,       // Increased from 0.6
+                            targetSelection: {
+                                ...strategy.targetSelection,
+                                specificPlayer: playerRankings[0]
+                            }
+                        });
+                    } else {
+                        // Far behind - high risk strategy
+                        Object.assign(strategy, {
+                            aggression: 0.9,
+                            riskTolerance: 0.8,
+                            targetSelection: {
+                                ...strategy.targetSelection,
+                                weakestPlayer: true
+                            }
+                        });
+                    }
                 }
                 break;
         }
@@ -414,9 +431,24 @@ const generateMoves = (game, strategy, pn) => {
             const defenderDice = adat[to].dice;
             const diceAdvantage = attackerDice - defenderDice;
             
-            // Skip if we don't have an advantage, unless at max dice and aggressive
-            if (diceAdvantage <= 0 && !(attackerDice === 8 && strategy.aggression > 0.7)) {
-                return;
+            // Skip if we don't have an advantage, with special handling for endgame scenarios
+            // Count active players to determine if we're in endgame
+            // The remainingPlayers is stored in the analysis result rather than directly passed
+            const activePlayersCount = Object.values(game.player).filter(p => p.area_c > 0).length;
+            const isEndgame = activePlayersCount <= 2;
+            const hasMaxDice = attackerDice === 8;
+            const targetHasMaxDice = defenderDice === 8;
+            
+            // In endgame with 2 players, be more aggressive with max dice territories
+            if (diceAdvantage <= 0) {
+                // Allow attacking equal or slightly stronger territories in endgame if we have max dice
+                if (isEndgame && hasMaxDice && (diceAdvantage >= -1 || strategy.aggression > 0.6)) {
+                    // Continue with attack evaluation in endgame
+                } else if (hasMaxDice && strategy.aggression > 0.7) {
+                    // Continue with attack for non-endgame but highly aggressive with max dice
+                } else {
+                    return; // Skip this attack - not favorable enough
+                }
             }
             
             // Calculate attack risk
@@ -796,6 +828,7 @@ const simulateConnectivityImprovement = (game, from, to) => {
 
 /**
  * Select the best move from the evaluated options
+ * Added special handling for endgame scenarios to break stalemates
  * 
  * @param {Array} moves - Sorted list of possible moves
  * @param {Object} strategy - Strategic parameters
@@ -804,7 +837,27 @@ const simulateConnectivityImprovement = (game, from, to) => {
 const selectBestMove = (moves, strategy) => {
     if (moves.length === 0) return null;
     
-    // Add some randomness based on risk tolerance
+    // Identify if we're in an endgame scenario based on strategy aggression being very high
+    const isEndgameScenario = strategy.aggression > 0.9 && strategy.riskTolerance > 0.8;
+    
+    // In endgame, introduce more randomness to break stalemates
+    if (isEndgameScenario) {
+        // Choose more randomly from good moves to create unpredictability
+        const randomFactor = Math.min(0.7, strategy.riskTolerance);
+        
+        if (Math.random() < randomFactor) {
+            // In endgame, consider a wider range of moves, up to half of all possible moves
+            const endgameTopCount = Math.max(1, Math.ceil(moves.length * 0.5));
+            const endgameTopMoves = moves.slice(0, Math.min(endgameTopCount, moves.length));
+            
+            // In rare cases, pick a completely random move to break patterns
+            if (Math.random() < 0.2 && endgameTopMoves.length > 1) {
+                return endgameTopMoves[Math.floor(Math.random() * endgameTopMoves.length)];
+            }
+        }
+    }
+    
+    // Regular non-endgame randomness based on risk tolerance
     if (Math.random() < strategy.riskTolerance * 0.3) {
         // Select from top moves (more options with higher risk tolerance)
         const topCount = Math.max(1, Math.ceil(moves.length * strategy.riskTolerance * 0.5));
