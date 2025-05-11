@@ -35,6 +35,15 @@ jest.mock('../../src/ai/index.js', () => ({
   ai_defensive: jest.fn(),
   ai_example: jest.fn(),
   ai_adaptive: jest.fn(),
+  AI_STRATEGIES: {
+    ai_default: { implementation: jest.fn() },
+    ai_defensive: { implementation: jest.fn() },
+    ai_example: { implementation: jest.fn() },
+    ai_adaptive: { implementation: jest.fn() },
+  },
+  createAIFunctionMapping: jest.fn(),
+  getAIImplementation: jest.fn(),
+  getAIById: jest.fn(),
 }));
 
 describe('Game', () => {

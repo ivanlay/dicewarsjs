@@ -5,16 +5,16 @@ window.GAME_CONFIG = {
   averageDicePerArea: 3,  // Average dice per territory
   maxDice: 8,             // Maximum dice per territory
   
-  // AI configuration
-  aiTypes: [
-    'ai_adaptive',        // Player 0 (human by default, AI in spectator mode)
-    'ai_example',         // Player 1
-    'ai_defensive',       // Player 2  
-    'ai_adaptive',        // Player 3
-    'ai_default',         // Player 4
-    'ai_default',         // Player 5
-    'ai_default',         // Player 6
-    'ai_default'          // Player 7
+  // AI configuration - uses centralized system
+  aiAssignments: [
+    null,                 // Player 0 (human by default, null means human player)
+    'ai_defensive',       // Player 1 - Defensive strategy
+    'ai_defensive',       // Player 2 - Defensive strategy
+    'ai_adaptive',        // Player 3 - Adaptive strategy
+    'ai_default',         // Player 4 - Default balanced AI
+    'ai_default',         // Player 5 - Default balanced AI
+    'ai_default',         // Player 6 - Default balanced AI
+    'ai_default'          // Player 7 - Default balanced AI
   ],
   
   // Spectator mode settings (when humanPlayerIndex is null)

@@ -21,7 +21,16 @@ The bridge consists of ES6 modules that:
 
 ```javascript
 // Example: ai.js bridge
-import { ai_default, ai_defensive, ai_example, ai_adaptive } from '../ai/index.js';
+import {
+  ai_default,
+  ai_defensive,
+  ai_example,
+  ai_adaptive,
+  AI_STRATEGIES,
+  getAIById,
+  getAllAIStrategies,
+  createAIFunctionMapping,
+} from '../ai/index.js';
 
 // Export to global scope for legacy code
 window.ai_default = ai_default;
@@ -29,8 +38,23 @@ window.ai_defensive = ai_defensive;
 window.ai_example = ai_example;
 window.ai_adaptive = ai_adaptive;
 
+// Also export configuration to global scope
+window.AI_STRATEGIES = AI_STRATEGIES;
+window.getAIById = getAIById;
+window.getAllAIStrategies = getAllAIStrategies;
+window.createAIFunctionMapping = createAIFunctionMapping;
+
 // Also export as ES6 module for new code
-export { ai_default, ai_defensive, ai_example, ai_adaptive };
+export {
+  ai_default,
+  ai_defensive,
+  ai_example,
+  ai_adaptive,
+  AI_STRATEGIES,
+  getAIById,
+  getAllAIStrategies,
+  createAIFunctionMapping,
+};
 ```
 
 ## Bridge Components
@@ -40,6 +64,8 @@ The bridge system is composed of several modules:
 1. **AI Bridge** (`src/bridge/ai.js`)
 
    - Exposes AI strategy functions to the global scope
+   - Provides access to the centralized AI configuration system
+   - Exposes helper functions for AI lookups and player-to-AI mapping
    - Used by the legacy game.js for AI player moves
 
 2. **Game Utils Bridge** (`src/bridge/gameUtils.js`)

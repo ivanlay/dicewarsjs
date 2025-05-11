@@ -223,8 +223,24 @@ return 0; // End turn if no good attacks
 To test your AI:
 
 1. Implement your strategy in a new file (e.g., `src/ai/ai_myCustom.js`)
-2. Add your AI to the available AIs in `src/ai/index.js`
-3. Update the configuration to use your AI
+2. Add your AI to the centralized AI configuration in `src/ai/aiConfig.js`:
+   ```javascript
+   export const AI_STRATEGIES = {
+     // Add your new AI strategy
+     ai_myCustom: {
+       id: 'ai_myCustom',
+       name: 'My Custom AI',
+       description: 'Brief description of your AI strategy',
+       difficulty: 3, // Rate from 1-5
+       implementation: ai_myCustom,
+     },
+     // Existing strategies...
+   };
+   ```
+3. Update the configuration to use your AI by changing `aiAssignments` in the config:
+   ```javascript
+   config.aiAssignments[2] = 'ai_myCustom'; // Assign to player 2
+   ```
 4. Run games against existing AIs to test performance
 
 ## Submission Guidelines
@@ -239,7 +255,9 @@ When the AI Championship Platform is ready, you'll be able to submit your AI thr
 ## Resources
 
 - Existing AI implementations in `src/ai/`
+- Centralized AI configuration in `src/ai/aiConfig.js`
 - Game mechanics in `src/mechanics/`
+- AI handling in `src/mechanics/aiHandler.js`
 - Test framework for AI performance testing in `tests/ai/`
 
 ## Future Enhancements

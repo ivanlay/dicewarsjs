@@ -5,11 +5,33 @@
  * for compatibility with the legacy code while enabling the incremental transition to ES6.
  */
 
-// Import ES6 module implementations
-import { ai_default, ai_defensive, ai_example, ai_adaptive } from '../ai/index.js';
+// Import ES6 module implementations and configuration
+import {
+  ai_default,
+  ai_defensive,
+  ai_example,
+  ai_adaptive,
+  AI_STRATEGIES,
+  getAIById,
+  getAIImplementation,
+  getAllAIStrategies,
+  createAIFunctionMapping,
+  DEFAULT_AI_ASSIGNMENTS,
+} from '../ai/index.js';
 
 // Also export as ES6 module for new code
-export { ai_default, ai_defensive, ai_example, ai_adaptive };
+export {
+  ai_default,
+  ai_defensive,
+  ai_example,
+  ai_adaptive,
+  AI_STRATEGIES,
+  getAIById,
+  getAIImplementation,
+  getAllAIStrategies,
+  createAIFunctionMapping,
+  DEFAULT_AI_ASSIGNMENTS,
+};
 
 // Create fallback AI function that returns random valid moves
 const fallbackAI = (game, playerIndex) => {
@@ -101,7 +123,15 @@ try {
     window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
   }
 
-  console.log('AI bridge module initialized successfully');
+  // Also expose the AI configuration utility functions
+  window.AI_STRATEGIES = AI_STRATEGIES;
+  window.DEFAULT_AI_ASSIGNMENTS = DEFAULT_AI_ASSIGNMENTS;
+  window.getAIById = getAIById;
+  window.getAIImplementation = getAIImplementation;
+  window.getAllAIStrategies = getAllAIStrategies;
+  window.createAIFunctionMapping = createAIFunctionMapping;
+
+  console.log('AI bridge module initialized successfully with configuration utilities');
 } catch (error) {
   console.error('Failed to initialize AI bridge module:', error);
 
@@ -122,4 +152,12 @@ try {
   window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
   window.AI_REGISTRY.ai_example = fallbacks.ai_example;
   window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
+
+  // Expose the configuration utility functions
+  window.AI_STRATEGIES = {};
+  window.DEFAULT_AI_ASSIGNMENTS = [];
+  window.getAIById = fallbacks.ai_default;
+  window.getAIImplementation = fallbacks.ai_default;
+  window.getAllAIStrategies = () => [];
+  window.createAIFunctionMapping = () => [];
 }

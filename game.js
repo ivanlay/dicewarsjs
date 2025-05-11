@@ -238,8 +238,8 @@ var Game = function(){
 		// Initialize AI strategy array with functions loaded via ES6 modules
 		// These should be available in the global scope via the bridge modules
 		this.ai = [
-			null,            // Player 0 (human player)
-			window.ai_example,      // Player 1 - Example basic AI
+			null,            		// Player 0 (human player)
+			window.ai_defensive,    // Player 1 - Defensive strategy
 			window.ai_defensive,    // Player 2 - Defensive strategy
 			window.ai_defensive,    // Player 3 - Defensive strategy
 			window.ai_default,      // Player 4 - Default balanced AI

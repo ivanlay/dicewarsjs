@@ -10,7 +10,9 @@ src/
 │   ├── ai_default.js      # Default balanced AI strategy
 │   ├── ai_defensive.js    # Defensive AI strategy
 │   ├── ai_example.js      # Simple example AI for learning
-│   └── index.js           # Exports all AI strategies
+│   ├── ai_adaptive.js     # Adaptive AI that changes strategy based on game state
+│   ├── aiConfig.js        # Centralized AI configuration and registry
+│   └── index.js           # Exports all AI strategies and configuration
 ├── models/                # Data structures and models
 │   ├── AreaData.js        # Territory data structure
 │   ├── Battle.js          # Battle animation data
@@ -54,11 +56,19 @@ Separate data structure classes:
 
 ### AI Strategies
 
-Modular AI implementations:
+Modular AI implementations with centralized configuration:
 
 - `ai_default`: Balanced strategy from the original game
 - `ai_defensive`: Conservative strategy focused on territory protection
 - `ai_example`: Simple example for learning how to create custom AIs
+- `ai_adaptive`: Adaptive strategy that changes based on game conditions
+
+The AI system is managed through a centralized configuration in `aiConfig.js` that provides:
+
+- A registry of all available AI strategies with metadata
+- Helper functions for accessing and mapping AI implementations
+- Utility functions for creating player-to-AI mappings
+- Standardized AI registration for new strategies
 
 ### Utility Modules
 
@@ -77,7 +87,7 @@ To create a custom AI:
 2. Export a function that takes a `game` parameter
 3. Implement your AI logic to select attacks
 4. Add your new AI to the `index.js` export list
-5. Update the AI array in `Game.js` to include your strategy
+5. Add your AI to the registry in `aiConfig.js` for centralized management
 
 Example:
 
@@ -108,7 +118,7 @@ updateConfig({ playerCount: 4 });
 
 // Change the AI for player 3
 const config = getConfig();
-config.aiTypes[3] = 'ai_defensive';
+config.aiAssignments[3] = 'ai_defensive';
 updateConfig(config);
 
 // Save configuration to localStorage

@@ -48,7 +48,7 @@ export class Game {
    */
   ai = [
     null,            // Player 0 (human player)
-    ai_example,      // Player 1 - Example basic AI
+    ai_defensive,    // Player 1 - Defensive strategy
     ai_defensive,    // Player 2 - Defensive strategy
     ai_adaptive,     // Player 3 - Adaptive strategy
     ai_default,      // Player 4 - Default balanced AI

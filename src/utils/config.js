@@ -1,11 +1,13 @@
 /**
  * Configuration Management Module
- * 
+ *
  * Provides utilities for game configuration:
  * - Default game settings
  * - Configuration loading and saving
  * - Dynamic configuration options
  */
+
+import { createAIFunctionMapping } from '../ai/index.js';  // Import AI configuration utilities
 
 /**
  * Default game configuration
@@ -17,16 +19,16 @@ export const DEFAULT_CONFIG = {
   averageDicePerArea: 3,  // Average dice per territory
   maxDice: 8,             // Maximum dice per territory
   
-  // AI configuration
-  aiTypes: [
-    'ai_adaptive',        // Player 0 (human by default, AI in spectator mode)
-    'ai_example',         // Player 1
-    'ai_defensive',       // Player 2  
-    'ai_adaptive',        // Player 3
-    'ai_default',         // Player 4
-    'ai_default',         // Player 5
-    'ai_default',         // Player 6
-    'ai_default'          // Player 7
+  // AI configuration - imported from centralized AI config
+  aiAssignments: [
+    null,                // Player 0 (human by default)
+    'ai_defensive',      // Player 1
+    'ai_defensive',      // Player 2
+    'ai_adaptive',       // Player 3
+    'ai_default',        // Player 4
+    'ai_default',        // Player 5
+    'ai_default',        // Player 6
+    'ai_default'         // Player 7
   ],
   
   // Display settings
@@ -139,45 +141,54 @@ export function applyConfigToGame(game, config = null) {
   game.YMAX = cfg.mapHeight;
   game.AREA_MAX = cfg.territoriesCount;
   
-  // AI configuration - map string names to function references
-  if (Array.isArray(cfg.aiTypes) && game.ai) {
-    // Map AI type strings to actual functions
-    for (let i = 0; i < cfg.aiTypes.length && i < game.ai.length; i++) {
-      const aiType = cfg.aiTypes[i];
-      // Special handling for player 0 - only set to null if humanPlayerIndex is player 0
-      if (i === 0 && cfg.humanPlayerIndex === 0) {
-        game.ai[i] = null;
-        continue;
-      }
-      // Skip null entries (human players at other positions)
-      if (aiType === null) {
-        game.ai[i] = null;
-        continue;
-      }
-      
-      // Map string names to the imported AI functions
-      switch (aiType) {
-        case 'ai_default':
-          game.ai[i] = game.aiRegistry.ai_default;
-          break;
-        case 'ai_defensive':
-          game.ai[i] = game.aiRegistry.ai_defensive;
-          break;
-        case 'ai_example':
-          game.ai[i] = game.aiRegistry.ai_example;
-          break;
-        case 'ai_adaptive':
-          game.ai[i] = game.aiRegistry.ai_adaptive;
-          break;
-        default:
-          console.warn(`Unknown AI type: ${aiType}, using default AI`);
-          game.ai[i] = game.aiRegistry.ai_default;
+  // AI configuration using the central configuration system
+  if (Array.isArray(cfg.aiAssignments) && game.ai) {
+    // Create a copy of aiAssignments to modify for the human player
+    const aiAssignments = [...cfg.aiAssignments];
+
+    // Ensure human player has null AI if not in spectator mode
+    if (cfg.humanPlayerIndex >= 0 && cfg.humanPlayerIndex < aiAssignments.length) {
+      aiAssignments[cfg.humanPlayerIndex] = null;
+    }
+
+    // Use the configureAI function if available (modern code pattern)
+    if (typeof game.configureAI === 'function') {
+      game.configureAI(aiAssignments);
+    }
+    // Legacy compatibility approach
+    else {
+      // Get AI functions from the assignments
+      const aiFunctions = createAIFunctionMapping(aiAssignments);
+
+      // Apply to the game's AI array
+      for (let i = 0; i < aiFunctions.length && i < game.ai.length; i++) {
+        game.ai[i] = aiFunctions[i];
       }
     }
-    
+
     // Log info about AI configuration for debugging
     console.log(`Game configured with humanPlayerIndex: ${cfg.humanPlayerIndex}`);
     console.log(`Player 0 AI function: ${game.ai[0] ? 'AI' : 'Human'}`);
+  }
+  // Legacy support for older config format
+  else if (Array.isArray(cfg.aiTypes) && game.ai) {
+    console.warn('Using legacy aiTypes configuration - consider upgrading to aiAssignments');
+
+    // Use aiTypes as aiAssignments
+    const aiAssignments = [...cfg.aiTypes];
+
+    // Ensure human player has null AI if not in spectator mode
+    if (cfg.humanPlayerIndex >= 0 && cfg.humanPlayerIndex < aiAssignments.length) {
+      aiAssignments[cfg.humanPlayerIndex] = null;
+    }
+
+    // Get AI functions from the assignments
+    const aiFunctions = createAIFunctionMapping(aiAssignments);
+
+    // Apply to the game's AI array
+    for (let i = 0; i < aiFunctions.length && i < game.ai.length; i++) {
+      game.ai[i] = aiFunctions[i];
+    }
   }
   
   return game;

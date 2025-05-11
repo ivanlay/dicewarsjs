@@ -5,19 +5,17 @@
  * Extracted from Game.js for modularity.
  */
 
-import { ai_default, ai_defensive, ai_example, ai_adaptive } from '../ai/index.js';
+import { AI_STRATEGIES, getAIImplementation, createAIFunctionMapping } from '../ai/index.js';
 
 /**
  * AI Strategy Registry
  *
  * Maps string AI strategy names to function references
+ * Re-exports the registry from aiConfig for backward compatibility
  */
-export const AI_REGISTRY = {
-  ai_default,
-  ai_defensive,
-  ai_example,
-  ai_adaptive,
-};
+export const AI_REGISTRY = Object.fromEntries(
+  Object.entries(AI_STRATEGIES).map(([key, value]) => [key, value.implementation])
+);
 
 /**
  * Generate possible attack moves
@@ -82,9 +80,10 @@ export function executeAIMove(gameState) {
     console.error(`AI function not found for player ${currentPlayer}`);
 
     // Try to use default AI as a fallback
-    if (typeof ai_default === 'function') {
+    const defaultAI = getAIImplementation('ai_default');
+    if (typeof defaultAI === 'function') {
       console.log('Using default AI as fallback');
-      return ai_default(gameState);
+      return defaultAI(gameState);
     }
     // If no fallback available, end the turn
     console.error('No fallback AI available, ending turn');
@@ -101,34 +100,23 @@ export function executeAIMove(gameState) {
  * Updates the AI function array based on string identifiers from config.
  *
  * @param {Object} gameState - Game state including AI array
- * @param {Array} aiTypes - Array of string AI type identifiers
+ * @param {Array} aiAssignments - Array of string AI type identifiers
  * @returns {Object} Updated game state with AI functions set
  */
-export function configureAI(gameState, aiTypes) {
-  if (!aiTypes || !Array.isArray(aiTypes)) {
+export function configureAI(gameState, aiAssignments) {
+  if (!aiAssignments || !Array.isArray(aiAssignments)) {
     return gameState;
   }
 
   // Clone the game state to avoid mutation
   const updatedGameState = { ...gameState };
 
-  // Loop through AI types and set corresponding functions
-  for (let i = 0; i < aiTypes.length && i < updatedGameState.ai.length; i++) {
-    const aiType = aiTypes[i];
+  // Use the utility function to create AI function mapping
+  const aiFunctions = createAIFunctionMapping(aiAssignments);
 
-    // Skip null entries (human players)
-    if (aiType === null) {
-      updatedGameState.ai[i] = null;
-      continue;
-    }
-
-    // Map string names to the imported AI functions
-    if (AI_REGISTRY[aiType]) {
-      updatedGameState.ai[i] = AI_REGISTRY[aiType];
-    } else {
-      console.warn(`Unknown AI type: ${aiType}, using default AI`);
-      updatedGameState.ai[i] = ai_default;
-    }
+  // Apply the mapping to the game state
+  for (let i = 0; i < aiFunctions.length && i < updatedGameState.ai.length; i++) {
+    updatedGameState.ai[i] = aiFunctions[i];
   }
 
   return updatedGameState;

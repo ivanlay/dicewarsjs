@@ -96,7 +96,7 @@ window.getAIFunctionByName = function (aiName) {
 if (!window.GAME_CONFIG) {
   window.GAME_CONFIG = {
     humanPlayerIndex: 0,
-    aiTypes: [
+    aiAssignments: [
       null, // Player 0 (human)
       'ai_example', // Player 1
       'ai_defensive', // Player 2
