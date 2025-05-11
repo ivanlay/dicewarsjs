@@ -147,6 +147,35 @@ When working with or adding to the bridge architecture:
    - Create tests that verify bridge functions are available when needed
    - Test different initialization scenarios
 
+## Comprehensive Migration Plan
+
+We are now implementing a structured 9-phase plan to complete the ES6 migration. For the full details, refer to the [Project Roadmap](./roadmap.md). The approach involves:
+
+1. **Assessment and Planning**: Auditing the codebase and establishing migration priorities
+2. **Infrastructure Setup**: Creating robust testing and build systems
+3. **Core Component Migration**: Converting key game systems to ES6 modules
+4. **UI and Interaction Migration**: Modernizing the rendering and input systems
+5. **Optimization**: Implementing performance improvements and error handling
+6. **Bridge Reduction**: Gradually removing bridge dependencies
+7. **Unmigrateable Code Strategy**: Creating adapters for legacy code that cannot be migrated
+8. **Documentation and Cleanup**: Ensuring thorough documentation and code quality
+9. **Final Bridge Removal**: Complete elimination of bridge components
+
+This phased approach ensures that at each step the game remains functional while progressively reducing dependency on the bridge pattern.
+
+## Bridge Component Removal Strategy
+
+As we migrate modules to pure ES6, we'll follow this bridge removal process:
+
+1. **Identify Direct Module Users**: Determine which legacy components use each bridge module
+2. **Convert Legacy Dependents**: Migrate those legacy components to ES6 modules
+3. **Replace Bridge Imports**: Update import statements to reference ES6 modules directly
+4. **Remove Global Exports**: Once no legacy code depends on global exports, remove them
+5. **Test Extensively**: Verify that no regressions are introduced at each step
+6. **Final Removal**: Once all dependencies are migrated, remove the bridge module
+
+Each bridge component will go through this process individually, allowing for incremental progress while maintaining a working application.
+
 ## Future Direction
 
 The bridge architecture is a temporary solution to ease the transition to full ES6 modules. Eventually, all code will be migrated to ES6 modules and the bridge components will be removed.

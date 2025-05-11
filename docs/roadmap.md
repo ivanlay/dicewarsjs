@@ -25,77 +25,142 @@ This document outlines the current development status, immediate next steps, and
    - Changed dynamic imports to direct file paths
    - Added explicit file type indication for CreateJS Sound API
 
-## Short-Term Action Items
+## Comprehensive ES6 Migration Plan
 
-### 1. Optimize Bridge Layer and Legacy Integration
+### Phase 1: Assessment and Planning
 
-As the project continues to modernize, consider these steps:
+1. **Complete Code Audit**
 
-- Remove bridge dependencies that can be safely migrated
-- Keep stable bridge interfaces for unmigrateable components (like mc.js)
-- Transition global variables to module exports/imports where possible
-- Refactor main.js to use ES6 module structure as much as possible
-- Update AI systems to fully rely on ES6 modules while maintaining compatibility
+   - Map all remaining global variables and functions that need migration
+   - Identify interdependencies between legacy and modern code
+   - Document which files are using the bridge pattern and their current state
+   - Create a dependency graph to visualize the migration path
 
-### 2. Update AI Loading System
+2. **Establish Migration Priorities**
+   - Prioritize components based on complexity, dependencies, and strategic value
+   - Create a detailed component-by-component migration schedule
+   - Define success criteria for each migration phase
+   - Establish measurable goals and performance benchmarks
 
-The current fix is a workaround for the immediate issue. A more robust solution would:
+### Phase 2: Infrastructure and Environment Setup
 
-- Modify Game.js to better handle the ES6 module system
-- Create an AIRegistry class to manage different AI strategies
-- Implement a dynamic loading system for AI modules
-- Add unit tests specifically for AI registration and usage
+1. **Enhance Testing Infrastructure**
 
-```javascript
-// Example of a more robust AI registry
-class AIRegistry {
-  constructor() {
-    this.strategies = new Map();
-    this.defaultStrategy = null;
-  }
+   - Create comprehensive tests for all bridge components
+   - Implement integration tests to verify bridge functionality
+   - Set up automated tests to verify backwards compatibility
 
-  register(name, aiFunction) {
-    this.strategies.set(name, aiFunction);
-    return this;
-  }
+2. **Refine Build Pipeline**
+   - Optimize webpack configuration for faster development builds
+   - Configure distinct development and production builds
+   - Implement proper source maps for debugging
+   - Set up bundle size analysis with size limits
 
-  setDefault(name) {
-    if (this.strategies.has(name)) {
-      this.defaultStrategy = this.strategies.get(name);
-    }
-    return this;
-  }
+### Phase 3: Core Components Migration
 
-  get(name) {
-    if (!name || !this.strategies.has(name)) {
-      return this.defaultStrategy;
-    }
-    return this.strategies.get(name);
-  }
-}
-```
+1. **Complete Game State Management**
 
-### 3. Improve Build System
+   - Finish implementation of immutable state patterns
+   - Add proper undo/redo functionality
+   - Implement event system for state changes
 
-- Add distinct development and production build configurations
-- Implement proper source maps for easier debugging
-- Add bundle size analysis and optimization
-- Implement code splitting for better performance
-- Consider adding TypeScript for better type safety
+2. **Migrate Map Generation and Battle Resolution**
 
-### 4. Update Documentation
+   - Convert to ES6 modules with proper exports
+   - Implement TypedArray-based grid representation
+   - Create proper battle history tracking
 
-- Add detailed comments about the bridge layer functionality
-- Create a migration guide for moving to full ES6 modules
-- Consolidate documentation files for better organization
-- Update architecture diagrams for new developers
+3. **Migrate Event System**
+   - Create ES6 event system to replace direct function calls
+   - Implement pub/sub pattern for game events
+   - Create bridge for legacy event handling
 
-### 5. Testing Improvements
+### Phase 4: UI and Interaction Migration
 
-- Add integration tests for the bridge layer
-- Test AI loading under different conditions
-- Implement automated browser testing with Puppeteer or Playwright
-- Add performance benchmarks for different AI strategies
+1. **Modernize Rendering Pipeline**
+
+   - Complete transition from global render functions to module-based
+   - Implement canvas abstraction layer
+   - Separate render logic from game state
+
+2. **Update Input Handling and UI Components**
+   - Replace direct DOM event handlers with proper event system
+   - Convert hardcoded UI to component-based approach
+   - Implement proper UI state management
+
+### Phase 5: Error Handling and Optimization
+
+1. **Implement Error Boundaries**
+
+   - Create proper error handling system
+   - Add graceful degradation for critical components
+   - Implement logging and error reporting
+
+2. **Performance Optimization**
+   - Apply TypedArrays for performance-critical operations
+   - Implement Map and Set data structures where appropriate
+   - Optimize rendering loop and memory management
+
+### Phase 6: Bridge Reduction
+
+1. **Identify Safe Bridge Removals**
+
+   - Analyze bridge component usage
+   - Create a list of safe bridge removals
+   - Document impact and risks
+
+2. **Implement Direct Module References**
+   - Replace bridge imports with direct module imports
+   - Update code to use ES6 module exports directly
+   - Clean up global namespace gradually
+
+### Phase 7: Unmigrateable Code Strategy
+
+1. **Identify Legacy Code Boundaries**
+
+   - Document which components must remain as legacy code
+   - Create stable interfaces for these components
+   - Implement proper adapter pattern
+
+2. **Create Legacy Adapters**
+   - Develop wrapper classes for legacy components
+   - Implement proxy objects for legacy interfaces
+   - Isolate legacy dependencies
+
+### Phase 8: Documentation and Cleanup
+
+1. **Update Development Documentation**
+
+   - Create detailed architecture documents
+   - Update API references
+   - Provide migration notes for remaining tasks
+
+2. **Code Cleanup**
+   - Remove dead code
+   - Standardize naming conventions
+   - Apply consistent formatting
+
+### Phase 9: Final Bridge Removal
+
+1. **Remove Bridge Components**
+
+   - Once direct module imports are used consistently, remove bridge modules
+   - Update any remaining references
+   - Test extensively
+
+2. **Update Entry Points**
+   - Update HTML to use bundled module
+   - Remove legacy script loading
+   - Finalize webpack configuration
+
+## Success Metrics
+
+1. **Zero global variables** except those absolutely required
+2. **100% ES6 module coverage** for all new and migrated code
+3. **Improved bundle size** and loading performance
+4. **Complete test coverage** for all migrated components
+5. **Identical game behavior** before and after migration
+6. **Simplified dependency graph** with clear module boundaries
 
 ## Medium-Term Goals
 
