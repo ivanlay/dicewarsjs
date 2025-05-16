@@ -94,11 +94,13 @@ class EventEmitter {
     }
 
     const handlers = this.handlers.get(eventType);
-    handlers.push(handler);
 
     // Generate and store subscription ID
     const subscriptionId = `${eventType}_${++this.idCounter}`;
     this.subscriptionIds.get(eventType).add(subscriptionId);
+
+    // Store handler object with id for easy removal
+    handlers.push({ id: subscriptionId, handler });
 
     return subscriptionId;
   }
@@ -140,15 +142,14 @@ class EventEmitter {
       return false;
     }
 
-    // Find the index of the handler
-    const handlerIndex = parseInt(subscriptionId.split('_')[1], 10) - 1;
-    if (handlerIndex < 0 || handlerIndex >= this.handlers.get(eventType).length) {
-      return false;
-    }
+    const handlers = this.handlers.get(eventType);
+
+    // Find handler object with matching id
+    const index = handlers.findIndex(h => h.id === subscriptionId);
+    if (index === -1) return false;
 
     // Remove the handler
-    const handlers = this.handlers.get(eventType);
-    handlers.splice(handlerIndex, 1);
+    handlers.splice(index, 1);
 
     // Remove the subscription ID
     this.subscriptionIds.get(eventType).delete(subscriptionId);
@@ -217,7 +218,7 @@ class EventEmitter {
     // Call all handlers with processed data
     const handlers = this.handlers.get(eventType);
     const results = await Promise.all(
-      handlers.map(handler => {
+      handlers.map(({ handler }) => {
         try {
           return Promise.resolve(handler(processedData));
         } catch (error) {
