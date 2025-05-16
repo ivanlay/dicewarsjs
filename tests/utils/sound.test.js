@@ -118,7 +118,11 @@ describe('Sound Utilities', () => {
   });
 
   describe('playSound', () => {
+    let originalPromise;
+
     beforeEach(() => {
+      // Store the original Promise so it can be restored after each test
+      originalPromise = global.Promise;
       // Mock loadSound to resolve immediately
       jest.spyOn(global, 'Promise').mockImplementation(executor => ({
         then: callback => {
@@ -129,6 +133,11 @@ describe('Sound Utilities', () => {
         },
         catch: () => {},
       }));
+    });
+
+    afterEach(() => {
+      // Restore global.Promise to its original value
+      global.Promise = originalPromise;
     });
 
     test('plays a sound with default options', async () => {
