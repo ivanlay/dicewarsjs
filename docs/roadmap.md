@@ -114,7 +114,7 @@ This document outlines the current development status, immediate next steps, and
    - Update code to use ES6 module exports directly
    - Clean up global namespace gradually
 
-### Phase 7: Unmigrateable Code Strategy
+### Phase 7: Unmigratable Code Strategy
 
 1. **Identify Legacy Code Boundaries**
 
@@ -234,7 +234,7 @@ This document outlines the current development status, immediate next steps, and
 
 ## Long-Term Vision
 
-### 1. Strategy for Unmigrateable Legacy Code
+### 1. Strategy for Unmigratable Legacy Code
 
 Some files in the codebase (like mc.js) may never be fully migrateable to ES6 modules since they were originally generated from Adobe Flash. To handle this reality:
 

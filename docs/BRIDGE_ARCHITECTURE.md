@@ -157,7 +157,7 @@ We are now implementing a structured 9-phase plan to complete the ES6 migration.
 4. **UI and Interaction Migration**: Modernizing the rendering and input systems
 5. **Optimization**: Implementing performance improvements and error handling
 6. **Bridge Reduction**: Gradually removing bridge dependencies
-7. **Unmigrateable Code Strategy**: Creating adapters for legacy code that cannot be migrated
+7. **Unmigratable Code Strategy**: Creating adapters for legacy code that cannot be migrated
 8. **Documentation and Cleanup**: Ensuring thorough documentation and code quality
 9. **Final Bridge Removal**: Complete elimination of bridge components
 

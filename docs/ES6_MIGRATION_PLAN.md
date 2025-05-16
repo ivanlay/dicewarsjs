@@ -215,7 +215,7 @@ The migration will follow a phased approach to ensure the game remains functiona
 - Global namespace analysis
 - Test coverage report
 
-### Phase 7: Unmigrateable Code Strategy (1 week)
+### Phase 7: Unmigratable Code Strategy (1 week)
 
 #### Tasks:
 
