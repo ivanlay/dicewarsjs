@@ -146,16 +146,14 @@ Game settings can be configured through the settings UI or by editing configurat
 ```javascript
 // Example configuration in src/config.js
 export const GAME_CONFIG = {
-  players: 8, // Number of players (2-8)
+  playerCount: 8, // Number of players (2-8)
   humanPlayerIndex: 0, // Set to null for AI vs AI mode
   spectatorSpeedMultiplier: 3, // Game speed in spectator mode
-  audioEnabled: true, // Enable/disable game sounds
+  soundEnabled: true, // Enable/disable game sounds
   battleHistoryLength: 10, // Number of battles to keep in history
   showProbabilities: true, // Show attack success probability
-  territories: {
-    count: 40, // Number of territories
-    maxDice: 8, // Maximum dice per territory
-  },
+  territoriesCount: 40, // Number of territories
+  maxDice: 8, // Maximum dice per territory
 };
 ```
 
