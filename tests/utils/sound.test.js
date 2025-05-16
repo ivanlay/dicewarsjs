@@ -205,4 +205,46 @@ describe('Sound Utilities', () => {
       expect(createjs.Sound.stop).toHaveBeenCalled();
     });
   });
+  describe('volume and enable/disable', () => {
+    test('setVolume clamps values between 0 and 1 and updates instances', async () => {
+      const instance = {
+        on: jest.fn(),
+        volume: 1,
+        loop: 0,
+        interrupt: 'interrupt',
+        playState: createjs.Sound.PLAY_SUCCEEDED,
+      };
+      createjs.Sound.play.mockReturnValueOnce(instance);
+      jest.spyOn(global, 'Promise').mockImplementation(executor => ({
+        then: callback => {
+          callback('./sound/button.wav');
+          return { catch: () => {} };
+        },
+        catch: () => {},
+      }));
+      await playSound('snd_button');
+
+      setVolume(2);
+      expect(createjs.Sound.volume).toBe(1);
+      expect(instance.volume).toBe(1);
+
+      setVolume(-0.5);
+      expect(createjs.Sound.volume).toBe(0);
+      expect(instance.volume).toBe(0);
+    });
+
+    test('setSoundEnabled(false) stops all sounds and toggles the flag', () => {
+      const { getConfig, updateConfig } = require('../../src/utils/config.js');
+      getConfig.mockReturnValueOnce({ soundEnabled: true });
+
+      // Spy on stopSound which should be called by stopAllSounds
+      const stopSpy = jest.spyOn(createjs.Sound, 'stop').mockClear();
+
+      const previous = setSoundEnabled(false);
+
+      expect(previous).toBe(true);
+      expect(updateConfig).toHaveBeenCalledWith({ soundEnabled: false });
+      expect(stopSpy).toHaveBeenCalled();
+    });
+  });
 });
