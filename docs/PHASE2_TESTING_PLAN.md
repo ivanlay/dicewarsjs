@@ -37,7 +37,7 @@ This document details the plans for strengthening the DiceWarsJS test suite duri
 ### 5. CI Integration
 
 - Update the GitHub Actions workflow to run unit, integration, and regression tests on every push and pull request
-- Upload coverage reports as CI artifacts
+- Coverage reports are uploaded as CI artifacts
 
 ### 6. Documentation Updates
 

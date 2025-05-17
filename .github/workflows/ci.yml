@@ -44,11 +44,18 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm run test
+      - name: Test with coverage
+        run: npm run test:coverage
 
       - name: Regression Tests
         run: npm run test:regression
 
       - name: Run benchmarks
         run: npm run test:benchmark
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 7
