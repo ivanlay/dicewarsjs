@@ -93,6 +93,7 @@ which legacy files still need to be replaced or refactored.
 2. **Refine Build Pipeline**
 
    - Optimize webpack configuration
+   - Split the build into `webpack.modern.js` and `webpack.legacy.js` (see [WEBPACK_CONFIG_SPLIT.md](./WEBPACK_CONFIG_SPLIT.md))
    - Set up distinct development and production builds
    - Implement proper source maps (generated in development and production)
    - Add bundle size analysis

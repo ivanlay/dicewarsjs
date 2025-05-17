@@ -26,7 +26,15 @@ This document outlines the current development status, immediate next steps, and
    - Changed dynamic imports to direct file paths
    - Added explicit file type indication for CreateJS Sound API
 
-4. **Phase 1 Code Audit Completed**
+4. **Webpack Configuration Split**
+
+   - Added `webpack.common.js` with shared settings
+   - Created `webpack.modern.js` for ES modules
+   - Created `webpack.legacy.js` for legacy script bundles
+   - See [WEBPACK_CONFIG_SPLIT.md](./WEBPACK_CONFIG_SPLIT.md) for details
+   - Future plan: remove the legacy build once all code is migrated
+
+5. **Phase 1 Code Audit Completed**
    - Documented remaining legacy scripts and global variables
    - Mapped bridge modules that expose ES6 modules globally
    - Recorded ES6 counterparts for all legacy files

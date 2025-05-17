@@ -34,18 +34,38 @@ This fork significantly extends the project with:
    npm install
    ```
 
-2. Start the development server:
+2. Start the development server (modern build):
 
    ```bash
    npm run dev
+   ```
+
+   For the legacy version:
+
+   ```bash
+   npm run dev:legacy
    ```
 
 3. Open your browser at `http://localhost:3000`
 
 ### Production Build
 
+Build the modern bundle:
+
 ```bash
 npm run build
+```
+
+Build the legacy bundle:
+
+```bash
+npm run build:legacy
+```
+
+Or build both at once:
+
+```bash
+npm run build:all
 ```
 
 The optimized files will be available in the `dist` directory and can be deployed to any web server.
@@ -175,6 +195,12 @@ export const GAME_CONFIG = {
 
 This project uses a modern architecture that bridges legacy code with new ES6+ practices:
 
+The build system now uses three separate webpack configurations:
+
+- **webpack.common.js** – shared settings
+- **webpack.modern.js** – output as ES modules
+- **webpack.legacy.js** – classic script bundles
+
 ```
 dicewarsjs/
 ├── src/                     # Source files (modern ES6 code)
@@ -188,7 +214,9 @@ dicewarsjs/
 ├── docs/                    # Documentation
 │   ├── ai-strategies/       # AI strategy documentation
 │   └── ...                  # Other documentation
-├── webpack.config.js        # Webpack configuration
+├── webpack.common.js        # Shared Webpack configuration
+├── webpack.legacy.js        # Legacy build configuration
+├── webpack.modern.js        # Modern ES6 build configuration
 ├── .eslintrc.js             # ESLint configuration
 └── package.json             # Dependencies and scripts
 ```
@@ -211,8 +239,17 @@ For more details, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md).
 # Start development server
 npm run dev
 
+# Start legacy development server
+npm run dev:legacy
+
 # Build for production
 npm run build
+
+# Build legacy bundle
+npm run build:legacy
+
+# Build both bundles
+npm run build:all
 
 # Run linting
 npm run lint
@@ -262,6 +299,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [**AI Developer Guide**](./docs/ai/DEVELOPER_GUIDE.md): Detailed guide for AI development
 - [**Bridge Architecture**](./docs/BRIDGE_ARCHITECTURE.md): Details on the architectural approach
 - [**Roadmap**](./docs/ROADMAP.md): Future development plans
+- [**Webpack Config Split**](./docs/WEBPACK_CONFIG_SPLIT.md): Rationale for the separate builds
 - [**Code Style Guide**](./docs/CODE_STYLE.md): Coding standards and conventions
 - [**Testing Strategy**](./docs/TESTING.md): Testing approach and implementation
 

@@ -20,7 +20,6 @@ ai_adaptive.js
 main.js
 
 # Webpack and configuration files
-webpack.config.js
 babel.config.json
 jest.config.js
 .prettierrc.js
@@ -41,3 +40,6 @@ tests/setup.js
 
 # GitHub Actions workflow files (managed by Prettier)
 .github/workflows/*.yml
+webpack.common.js
+webpack.legacy.js
+webpack.modern.js

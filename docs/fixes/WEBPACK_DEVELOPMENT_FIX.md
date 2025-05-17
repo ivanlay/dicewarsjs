@@ -60,12 +60,12 @@ This document consolidates fixes implemented for the DiceWarsJS development envi
 
 **Solution:**
 
-- Updated webpack.config.js to include game-loader.js in the CopyWebpackPlugin patterns:
+- Updated the webpack configs to include game-loader.js in the CopyWebpackPlugin patterns:
   ```javascript
   new CopyWebpackPlugin({
     patterns: [
       // Copy all the legacy JS files
-      { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js'] } },
+      { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js', 'webpack.*.js'] } },
       // Copy CSS files if any
       { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
       // Copy sound files for legacy code

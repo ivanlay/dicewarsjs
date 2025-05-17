@@ -187,6 +187,14 @@ Long-term steps:
 3. Remove global exports from bridge modules
 4. Eventually remove bridge modules entirely
 
+## Build Configuration Overview
+
+The build system is split into three webpack configs:
+
+- `webpack.common.js` – shared settings
+- `webpack.modern.js` – generates ES module output
+- `webpack.legacy.js` – legacy bundle for older scripts
+
 ## Recent Fixes
 
 We recently fixed an issue where the Game object was trying to access AI functions before they were available in the global scope:
