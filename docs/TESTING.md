@@ -166,3 +166,12 @@ As we continue the migration to ES6 modules, we plan to:
 2. Implement component testing for UI elements
 3. Add performance testing for critical game operations
 4. Implement end-to-end testing for complete game scenarios
+
+## Phase 2 Enhancements
+
+The ES6 migration plan outlines several improvements to the testing infrastructure during Phase 2. Details are provided in [PHASE2_TESTING_PLAN.md](./PHASE2_TESTING_PLAN.md). Highlights include:
+
+1. Unit tests covering each bridge module and their fallback logic
+2. Integration tests verifying legacy code interaction via the bridges
+3. A new regression test suite located in `tests/regression`
+4. Updated CI configuration to run unit, integration, and regression tests on every pull request

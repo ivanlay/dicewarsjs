@@ -55,6 +55,7 @@ This document outlines the current development status, immediate next steps, and
    - Create comprehensive tests for all bridge components
    - Implement integration tests to verify bridge functionality
    - Set up automated tests to verify backwards compatibility
+   - See [PHASE2_TESTING_PLAN.md](./PHASE2_TESTING_PLAN.md) for the detailed testing roadmap
 
 2. **Refine Build Pipeline**
    - Optimize webpack configuration for faster development builds
