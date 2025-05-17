@@ -34,18 +34,38 @@ This fork significantly extends the project with:
    npm install
    ```
 
-2. Start the development server:
+2. Start the modern development server:
 
    ```bash
    npm run dev
    ```
 
-3. Open your browser at `http://localhost:3000`
+3. To test the legacy build run:
+
+   ```bash
+   npm run dev:legacy
+   ```
+
+4. Open your browser at `http://localhost:3000`
 
 ### Production Build
 
+Modern build:
+
 ```bash
 npm run build
+```
+
+Legacy build:
+
+```bash
+npm run build:legacy
+```
+
+Build both at once:
+
+```bash
+npm run build:all
 ```
 
 The optimized files will be available in the `dist` directory and can be deployed to any web server.
@@ -188,7 +208,9 @@ dicewarsjs/
 ├── docs/                    # Documentation
 │   ├── ai-strategies/       # AI strategy documentation
 │   └── ...                  # Other documentation
-├── webpack.config.js        # Webpack configuration
+├── webpack.common.js        # Shared webpack configuration
+├── webpack.legacy.js        # Legacy build config (defer scripts)
+├── webpack.modern.js        # Modern ES module build config
 ├── .eslintrc.js             # ESLint configuration
 └── package.json             # Dependencies and scripts
 ```
@@ -211,8 +233,17 @@ For more details, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md).
 # Start development server
 npm run dev
 
+# Start legacy development server
+npm run dev:legacy
+
 # Build for production
 npm run build
+
+# Build legacy bundle
+npm run build:legacy
+
+# Build both bundles
+npm run build:all
 
 # Run linting
 npm run lint
