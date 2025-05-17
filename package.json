@@ -27,7 +27,8 @@
     "format:check": "prettier --check .",
     "fix-warnings": "node scripts/fix-lint-warnings.js",
     "prepare": "husky install",
-    "test:regression": "jest tests/regression"
+    "test:regression": "jest tests/regression",
+    "perf:check": "node scripts/check-bundle-size.js"
   },
   "keywords": [
     "game",

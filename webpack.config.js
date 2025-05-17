@@ -193,8 +193,8 @@ module.exports = (env, argv) => {
       },
     };
 
-    // No source maps in production for smaller bundle size
-    config.devtool = false;
+    // Generate external source maps for production debugging
+    config.devtool = 'source-map';
   } else {
     // Development-specific configuration
     config.output.filename = '[name].bundle.js';

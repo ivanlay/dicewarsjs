@@ -848,16 +848,6 @@ function draw_player_data(){
 		}
 	}
 	
-	// Add "AI vs AI MODE" indicator text when in spectator mode
-	if (spectate_mode) {
-		spr[sn_mes].visible = true;
-		spr[sn_mes].text = "AI vs AI MODE";
-		spr[sn_mes].color = "#aa0000";
-		spr[sn_mes].textAlign = "center";
-		spr[sn_mes].x = view_w/2;
-		spr[sn_mes].y = view_h*0.06; // Position near the top
-	}
-	
 	// Then position and update their displays
 	var c=0;
 	for( i=0; i<8; i++ ){

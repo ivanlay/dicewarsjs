@@ -94,9 +94,11 @@ which legacy files still need to be replaced or refactored.
 
    - Optimize webpack configuration
    - Set up distinct development and production builds
-   - Implement proper source maps
+   - Implement proper source maps (generated in development and production)
    - Add bundle size analysis
    - Establish performance monitoring
+
+Bundle analysis can be generated with `npm run build:analyze`. A helper script `npm run perf:check` verifies that the total bundle size remains under 250KB.
 
 3. **Create Migration Utilities**
    - Develop helper functions for common migration patterns

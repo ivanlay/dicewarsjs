@@ -50,6 +50,20 @@ npm run build
 
 The optimized files will be available in the `dist` directory and can be deployed to any web server.
 
+### Bundle Analysis
+
+Generate a bundle report to inspect the contents of the production build:
+
+```bash
+npm run build:analyze
+```
+
+Open `dist/bundle-report.html` to view the visualization. To enforce bundle size limits, run:
+
+```bash
+npm run perf:check
+```
+
 ### Game Modes
 
 - **Player vs AI**: Test your strategy against various AI opponents (default)

@@ -60,8 +60,8 @@ This document outlines the current development status, immediate next steps, and
 2. **Refine Build Pipeline**
    - Optimize webpack configuration for faster development builds
    - Configure distinct development and production builds
-   - Implement proper source maps for debugging
-   - Set up bundle size analysis with size limits
+   - Implement proper source maps for debugging (development and production)
+   - Set up bundle size analysis with size limits (`npm run build:analyze` and `npm run perf:check`)
 
 ### Phase 3: Core Components Migration
 

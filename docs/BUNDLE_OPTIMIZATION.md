@@ -18,6 +18,12 @@ npm run build:analyze
 npm run analyze
 ```
 
+After generating the stats file, you can enforce a bundle size limit using:
+
+```bash
+npm run perf:check
+```
+
 The analyzer will create a visual representation of the bundle contents, showing:
 
 - Each module's size (as raw, minified, and gzipped)
