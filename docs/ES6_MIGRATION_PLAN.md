@@ -60,6 +60,25 @@ The migration will follow a phased approach to ensure the game remains functiona
 - Success criteria document
 - Risk assessment and mitigation plan
 
+### Audit Findings
+
+The initial code audit produced an inventory of legacy scripts and how they
+interact with the modern ES6 modules:
+
+- **index.html** loads several legacy scripts before webpack injects the module
+  bundles.
+- **game-loader.js** defines placeholder AI functions and exposes them globally
+  via `AI_REGISTRY`.
+- **game.js**, **main.js**, **mc.js**, **areadice.js**, and the `ai_*.js` files
+  still declare many global variables and functions.
+- Bridge modules under `src/bridge/` make the new ES6 classes available in the
+  global scope.
+- ES6 counterparts for these components live in `src/`, including the modern
+  `Game` class in `src/Game.js`.
+
+This inventory will guide the remaining migration effort by showing exactly
+which legacy files still need to be replaced or refactored.
+
 ### Phase 2: Infrastructure and Environment Setup (1-2 weeks)
 
 #### Tasks:
