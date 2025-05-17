@@ -7,10 +7,6 @@
 
 // Import ES6 module implementations and configuration
 import {
-  ai_default,
-  ai_defensive,
-  ai_example,
-  ai_adaptive,
   AI_STRATEGIES,
   getAIById,
   getAIImplementation,
@@ -21,10 +17,6 @@ import {
 
 // Also export as ES6 module for new code
 export {
-  ai_default,
-  ai_defensive,
-  ai_example,
-  ai_adaptive,
   AI_STRATEGIES,
   getAIById,
   getAIImplementation,
@@ -76,88 +68,66 @@ const fallbacks = {
 };
 
 // Export all AI functions to the global scope for legacy code compatibility
-try {
-  // Initialize the AI registry if it doesn't exist
-  if (!window.AI_REGISTRY) {
-    window.AI_REGISTRY = {};
-    console.log('Created global AI_REGISTRY');
-  }
+(async () => {
+  try {
+    // Initialize the AI registry if it doesn't exist
+    if (!window.AI_REGISTRY) {
+      window.AI_REGISTRY = {};
+      console.log('Created global AI_REGISTRY');
+    }
 
-  // Set AI functions with fallbacks, and update the AI registry
-  if (typeof ai_default === 'function') {
-    window.ai_default = ai_default;
-    window.AI_REGISTRY.ai_default = ai_default;
-    console.log('ES6 ai_default loaded successfully');
-  } else {
-    console.warn('ES6 ai_default not found, using fallback');
+    const exposeAI = async key => {
+      try {
+        const fn = await AI_STRATEGIES[key].loader();
+        window[key] = fn;
+        window.AI_REGISTRY[key] = fn;
+        console.log(`ES6 ${key} loaded successfully`);
+      } catch {
+        console.warn(`ES6 ${key} not found, using fallback`);
+        window[key] = fallbacks[key];
+        window.AI_REGISTRY[key] = fallbacks[key];
+      }
+    };
+
+    await Promise.all([
+      exposeAI('ai_default'),
+      exposeAI('ai_defensive'),
+      exposeAI('ai_example'),
+      exposeAI('ai_adaptive'),
+    ]);
+
+    // Expose the configuration utility functions
+    window.AI_STRATEGIES = AI_STRATEGIES;
+    window.DEFAULT_AI_ASSIGNMENTS = DEFAULT_AI_ASSIGNMENTS;
+    window.getAIById = getAIById;
+    window.getAIImplementation = getAIImplementation;
+    window.getAllAIStrategies = getAllAIStrategies;
+    window.createAIFunctionMapping = createAIFunctionMapping;
+
+    console.log('AI bridge module initialized successfully with configuration utilities');
+  } catch (error) {
+    console.error('Failed to initialize AI bridge module:', error);
+
+    if (!window.AI_REGISTRY) {
+      window.AI_REGISTRY = {};
+      console.log('Created global AI_REGISTRY in error handler');
+    }
+
     window.ai_default = fallbacks.ai_default;
-    window.AI_REGISTRY.ai_default = fallbacks.ai_default;
-  }
-  if (typeof ai_defensive === 'function') {
-    window.ai_defensive = ai_defensive;
-    window.AI_REGISTRY.ai_defensive = ai_defensive;
-    console.log('ES6 ai_defensive loaded successfully');
-  } else {
-    console.warn('ES6 ai_defensive not found, using fallback');
     window.ai_defensive = fallbacks.ai_defensive;
-    window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
-  }
-
-  if (typeof ai_example === 'function') {
-    window.ai_example = ai_example;
-    window.AI_REGISTRY.ai_example = ai_example;
-    console.log('ES6 ai_example loaded successfully');
-  } else {
-    console.warn('ES6 ai_example not found, using fallback');
     window.ai_example = fallbacks.ai_example;
-    window.AI_REGISTRY.ai_example = fallbacks.ai_example;
-  }
-
-  if (typeof ai_adaptive === 'function') {
-    window.ai_adaptive = ai_adaptive;
-    window.AI_REGISTRY.ai_adaptive = ai_adaptive;
-    console.log('ES6 ai_adaptive loaded successfully');
-  } else {
-    console.warn('ES6 ai_adaptive not found, using fallback');
     window.ai_adaptive = fallbacks.ai_adaptive;
+
+    window.AI_REGISTRY.ai_default = fallbacks.ai_default;
+    window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
+    window.AI_REGISTRY.ai_example = fallbacks.ai_example;
     window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
+
+    window.AI_STRATEGIES = {};
+    window.DEFAULT_AI_ASSIGNMENTS = [];
+    window.getAIById = fallbacks.ai_default;
+    window.getAIImplementation = fallbacks.ai_default;
+    window.getAllAIStrategies = () => [];
+    window.createAIFunctionMapping = () => [];
   }
-
-  // Also expose the AI configuration utility functions
-  window.AI_STRATEGIES = AI_STRATEGIES;
-  window.DEFAULT_AI_ASSIGNMENTS = DEFAULT_AI_ASSIGNMENTS;
-  window.getAIById = getAIById;
-  window.getAIImplementation = getAIImplementation;
-  window.getAllAIStrategies = getAllAIStrategies;
-  window.createAIFunctionMapping = createAIFunctionMapping;
-
-  console.log('AI bridge module initialized successfully with configuration utilities');
-} catch (error) {
-  console.error('Failed to initialize AI bridge module:', error);
-
-  // Initialize the AI registry if it doesn't exist
-  if (!window.AI_REGISTRY) {
-    window.AI_REGISTRY = {};
-    console.log('Created global AI_REGISTRY in error handler');
-  }
-
-  // Provide fallback implementations to prevent game crashes
-  window.ai_default = fallbacks.ai_default;
-  window.ai_defensive = fallbacks.ai_defensive;
-  window.ai_example = fallbacks.ai_example;
-  window.ai_adaptive = fallbacks.ai_adaptive;
-
-  // Also update the registry
-  window.AI_REGISTRY.ai_default = fallbacks.ai_default;
-  window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
-  window.AI_REGISTRY.ai_example = fallbacks.ai_example;
-  window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
-
-  // Expose the configuration utility functions
-  window.AI_STRATEGIES = {};
-  window.DEFAULT_AI_ASSIGNMENTS = [];
-  window.getAIById = fallbacks.ai_default;
-  window.getAIImplementation = fallbacks.ai_default;
-  window.getAllAIStrategies = () => [];
-  window.createAIFunctionMapping = () => [];
-}
+})();

@@ -6,7 +6,7 @@
  */
 
 import { AreaData, PlayerData, JoinData, HistoryData, GridData } from '../models/enhanced/index.js';
-import { ai_default, ai_defensive, ai_example, ai_adaptive } from '../ai/index.js';
+// AI implementations will be loaded on demand via configuration
 import { 
   // Map generation
   makeMap, setAreaTc, 
@@ -45,14 +45,14 @@ export class Game {
    * These functions are called during computer player turns to determine moves.
    */
   ai = [
-    null,            // Player 0 (human player)
-    ai_defensive,    // Player 1 - Defensive strategy
-    ai_defensive,    // Player 2 - Defensive strategy
-    ai_adaptive,     // Player 3 - Adaptive strategy
-    ai_default,      // Player 4 - Default balanced AI
-    ai_default,      // Player 5 - Default balanced AI
-    ai_default,      // Player 6 - Default balanced AI
-    ai_default       // Player 7 - Default balanced AI
+    null, // Player 0 (human player)
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
   ];
 
   //=============================================

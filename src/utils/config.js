@@ -128,7 +128,7 @@ export function resetConfig() {
  * @param {Game} game - The game instance to configure
  * @param {Object} [config=null] - Optional configuration to apply (uses active config if not provided)
  */
-export function applyConfigToGame(game, config = null) {
+export async function applyConfigToGame(game, config = null) {
   const cfg = config ?? activeConfig;
   
   // Game rules
@@ -153,12 +153,12 @@ export function applyConfigToGame(game, config = null) {
 
     // Use the configureAI function if available (modern code pattern)
     if (typeof game.configureAI === 'function') {
-      game.configureAI(aiAssignments);
+      await game.configureAI(aiAssignments);
     }
     // Legacy compatibility approach
     else {
       // Get AI functions from the assignments
-      const aiFunctions = createAIFunctionMapping(aiAssignments);
+      const aiFunctions = await createAIFunctionMapping(aiAssignments);
 
       // Apply to the game's AI array
       for (let i = 0; i < aiFunctions.length && i < game.ai.length; i++) {
@@ -183,7 +183,7 @@ export function applyConfigToGame(game, config = null) {
     }
 
     // Get AI functions from the assignments
-    const aiFunctions = createAIFunctionMapping(aiAssignments);
+    const aiFunctions = await createAIFunctionMapping(aiAssignments);
 
     // Apply to the game's AI array
     for (let i = 0; i < aiFunctions.length && i < game.ai.length; i++) {

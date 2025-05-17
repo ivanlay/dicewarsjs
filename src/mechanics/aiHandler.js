@@ -5,7 +5,7 @@
  * Extracted from Game.js for modularity.
  */
 
-import { AI_STRATEGIES, getAIImplementation, createAIFunctionMapping } from '../ai/index.js';
+import { AI_STRATEGIES, createAIFunctionMapping } from '../ai/index.js';
 
 /**
  * AI Strategy Registry
@@ -14,7 +14,7 @@ import { AI_STRATEGIES, getAIImplementation, createAIFunctionMapping } from '../
  * Re-exports the registry from aiConfig for backward compatibility
  */
 export const AI_REGISTRY = Object.fromEntries(
-  Object.entries(AI_STRATEGIES).map(([key, value]) => [key, value.implementation])
+  Object.entries(AI_STRATEGIES).map(([key, value]) => [key, value.loader])
 );
 
 /**
@@ -80,7 +80,7 @@ export function executeAIMove(gameState) {
     console.error(`AI function not found for player ${currentPlayer}`);
 
     // Try to use default AI as a fallback
-    const defaultAI = getAIImplementation('ai_default');
+    const defaultAI = AI_STRATEGIES.ai_default.implementation;
     if (typeof defaultAI === 'function') {
       console.log('Using default AI as fallback');
       return defaultAI(gameState);
@@ -103,7 +103,7 @@ export function executeAIMove(gameState) {
  * @param {Array} aiAssignments - Array of string AI type identifiers
  * @returns {Object} Updated game state with AI functions set
  */
-export function configureAI(gameState, aiAssignments) {
+export async function configureAI(gameState, aiAssignments) {
   if (!aiAssignments || !Array.isArray(aiAssignments)) {
     return gameState;
   }
@@ -112,7 +112,7 @@ export function configureAI(gameState, aiAssignments) {
   const updatedGameState = { ...gameState };
 
   // Use the utility function to create AI function mapping
-  const aiFunctions = createAIFunctionMapping(aiAssignments);
+  const aiFunctions = await createAIFunctionMapping(aiAssignments);
 
   // Apply the mapping to the game state
   for (let i = 0; i < aiFunctions.length && i < updatedGameState.ai.length; i++) {
