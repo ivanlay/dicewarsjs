@@ -76,20 +76,8 @@ jest.mock('../../src/models/index.js', () => ({
   })),
 }));
 
-// Create a local variable for mocking resolveBattle
-let mockResolveBattle;
-jest.mock('../../src/mechanics/battleResolution.js', () => {
-  const actual = jest.requireActual('../../src/mechanics/battleResolution.js');
-  return {
-    ...actual,
-    resolveBattle: (...args) =>
-      mockResolveBattle ? mockResolveBattle(...args) : actual.resolveBattle(...args),
-  };
-});
-
 describe('Battle Resolution', () => {
   beforeEach(() => {
-    mockResolveBattle = null;
     jest.clearAllMocks();
   });
 
@@ -148,10 +136,16 @@ describe('Battle Resolution', () => {
 
   describe('resolveBattle', () => {
     // Mock Math.random for predictable tests
-    const mockRandom = jest.spyOn(Math, 'random');
+    let mockRandom;
+
+    beforeEach(() => {
+      mockRandom = jest.spyOn(Math, 'random');
+    });
 
     afterEach(() => {
-      mockRandom.mockRestore();
+      if (mockRandom) {
+        mockRandom.mockRestore();
+      }
     });
 
     it('should resolve a battle where attacker wins', () => {
@@ -186,22 +180,34 @@ describe('Battle Resolution', () => {
         batt: null,
       };
 
-      /*
-       * Mock dice rolls: defender gets higher total
-       * Attacker rolls 2 dice, total should be low
-       * Defender rolls 3 dice, total should be high
-       */
-      mockRandom
-        .mockReturnValueOnce(0) // First attacker die (rolls 1)
-        .mockReturnValueOnce(0.17) // Second attacker die (rolls 2)
-        .mockReturnValueOnce(0.99) // First defender die (rolls 6)
-        .mockReturnValueOnce(0.99) // Second defender die (rolls 6)
-        .mockReturnValueOnce(0.99); // Third defender die (rolls 6)
+      // Clear any previous mocks and set up fresh
+      mockRandom.mockReset();
+
+      // Set up all 5 dice rolls in advance
+      const mockValues = [
+        0.0, // Attacker die 1: floor(0.0 * 6) + 1 = 1
+        0.167, // Attacker die 2: floor(0.167 * 6) + 1 = 2 (total: 3)
+        0.99, // Defender die 1: floor(0.99 * 6) + 1 = 6
+        0.99, // Defender die 2: floor(0.99 * 6) + 1 = 6
+        0.99, // Defender die 3: floor(0.99 * 6) + 1 = 6 (total: 18)
+      ];
+
+      mockValues.forEach(value => mockRandom.mockReturnValueOnce(value));
 
       const result = resolveBattle(gameState, 1, 2);
 
       expect(result).toBeDefined();
+      expect(result.attackerRoll).toBeDefined();
+      expect(result.defenderRoll).toBeDefined();
+
+      // Log for debugging if test still fails in CI
+      if (result.success !== false) {
+        console.log('Attacker roll:', result.attackerRoll);
+        console.log('Defender roll:', result.defenderRoll);
+      }
+
       /*
+       * Expected:
        * Attacker total: 1 + 2 = 3
        * Defender total: 6 + 6 + 6 = 18
        * Defender wins, so success should be false
