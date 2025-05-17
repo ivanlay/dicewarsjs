@@ -47,5 +47,8 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: Regression Tests
+        run: npm run test:regression
+
       - name: Run benchmarks
         run: npm run test:benchmark

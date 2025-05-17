@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Regression: Game boot sequence start_game initializes consistent state 1`] = `
+{
+  "ban": 0,
+  "firstAreaOwner": 5,
+  "historyCount": 0,
+  "playerCount": 8,
+  "pmax": 7,
+}
+`;

@@ -26,7 +26,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fix-warnings": "node scripts/fix-lint-warnings.js",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test:regression": "jest tests/regression"
   },
   "keywords": [
     "game",

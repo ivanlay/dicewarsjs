@@ -175,3 +175,17 @@ The ES6 migration plan outlines several improvements to the testing infrastructu
 2. Integration tests verifying legacy code interaction via the bridges
 3. A new regression test suite located in `tests/regression`
 4. Updated CI configuration to run unit, integration, and regression tests on every pull request
+
+### Regression Suite
+
+The regression suite resides in `tests/regression`. These tests capture previous bugs or key game scenarios to detect regressions. Run only this suite with:
+
+```bash
+npm run test:regression
+```
+
+Regression tests are also executed with the standard `npm test` command.
+
+### Bridge Tests
+
+Bridge-related unit and integration tests are located in `tests/bridge`. They ensure ES6 modules are properly exposed to legacy code and that fallback logic works. These tests run automatically with `npm test`.
