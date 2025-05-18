@@ -108,8 +108,11 @@ export async function configureAI(gameState, aiAssignments) {
     return gameState;
   }
 
-  // Clone the game state to avoid mutation
-  const updatedGameState = { ...gameState };
+  // Clone the game state and the ai array to avoid mutation
+  const updatedGameState = {
+    ...gameState,
+    ai: [...gameState.ai], // Clone the array
+  };
 
   // Use the utility function to create AI function mapping
   const aiFunctions = await createAIFunctionMapping(aiAssignments);
