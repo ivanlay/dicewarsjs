@@ -84,6 +84,7 @@ module.exports = (env, argv) => {
           { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
           { from: 'sound', to: 'sound' },
           { from: 'src/game-loader.js', to: 'game-loader.js' },
+          { from: 'src/gameWrapper.js', to: 'src/gameWrapper.js' },
         ],
       }),
       new CleanWebpackPlugin(),

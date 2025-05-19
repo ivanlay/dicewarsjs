@@ -27,6 +27,9 @@ import { applyConfigToGame, loadConfig } from '@utils/config.js';
 const config = loadConfig();
 (async () => {
   await applyConfigToGame(game, config);
+  if (typeof window !== 'undefined' && typeof window.applyGameConfig === 'function') {
+    window.applyGameConfig(game);
+  }
 })();
 
 // Display position and scaling parameters

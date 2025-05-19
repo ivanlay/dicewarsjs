@@ -76,8 +76,8 @@ describe('Bridge to Legacy Integration', () => {
       setImmediate(resolve);
     });
 
-    // Load legacy game.js which expects Game in global scope
-    require('../../game.js');
+    // Load game module which exposes Game in global scope
+    require('../../src/gameWrapper.js');
     await new Promise(resolve => {
       setImmediate(resolve);
     });
@@ -116,13 +116,13 @@ describe('Bridge to Legacy Integration', () => {
      */
     setupMcjsMock();
 
-    require('../../game.js');
+    require('../../src/gameWrapper.js');
 
     // Before loading main.js, we need to ensure applyGameConfig is available
     global.applyGameConfig = jest.fn();
 
     // main.js creates the game instance and other globals
-    require('../../main.js');
+    require('../../src/main.js');
     await new Promise(resolve => {
       setImmediate(resolve);
     });

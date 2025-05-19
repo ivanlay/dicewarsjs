@@ -114,9 +114,18 @@ module.exports = (env, argv) => {
     });
 
     config.devServer = {
-      static: {
-        directory: path.join(__dirname, 'dist'),
-      },
+      static: [
+        {
+          directory: path.join(__dirname, 'dist'),
+        },
+        {
+          directory: path.join(__dirname),
+          publicPath: '/',
+          watch: {
+            ignored: /node_modules/,
+          },
+        },
+      ],
       compress: true,
       port,
       // HMR is not supported for ES module output yet

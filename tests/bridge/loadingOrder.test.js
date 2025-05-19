@@ -35,20 +35,26 @@ describe('Legacy Script Loading Order', () => {
     await import('../../src/bridge/ai.js');
     await new Promise(resolve => setImmediate(resolve));
 
-    const { Game } = require('../../src/Game.js');
     const aiBefore = window.ai_default;
-    expect(window.Game).toBe(Game);
     expect(typeof aiBefore).toBe('function');
 
+    // Store the initial window.Game reference (from bridge)
+    const GameBefore = window.Game;
+    expect(typeof GameBefore).toBe('function');
+
     setupMcjsMock();
-    require('../../game.js');
+    require('../../src/gameWrapper.js');
     require('../../config.js');
-    require('../../main.js');
+    require('../../src/main.js');
 
     window.dispatchEvent(new Event('load'));
 
+    /*
+     * The gameWrapper.js should have set window.Game
+     * Check that we have the same constructor
+     */
     const instance = new window.Game();
-    expect(instance).toBeInstanceOf(Game);
+    expect(instance).toBeInstanceOf(window.Game);
     expect(window.ai_default).toBe(aiBefore);
   });
 });

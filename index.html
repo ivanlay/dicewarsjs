@@ -68,6 +68,35 @@
 
     <!-- Scripts -->
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <!-- Browser environment initialization -->
+    <script>
+      // Define process.env for browser compatibility
+      if (typeof window !== 'undefined' && !window.process) {
+        window.process = {
+          env: {
+            NODE_ENV:
+              window.location.hostname === 'localhost' ||
+              window.location.hostname === '127.0.0.1' ||
+              window.location.hostname.includes('dev.')
+                ? 'development'
+                : 'production',
+          },
+        };
+      }
+    </script>
+    <!-- Import map for ES modules (must be before any module scripts) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@models/": "./src/models/",
+          "@mechanics/": "./src/mechanics/",
+          "@utils/": "./src/utils/",
+          "@ai/": "./src/ai/",
+          "@state/": "./src/state/",
+          "@polyfills/": "./src/polyfills/"
+        }
+      }
+    </script>
     <!-- All script tags need to be in body for proper ordering with webpack -->
   </head>
 
@@ -81,6 +110,8 @@
     <script src="game.js"></script>
     <script src="config.js"></script>
     <script src="main.js"></script>
+    <!-- Modern module entry point -->
+    <script type="module" src="src/gameWrapper.js"></script>
     <!-- Webpack will inject ES6 module bundles after these scripts -->
   </body>
 </html>
