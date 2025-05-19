@@ -85,6 +85,8 @@ module.exports = (env, argv) => {
           { from: 'sound', to: 'sound' },
           { from: 'src/game-loader.js', to: 'game-loader.js' },
           { from: 'src/gameWrapper.js', to: 'src/gameWrapper.js' },
+          // Ensure browser-compatible Game module is included in the build
+          { from: 'src/Game-browser.js', to: 'src/Game-browser.js' },
         ],
       }),
       new CleanWebpackPlugin(),
