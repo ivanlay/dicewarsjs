@@ -256,7 +256,55 @@ npm run format
 
 # Run tests
 npm run test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
 ```
+
+### Pre-commit Checklist
+
+Before committing any changes, ensure all quality checks pass:
+
+1. **Run Tests**: All tests must pass
+
+   ```bash
+   npm test
+   ```
+
+   Expected result: All tests pass with no failures
+
+2. **Format Code**: Ensure code formatting is consistent
+
+   ```bash
+   npm run format
+   ```
+
+   This will automatically format your code using Prettier
+
+3. **Check Linting**: No linting errors should be present
+
+   ```bash
+   npm run lint
+   ```
+
+   Expected result: No errors (warnings are acceptable but should be minimized)
+
+   To automatically fix linting issues:
+
+   ```bash
+   npm run lint:fix
+   ```
+
+4. **Verify Build**: Ensure the project builds successfully
+   ```bash
+   npm run build
+   ```
+   Expected result: Build completes without errors
+
+If any of these checks fail, fix the issues before committing your changes. This ensures code quality and prevents breaking the build for other developers.
 
 ### Code Quality Tools
 
