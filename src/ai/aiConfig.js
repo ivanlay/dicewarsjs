@@ -6,11 +6,11 @@
  * and utility functions for accessing them.
  */
 
-// Import the AI strategies
-import { ai_default } from './ai_default.js';
-import { ai_defensive } from './ai_defensive.js';
-import { ai_example } from './ai_example.js';
-import { ai_adaptive } from './ai_adaptive.js';
+// Loader functions for each AI strategy using dynamic import
+export const load_ai_default = async () => (await import('./ai_default.js')).ai_default;
+export const load_ai_defensive = async () => (await import('./ai_defensive.js')).ai_defensive;
+export const load_ai_example = async () => (await import('./ai_example.js')).ai_example;
+export const load_ai_adaptive = async () => (await import('./ai_adaptive.js')).ai_adaptive;
 
 /**
  * AI Strategy Registry
@@ -30,7 +30,8 @@ export const AI_STRATEGIES = {
     name: 'Balanced AI',
     description: 'A balanced approach that weighs attack and defense equally',
     difficulty: 3,
-    implementation: ai_default,
+    loader: load_ai_default,
+    implementation: null,
   },
 
   // Defensive-focused AI
@@ -39,7 +40,8 @@ export const AI_STRATEGIES = {
     name: 'Defensive AI',
     description: 'Prioritizes protecting vulnerable territories',
     difficulty: 2,
-    implementation: ai_defensive,
+    loader: load_ai_defensive,
+    implementation: null,
   },
 
   // Example simple AI
@@ -48,7 +50,8 @@ export const AI_STRATEGIES = {
     name: 'Basic AI',
     description: 'Simple implementation for educational purposes',
     difficulty: 1,
-    implementation: ai_example,
+    loader: load_ai_example,
+    implementation: null,
   },
 
   // Adaptive AI that changes strategy
@@ -57,7 +60,8 @@ export const AI_STRATEGIES = {
     name: 'Adaptive AI',
     description: 'Adapts strategy based on game conditions',
     difficulty: 4,
-    implementation: ai_adaptive,
+    loader: load_ai_adaptive,
+    implementation: null,
   },
 };
 
@@ -75,8 +79,12 @@ export function getAIById(aiId) {
  * @param {string} aiId - The AI strategy ID
  * @returns {Function} The AI implementation function
  */
-export function getAIImplementation(aiId) {
-  return (AI_STRATEGIES[aiId] || AI_STRATEGIES.ai_default).implementation;
+export async function getAIImplementation(aiId) {
+  const strategy = AI_STRATEGIES[aiId] || AI_STRATEGIES.ai_default;
+  if (!strategy.implementation) {
+    strategy.implementation = await strategy.loader();
+  }
+  return strategy.implementation;
 }
 
 /**
@@ -107,9 +115,15 @@ export const DEFAULT_AI_ASSIGNMENTS = [
  * @param {Array} aiAssignments - Array of AI strategy IDs for each player
  * @returns {Array} Array of AI implementation functions
  */
-export function createAIFunctionMapping(aiAssignments = DEFAULT_AI_ASSIGNMENTS) {
-  return aiAssignments.map(aiId => (aiId === null ? null : getAIImplementation(aiId)));
+export async function createAIFunctionMapping(aiAssignments = DEFAULT_AI_ASSIGNMENTS) {
+  const mappingPromises = aiAssignments.map(async aiId => {
+    if (aiId === null) return null;
+    try {
+      return await getAIImplementation(aiId);
+    } catch (err) {
+      console.error(`Failed to load AI strategy ${aiId}`, err);
+      return getAIImplementation('ai_default');
+    }
+  });
+  return Promise.all(mappingPromises);
 }
-
-// Export the implementations directly as well for backward compatibility
-export { ai_default, ai_defensive, ai_example, ai_adaptive };

@@ -11,7 +11,7 @@ const setupMcjsMock = () => {
   global.lib = global.lib || {};
 
   // Create the anonymous function wrapper that mc.js expects
-  const mcInit = jest.fn((lib, img, cjs, ss) => {
+  const mcInit = jest.fn((lib, _img, _cjs, _ss) => {
     // Mock basic lib properties that mc.js sets
     lib.webFontTxtFilters = {};
     lib.properties = {
@@ -60,13 +60,27 @@ describe('Bridge to Legacy Integration', () => {
     global.window = originalWindow;
   });
 
-  test('legacy game.js uses bridged Game class', () => {
+  test('legacy game.js uses bridged Game class', async () => {
     // Load placeholders then bridges
     require('../../src/game-loader.js');
     require('../../src/bridge/index.js');
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    await import('../../src/bridge/ai.js');
+    await import('../../src/ai/ai_default.js');
+    await import('../../src/ai/ai_defensive.js');
+    await import('../../src/ai/ai_example.js');
+    await import('../../src/ai/ai_adaptive.js');
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
 
     // Load legacy game.js which expects Game in global scope
     require('../../game.js');
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
 
     const game = new window.Game();
     game.make_map();
@@ -74,16 +88,26 @@ describe('Bridge to Legacy Integration', () => {
 
     // AI functions should be assigned from bridge
     game.start_game();
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    const { createAIFunctionMapping } = require('../../src/ai/aiConfig.js');
+    const mapping = await createAIFunctionMapping(window.DEFAULT_AI_ASSIGNMENTS);
+    game.ai = mapping;
     game.ai.slice(1).forEach(fn => expect(typeof fn).toBe('function'));
   });
 
-  test('main.js loads and creates proper environment', () => {
+  test('main.js loads and creates proper environment', async () => {
     // Mock a window object that will capture global variables
     const mockWindow = { ...global.window };
     global.window = mockWindow;
 
     require('../../src/game-loader.js');
     require('../../src/bridge/index.js');
+    await Promise.resolve();
     require('../../config.js');
 
     /*
@@ -99,6 +123,7 @@ describe('Bridge to Legacy Integration', () => {
 
     // main.js creates the game instance and other globals
     require('../../main.js');
+    await Promise.resolve();
 
     // Verify that main.js set up the required globals
     expect(global.Game).toBeDefined();

@@ -205,7 +205,14 @@ class EventEmitter {
 
     // Process all middleware in parallel instead of sequentially
     const middlewareResults = await Promise.all(
-      this.middleware.map(middleware => Promise.resolve(middleware(eventType, processedData)))
+      this.middleware.map(middleware => {
+        try {
+          return Promise.resolve(middleware(eventType, processedData));
+        } catch (error) {
+          console.error(`Error in middleware:`, error);
+          return null;
+        }
+      })
     );
 
     // Apply middleware results (use the last non-null result)
@@ -249,6 +256,16 @@ class EventEmitter {
    */
   subscriberCount(eventType) {
     return this.handlers.has(eventType) ? this.handlers.get(eventType).length : 0;
+  }
+
+  /**
+   * Clear all event handlers and middleware
+   */
+  clear() {
+    this.handlers.clear();
+    this.subscriptionIds.clear();
+    this.middleware = [];
+    this.idCounter = 0;
   }
 }
 
@@ -445,6 +462,97 @@ export const createTimeTravel = () => {
     clearHistory,
   };
 };
+
+// Global event history (for testing)
+const eventHistory = [];
+const EVENT_HISTORY_LIMIT = 1000;
+
+/**
+ * Record an event to history
+ * @param {string} eventType - Type of event
+ * @param {Object} data - Event data
+ */
+export const recordEvent = (eventType, data) => {
+  eventHistory.push({
+    timestamp: Date.now(),
+    eventType,
+    data: { ...data },
+  });
+
+  // Keep history under limit
+  if (eventHistory.length > EVENT_HISTORY_LIMIT) {
+    eventHistory.splice(0, eventHistory.length - EVENT_HISTORY_LIMIT);
+  }
+};
+
+/**
+ * Clear event history
+ */
+export const clearEventHistory = () => {
+  eventHistory.length = 0;
+};
+
+/**
+ * Get the event history
+ * @returns {Array} Event history array
+ */
+export const getEventHistory = () => [...eventHistory]; // Return a copy to prevent external mutations
+
+/**
+ * Filter events by criteria
+ * @param {string|Function} filter - Event type or filter function
+ * @returns {Array} Filtered events
+ */
+export const filterEvents = filter => {
+  if (!filter) return [...eventHistory];
+
+  if (typeof filter === 'string') {
+    return eventHistory.filter(event => event.eventType === filter);
+  }
+
+  if (typeof filter === 'function') {
+    return eventHistory.filter(filter);
+  }
+
+  return [];
+};
+
+/**
+ * Get event statistics
+ * @returns {Object} Event statistics
+ */
+export const eventStats = () => {
+  const stats = {};
+
+  eventHistory.forEach(event => {
+    if (!stats[event.eventType]) {
+      stats[event.eventType] = 0;
+    }
+    stats[event.eventType]++;
+  });
+
+  return stats;
+};
+
+/**
+ * Create event system with recording
+ * @returns {Object} Event system with recording capabilities
+ */
+export const createEventSystem = () => {
+  // Clear existing middleware and handlers to ensure clean state
+  gameEvents.clear();
+
+  // Add recording middleware
+  gameEvents.addMiddleware((eventType, data) => {
+    recordEvent(eventType, data);
+    return data;
+  });
+
+  return gameEvents;
+};
+
+// Export event history as immutable getter
+export { getEventHistory as eventHistory };
 
 // Export default singleton
 export default gameEvents;
