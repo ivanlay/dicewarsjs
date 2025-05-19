@@ -82,10 +82,7 @@ describe('Error Handling Module', () => {
     it('should throw error when attacking from enemy territory', () => {
       expect(() => validateTerritories(gameState, 2, 1, 1)).toThrow(TerritoryError);
 
-      // Test specific error properties
-      const errorFn = () => validateTerritories(gameState, 2, 1, 1);
-      const error = expect(errorFn).toThrow(TerritoryError).mock.results[0].value;
-      // Alternative approach using try-catch without conditional expects
+      // Test specific error properties using try-catch
       let caughtError;
       try {
         validateTerritories(gameState, 2, 1, 1);

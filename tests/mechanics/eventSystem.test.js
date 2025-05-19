@@ -205,8 +205,9 @@ describe('Event System Module', () => {
       const event = { type: 'test', data: { value: 1 } };
       recordEvent('test', event);
 
-      expect(eventHistory).toHaveLength(1);
-      expect(eventHistory[0]).toMatchObject({
+      const history = eventHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0]).toMatchObject({
         eventType: 'test',
         data: event,
         timestamp: expect.any(Number),
@@ -219,17 +220,17 @@ describe('Event System Module', () => {
         recordEvent('test', { index: i });
       }
 
-      expect(eventHistory.length).toBeLessThanOrEqual(1000);
+      expect(eventHistory().length).toBeLessThanOrEqual(1000);
     });
   });
 
   describe('clearEventHistory', () => {
     it('should clear all event history', () => {
       recordEvent('test', { data: 'test' });
-      expect(eventHistory).toHaveLength(1);
+      expect(eventHistory()).toHaveLength(1);
 
       clearEventHistory();
-      expect(eventHistory).toHaveLength(0);
+      expect(eventHistory()).toHaveLength(0);
     });
   });
 
@@ -405,7 +406,8 @@ describe('Event System Module', () => {
     });
 
     it('should record emitted events', async () => {
-      const initialLength = eventHistory.length;
+      const initialHistory = eventHistory();
+      const initialLength = initialHistory.length;
 
       // Create event system with recording middleware
       const events = createEventSystem();
@@ -415,8 +417,9 @@ describe('Event System Module', () => {
 
       await events.emit(EventType.TURN_START, { turn: 1 });
 
-      expect(eventHistory.length).toBe(initialLength + 1);
-      expect(eventHistory[eventHistory.length - 1]).toMatchObject({
+      const updatedHistory = eventHistory();
+      expect(updatedHistory.length).toBe(initialLength + 1);
+      expect(updatedHistory[updatedHistory.length - 1]).toMatchObject({
         eventType: EventType.TURN_START,
         data: { turn: 1 },
       });
