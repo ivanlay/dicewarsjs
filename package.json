@@ -87,5 +87,6 @@
     ".github/**/*.{yml,yaml}": [
       "prettier --write"
     ]
-  }
+  },
+  "sideEffects": false
 }
