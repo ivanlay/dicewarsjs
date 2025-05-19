@@ -235,18 +235,36 @@ var Game = function(){
 	this.start_game = function(){
 		var i;
 		
-		// Initialize AI strategy array with functions loaded via ES6 modules
-		// These should be available in the global scope via the bridge modules
-		this.ai = [
-			null,            		// Player 0 (human player)
-			window.ai_defensive,    // Player 1 - Defensive strategy
-			window.ai_defensive,    // Player 2 - Defensive strategy
-			window.ai_defensive,    // Player 3 - Defensive strategy
-			window.ai_default,      // Player 4 - Default balanced AI
-			window.ai_default,      // Player 5 - Default balanced AI
-			window.ai_default,      // Player 6 - Default balanced AI
-			window.ai_default       // Player 7 - Default balanced AI
-		];
+		// Initialize AI strategy array - will be configured later if config is available
+		// Default to a basic configuration that can be overridden
+		if (!this.ai || this.ai.every(fn => fn === null)) {
+			// Check if we're in spectator mode (user is null)
+			if (this.user === null) {
+				// All players should have AI in spectator mode
+				this.ai = [
+					window.ai_default,      // Player 0 - AI in spectator mode
+					window.ai_defensive,    // Player 1 - Defensive strategy
+					window.ai_defensive,    // Player 2 - Defensive strategy
+					window.ai_defensive,    // Player 3 - Defensive strategy
+					window.ai_default,      // Player 4 - Default balanced AI
+					window.ai_default,      // Player 5 - Default balanced AI
+					window.ai_default,      // Player 6 - Default balanced AI
+					window.ai_default       // Player 7 - Default balanced AI
+				];
+			} else {
+				// Normal mode with human player
+				this.ai = [
+					null,            		// Player 0 (human player by default)
+					window.ai_defensive,    // Player 1 - Defensive strategy
+					window.ai_defensive,    // Player 2 - Defensive strategy
+					window.ai_defensive,    // Player 3 - Defensive strategy
+					window.ai_default,      // Player 4 - Default balanced AI
+					window.ai_default,      // Player 5 - Default balanced AI
+					window.ai_default,      // Player 6 - Default balanced AI
+					window.ai_default       // Player 7 - Default balanced AI
+				];
+			}
+		}
 		
 		// Initialize and randomize player turn order
 		for( i=0; i<8; i++ ) this.jun[i] = i;  // Start with sequential ordering
@@ -280,6 +298,10 @@ var Game = function(){
 	 * @param {number} pn - Player number/index
 	 */
 	this.set_area_tc = function( pn ){
+		// Check if player index is valid and player exists to avoid undefined errors
+		if (pn < 0 || pn >= this.player.length || !this.player[pn]) {
+			return;
+		}
 		this.player[pn].area_tc = 0;
 		var i,j;
 		

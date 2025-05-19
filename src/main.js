@@ -4,6 +4,7 @@
  * Handles initialization, rendering, and UI interactions
  */
 import { Game } from './Game.js';
+import { renderTitleScreen } from './ui/titleScreen.js';
 
 // Global variables
 let canvas, stage;        // CreateJS canvas and stage objects
@@ -211,7 +212,12 @@ function mouseUpListener(e) {
  * Initialize the title screen display
  */
 function start_title_screen() {
-    // TODO: Implement title screen
+    timer_func = null;
+    click_func = null;
+    move_func = null;
+    release_func = null;
+
+    renderTitleScreen(stage);
 }
 
 /**

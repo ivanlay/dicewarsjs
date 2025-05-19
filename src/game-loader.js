@@ -18,7 +18,10 @@ console.log('Initializing game-loader.js...');
  * just returning 0 (ending turn) immediately
  */
 window.ai_default = function (game) {
-  console.warn('Using placeholder ai_default - ES6 module not loaded');
+  // Only warn if we're not expecting ES6 modules to load
+  if (!window.ES6_LOADING_STARTED) {
+    console.warn('Using placeholder ai_default - ES6 module not loaded');
+  }
 
   /**
    * Simple AI implementation that makes random valid moves
@@ -56,17 +59,26 @@ window.ai_default = function (game) {
 
 // Make the other AIs use the default AI implementation
 window.ai_defensive = function (game) {
-  console.warn('Using placeholder ai_defensive - ES6 module not loaded');
+  // Only warn if we're not expecting ES6 modules to load
+  if (!window.ES6_LOADING_STARTED) {
+    console.warn('Using placeholder ai_defensive - ES6 module not loaded');
+  }
   return window.ai_default(game);
 };
 
 window.ai_example = function (game) {
-  console.warn('Using placeholder ai_example - ES6 module not loaded');
+  // Only warn if we're not expecting ES6 modules to load
+  if (!window.ES6_LOADING_STARTED) {
+    console.warn('Using placeholder ai_example - ES6 module not loaded');
+  }
   return window.ai_default(game);
 };
 
 window.ai_adaptive = function (game) {
-  console.warn('Using placeholder ai_adaptive - ES6 module not loaded');
+  // Only warn if we're not expecting ES6 modules to load
+  if (!window.ES6_LOADING_STARTED) {
+    console.warn('Using placeholder ai_adaptive - ES6 module not loaded');
+  }
   return window.ai_default(game);
 };
 

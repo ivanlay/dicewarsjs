@@ -15,7 +15,8 @@ var game = new Game();
 
 // Apply configuration if available
 if (typeof applyGameConfig === 'function') {
-    applyGameConfig(game);
+    // ES6 modules might not be loaded yet, so we'll apply this later
+    window.pendingGameConfig = true;
 }
 
 // Display position and scaling parameters
@@ -806,7 +807,7 @@ function draw_areadice(sn,area){
 // Start play
 ////////////////////////////////////////////////////
 
-function start_game(){
+async function start_game(){
 	// Apply any GAME_CONFIG settings before starting the game
 	if (typeof GAME_CONFIG !== 'undefined') {
 		if (GAME_CONFIG.humanPlayerIndex === null) {
@@ -827,6 +828,15 @@ function start_game(){
 		// If no GAME_CONFIG exists, ensure we're in normal mode
 		game.user = 0;
 		spectate_mode = false;
+	}
+	
+	// Apply ES6 configuration if available
+	if (window.pendingGameConfig && typeof applyGameConfig === 'function') {
+		try {
+			await applyGameConfig(game);
+		} catch (error) {
+			console.error('Failed to apply game configuration:', error);
+		}
 	}
 	
 	game.start_game();
@@ -1730,6 +1740,20 @@ function toppage(){
 	// Update config properties
 	GAME_CONFIG.humanPlayerIndex = null;
 	GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
+	
+	// Ensure all players have AI assignments in spectator mode
+	if (!GAME_CONFIG.aiAssignments || GAME_CONFIG.aiAssignments.includes(null)) {
+		GAME_CONFIG.aiAssignments = [
+			'ai_default',     // Player 0
+			'ai_defensive',   // Player 1
+			'ai_defensive',   // Player 2
+			'ai_adaptive',    // Player 3
+			'ai_default',     // Player 4
+			'ai_default',     // Player 5
+			'ai_default',     // Player 6
+			'ai_default'      // Player 7
+		];
+	}
 	
 	// Start a new game in spectator mode - use the proper function sequence
 	// First generate the map

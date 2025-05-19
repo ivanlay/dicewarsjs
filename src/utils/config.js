@@ -146,8 +146,8 @@ export async function applyConfigToGame(game, config = null) {
     // Create a copy of aiAssignments to modify for the human player
     const aiAssignments = [...cfg.aiAssignments];
 
-    // Ensure human player has null AI if not in spectator mode
-    if (cfg.humanPlayerIndex >= 0 && cfg.humanPlayerIndex < aiAssignments.length) {
+    // Ensure human player has null AI only if not in spectator mode
+    if (cfg.humanPlayerIndex !== null && cfg.humanPlayerIndex >= 0 && cfg.humanPlayerIndex < aiAssignments.length) {
       aiAssignments[cfg.humanPlayerIndex] = null;
     }
 
@@ -177,8 +177,8 @@ export async function applyConfigToGame(game, config = null) {
     // Use aiTypes as aiAssignments
     const aiAssignments = [...cfg.aiTypes];
 
-    // Ensure human player has null AI if not in spectator mode
-    if (cfg.humanPlayerIndex >= 0 && cfg.humanPlayerIndex < aiAssignments.length) {
+    // Ensure human player has null AI only if not in spectator mode
+    if (cfg.humanPlayerIndex !== null && cfg.humanPlayerIndex >= 0 && cfg.humanPlayerIndex < aiAssignments.length) {
       aiAssignments[cfg.humanPlayerIndex] = null;
     }
 
@@ -196,3 +196,11 @@ export async function applyConfigToGame(game, config = null) {
 
 // Initialize by loading any saved configuration
 loadConfig();
+
+// Export functions for global use
+if (typeof window !== 'undefined') {
+  window.applyGameConfig = applyConfigToGame;
+  window.getConfig = getConfig;
+  window.updateConfig = updateConfig;
+  window.resetConfig = resetConfig;
+}

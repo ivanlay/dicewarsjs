@@ -6,6 +6,9 @@
  * scripts while still setting up the ES6 module system for future use.
  */
 
+// Set flag to indicate ES6 modules are loading
+window.ES6_LOADING_STARTED = true;
+
 // Log ES6 module loading with timestamps for debugging
 /*
  * Import bridge modules to expose ES6 functionality to legacy code
