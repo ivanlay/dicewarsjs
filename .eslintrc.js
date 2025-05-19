@@ -113,10 +113,6 @@ module.exports = {
     'mc.js',
     'game.js',
     'config.js',
-    'ai_default.js',
-    'ai_defensive.js',
-    'ai_example.js',
-    'ai_adaptive.js',
     'main.js',
   ],
 };
