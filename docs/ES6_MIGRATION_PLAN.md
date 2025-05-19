@@ -94,6 +94,7 @@ which legacy files still need to be replaced or refactored.
 
    - Optimize webpack configuration
    - Set up distinct development and production builds
+   - Split webpack config into `webpack.common.js`, `webpack.legacy.js` and `webpack.modern.js`
    - Implement proper source maps (generated in development and production)
    - Add bundle size analysis
    - Establish performance monitoring
@@ -313,7 +314,7 @@ Bundle analysis can be generated with `npm run build:analyze`. A helper script `
 
    - Update HTML to use bundled module
    - Remove legacy script loading
-   - Finalize webpack configuration
+   - Finalize webpack configuration using the new split setup
    - Optimize loading sequence
 
 3. **Final Verification**

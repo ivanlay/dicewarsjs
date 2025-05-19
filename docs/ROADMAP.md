@@ -19,14 +19,20 @@ This document outlines the current development status, immediate next steps, and
    - Fixed "AI function not found" warnings
    - Implemented proper AI configuration in both legacy and modern systems
 
-3. **Sound System Enhancement**
+3. **Webpack Configuration Split**
+
+   - Replaced the single `webpack.config.js` with `webpack.common.js`,
+     `webpack.legacy.js` and `webpack.modern.js`
+   - Added npm scripts for modern and legacy builds and `build:all`
+
+4. **Sound System Enhancement**
 
    - Added event listener to initialize AudioContext on user gesture
    - Implemented proper sound system initialization sequence
    - Changed dynamic imports to direct file paths
    - Added explicit file type indication for CreateJS Sound API
 
-4. **Phase 1 Code Audit Completed**
+5. **Phase 1 Code Audit Completed**
    - Documented remaining legacy scripts and global variables
    - Mapped bridge modules that expose ES6 modules globally
    - Recorded ES6 counterparts for all legacy files

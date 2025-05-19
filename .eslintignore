@@ -41,3 +41,6 @@ tests/setup.js
 
 # GitHub Actions workflow files (managed by Prettier)
 .github/workflows/*.yml
+webpack.common.js
+webpack.legacy.js
+webpack.modern.js
