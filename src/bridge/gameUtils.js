@@ -6,10 +6,10 @@
  */
 
 // Import ES6 module implementations
-import * as GameUtils from '../utils/gameUtils.js';
+import * as GameUtils from '@utils/gameUtils.js';
 
 // Also export as ES6 module for new code
-export * from '../utils/gameUtils.js';
+export * from '@utils/gameUtils.js';
 
 // Create fallback implementations
 const fallbacks = {

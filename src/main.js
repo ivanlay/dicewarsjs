@@ -22,7 +22,7 @@ let stat = 0;             // General state variable used in state machines
 const game = new Game();
 
 // Import and apply configuration
-import { applyConfigToGame, loadConfig } from './utils/config.js';
+import { applyConfigToGame, loadConfig } from '@utils/config.js';
 const config = loadConfig();
 (async () => {
   await applyConfigToGame(game, config);

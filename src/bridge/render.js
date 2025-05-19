@@ -6,10 +6,10 @@
  */
 
 // Import ES6 module implementations
-import * as RenderUtils from '../utils/render.js';
+import * as RenderUtils from '@utils/render.js';
 
 // Also export as ES6 module for new code
-export * from '../utils/render.js';
+export * from '@utils/render.js';
 
 // Default colors if not available in the module
 const defaultColors = {

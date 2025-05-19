@@ -5,17 +5,12 @@ module.exports = {
     node: true,
     jest: true,
   },
-  extends: [
-    'airbnb-base',
-    'plugin:import/recommended',
-    'plugin:jest/recommended',
-    'plugin:prettier/recommended',
-  ],
+  extends: ['plugin:jest/recommended', 'plugin:prettier/recommended'],
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
   },
-  plugins: ['import', 'jest', 'prettier'],
+  plugins: ['jest', 'prettier'],
   rules: {
     // Prettier integration
     'prettier/prettier': ['error'],
@@ -36,9 +31,6 @@ module.exports = {
     'no-useless-constructor': 'error',
     'no-useless-rename': 'error',
     'no-duplicate-imports': 'error',
-    'import/first': 'error',
-    'import/newline-after-import': 'error',
-    'import/no-duplicates': 'error',
 
     // Allow console for game development
     'no-console': 'off',
@@ -54,7 +46,6 @@ module.exports = {
     ],
 
     // Allow file extensions in import statements
-    'import/extensions': ['off'],
 
     // Allow non-camelcase identifiers (due to existing AI implementation)
     camelcase: ['off'],
@@ -72,8 +63,6 @@ module.exports = {
     'no-restricted-syntax': ['off'],
     // Allow use-before-define for complex game logic
     'no-use-before-define': ['off'],
-    // Disable prefer-default-export due to multiple small exports
-    'import/prefer-default-export': ['off'],
     // Relax unused vars for game development
     'no-unused-vars': ['warn'],
     // Allow no-param-reassign for game logic

@@ -7,11 +7,11 @@
  */
 
 // Import ES6 module implementations
-import * as SoundUtils from '../utils/sound.js';
-import { loadSoundsByPriority, createLoadingIndicator } from '../utils/soundStrategy.js';
+import * as SoundUtils from '@utils/sound.js';
+import { loadSoundsByPriority, createLoadingIndicator } from '@utils/soundStrategy.js';
 
 // Also export as ES6 module for new code
-export * from '../utils/sound.js';
+export * from '@utils/sound.js';
 
 // Default sound manifest if not available in the module
 const defaultSoundManifest = [

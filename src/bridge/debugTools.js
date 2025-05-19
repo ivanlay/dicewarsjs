@@ -5,10 +5,10 @@
  * Only active in development mode to prevent performance impact in production.
  */
 
-import * as DebugTools from '../utils/debugTools.js';
+import * as DebugTools from '@utils/debugTools.js';
 
 // Also export as ES6 module for new code
-export * from '../utils/debugTools.js';
+export * from '@utils/debugTools.js';
 
 // Default implementations for when DebugTools is not available
 const fallbacks = {

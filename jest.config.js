@@ -13,6 +13,11 @@ module.exports = {
     '\\.(jpg|jpeg|png|gif|wav|mp3|svg)$': '<rootDir>/tests/mocks/fileMock.js',
     // Handle stylesheets
     '\\.(css|less|scss)$': '<rootDir>/tests/mocks/styleMock.js',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@ai/(.*)$': '<rootDir>/src/ai/$1',
+    '^@models/(.*)$': '<rootDir>/src/models/$1',
+    '^@mechanics/(.*)$': '<rootDir>/src/mechanics/$1',
+    '^@state/(.*)$': '<rootDir>/src/state/$1',
   },
 
   // Specify where to find test files

@@ -5,7 +5,7 @@
  * Extracted from Game.js for modularity.
  */
 
-import { AI_STRATEGIES, createAIFunctionMapping } from '../ai/index.js';
+import { AI_STRATEGIES, createAIFunctionMapping } from '@ai/index.js';
 
 /**
  * AI Strategy Registry

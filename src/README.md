@@ -111,7 +111,7 @@ export function ai_custom(game) {
 The configuration system allows customizing various aspects of the game:
 
 ```javascript
-import { updateConfig, getConfig } from './utils/config.js';
+import { updateConfig, getConfig } from '@utils/config.js';
 
 // Change the number of players
 updateConfig({ playerCount: 4 });
@@ -130,7 +130,7 @@ updateConfig(config);
 The gameUtils module provides helpful functions for game logic:
 
 ```javascript
-import { calculateAttackProbability, analyzeTerritory, findBestAttack } from './utils/gameUtils.js';
+import { calculateAttackProbability, analyzeTerritory, findBestAttack } from '@utils/gameUtils.js';
 
 // Calculate probability of attack success
 const probability = calculateAttackProbability(5, 3); // 0.65
@@ -152,7 +152,7 @@ if (bestAttack) {
 The render module provides functions for UI elements:
 
 ```javascript
-import { createButton, createText, drawTerritory, createDiceDisplay } from './utils/render.js';
+import { createButton, createText, drawTerritory, createDiceDisplay } from '@utils/render.js';
 
 // Create a button
 const button = createButton('End Turn', x, y, width, height, handleClick);

@@ -23,6 +23,15 @@ module.exports = (env, argv) => {
       assetModuleFilename: 'assets/[name][ext][query]',
       publicPath: isProduction ? './' : '/',
     },
+    resolve: {
+      alias: {
+        '@utils': path.resolve(__dirname, 'src/utils'),
+        '@ai': path.resolve(__dirname, 'src/ai'),
+        '@models': path.resolve(__dirname, 'src/models'),
+        '@mechanics': path.resolve(__dirname, 'src/mechanics'),
+        '@state': path.resolve(__dirname, 'src/state'),
+      },
+    },
     module: {
       rules: [
         {
