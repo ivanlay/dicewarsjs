@@ -9,7 +9,7 @@
 import { calculateAttackProbability, rollDice } from '../../src/utils/gameUtils.js';
 import { AI_REGISTRY } from '../../src/mechanics/aiHandler.js';
 import { Game } from '../../src/Game.js';
-import { ai_default, ai_defensive, ai_example, ai_adaptive } from '../../src/ai/index.js';
+import { getAIImplementation } from '../../src/ai/index.js';
 
 describe('Bridge Module Integration', () => {
   describe('Game Bridge', () => {
@@ -40,9 +40,16 @@ describe('Bridge Module Integration', () => {
   });
 
   describe('AI Bridge', () => {
-    test('exposes AI functions to global scope', () => {
+    test('exposes AI functions to global scope', async () => {
       // Import the bridge module to trigger the code
-      require('../../src/bridge/ai.js');
+      await import('../../src/bridge/ai.js');
+      await Promise.resolve();
+
+      // Load ES6 implementations for comparison
+      const ai_default = await getAIImplementation('ai_default');
+      const ai_defensive = await getAIImplementation('ai_defensive');
+      const ai_example = await getAIImplementation('ai_example');
+      const ai_adaptive = await getAIImplementation('ai_adaptive');
 
       // Verify that AI functions are available in the global scope
       expect(window.ai_default).toBeDefined();

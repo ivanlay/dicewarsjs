@@ -82,9 +82,14 @@ describe('Bridge Module Initialization', () => {
   });
 
   describe('AI Bridge Initialization', () => {
-    test('logs success message on successful initialization', () => {
+    test('logs success message on successful initialization', async () => {
       // Load the AI bridge module
-      require('../../src/bridge/ai.js');
+      await import('../../src/bridge/ai.js');
+
+      // Allow pending promises to resolve
+      await new Promise(resolve => {
+        setImmediate(resolve);
+      });
 
       // Check that success message was logged
       expect(console.log).toHaveBeenCalledWith(
@@ -109,7 +114,7 @@ describe('Bridge Module Initialization', () => {
       console.error('Failed to initialize AI bridge module:', error);
 
       // Now manually set the fallback implementations
-      const fallbackAI = (game, playerIndex) => null; // Simple null implementation for testing
+      const fallbackAI = () => null; // Simple null implementation for testing
       window.ai_default = fallbackAI;
       window.ai_defensive = fallbackAI;
       window.ai_example = fallbackAI;

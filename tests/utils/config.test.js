@@ -21,12 +21,12 @@ jest.mock('../../src/ai/index.js', () => {
 
   return {
     AI_STRATEGIES: {
-      ai_default: { implementation: mockDefaultAI },
-      ai_defensive: { implementation: mockDefensiveAI },
-      ai_example: { implementation: mockExampleAI },
-      ai_adaptive: { implementation: mockAdaptiveAI },
+      ai_default: { loader: async () => mockDefaultAI, implementation: mockDefaultAI },
+      ai_defensive: { loader: async () => mockDefensiveAI, implementation: mockDefensiveAI },
+      ai_example: { loader: async () => mockExampleAI, implementation: mockExampleAI },
+      ai_adaptive: { loader: async () => mockAdaptiveAI, implementation: mockAdaptiveAI },
     },
-    createAIFunctionMapping: jest.fn(aiAssignments => {
+    createAIFunctionMapping: jest.fn(async aiAssignments => {
       const mapping = Array(8).fill(null);
 
       if (!aiAssignments) return mapping;
@@ -153,7 +153,7 @@ describe('Configuration Management', () => {
   });
 
   describe('applyConfigToGame', () => {
-    test('applies config values to game object', () => {
+    test('applies config values to game object', async () => {
       // Mock AI functions for testing
       const mockDefaultAI = jest.fn();
       const mockDefensiveAI = jest.fn();
@@ -209,7 +209,7 @@ describe('Configuration Management', () => {
         ],
       };
 
-      applyConfigToGame(game, config);
+      await applyConfigToGame(game, config);
 
       expect(game.pmax).toBe(5);
       expect(game.user).toBe(2);
@@ -225,7 +225,7 @@ describe('Configuration Management', () => {
       expect(game.configureAI).toHaveBeenCalled();
     });
 
-    test('handles unknown AI types gracefully', () => {
+    test('handles unknown AI types gracefully', async () => {
       // Create mock function
       const mockDefaultAI = jest.fn();
 
@@ -252,7 +252,7 @@ describe('Configuration Management', () => {
         aiAssignments: [null, 'ai_unknown'],
       };
 
-      applyConfigToGame(game, config);
+      await applyConfigToGame(game, config);
 
       expect(game.ai[0]).toBeNull();
       expect(game.ai[1]).toBe(game.aiRegistry.ai_default);

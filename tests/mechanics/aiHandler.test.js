@@ -1,261 +1,275 @@
 /**
  * Tests for AI Handler Module
+ *
+ * @jest-environment jsdom
  */
 
+import { jest } from '@jest/globals';
+
+// Now import modules
 import {
   AI_REGISTRY,
   generatePossibleMoves,
   executeAIMove,
   configureAI,
 } from '../../src/mechanics/aiHandler.js';
+import { AI_STRATEGIES, createAIFunctionMapping } from '../../src/ai/index.js';
 
-import { AI_STRATEGIES } from '../../src/ai/index.js';
+// Mock createAIFunctionMapping before importing the module
+jest.mock('../../src/ai/index.js', () => {
+  const actualModule = jest.requireActual('../../src/ai/index.js');
+  return {
+    ...actualModule,
+    createAIFunctionMapping: jest.fn(),
+  };
+});
 
-// Mock modules
-jest.mock('../../src/ai/index.js', () => ({
-  AI_STRATEGIES: {
-    DEFAULT: { implementation: jest.fn().mockReturnValue(0) },
-    DEFENSIVE: { implementation: jest.fn().mockReturnValue(0) },
-    EXAMPLE: { implementation: jest.fn().mockReturnValue(0) },
-    CUSTOM: { implementation: jest.fn().mockReturnValue(0) },
-  },
-  getAIImplementation: jest.fn(),
-  createAIFunctionMapping: jest.fn().mockReturnValue([]),
-}));
-
-// Mock executeAttack from battleResolution
-jest.mock('../../src/mechanics/battleResolution.js', () => ({
-  executeAttack: jest.fn().mockReturnValue({
-    success: true,
-    gameState: {},
-    attackSuccessful: true,
-  }),
-}));
-
-describe('AI Handler', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
+describe('AI Handler Module', () => {
   describe('AI_REGISTRY', () => {
-    it('should create registry from AI_STRATEGIES', () => {
-      // AI_REGISTRY should map strategy names to implementations
+    it('should create a registry from AI_STRATEGIES', () => {
       expect(AI_REGISTRY).toBeDefined();
       expect(typeof AI_REGISTRY).toBe('object');
-      expect(AI_REGISTRY.DEFAULT).toBe(AI_STRATEGIES.DEFAULT.implementation);
-      expect(AI_REGISTRY.DEFENSIVE).toBe(AI_STRATEGIES.DEFENSIVE.implementation);
+
+      // Check that all strategies from AI_STRATEGIES are in the registry
+      Object.keys(AI_STRATEGIES).forEach(key => {
+        expect(AI_REGISTRY).toHaveProperty(key);
+        expect(AI_REGISTRY[key]).toBe(AI_STRATEGIES[key].loader);
+      });
     });
   });
 
   describe('generatePossibleMoves', () => {
-    it('should generate all valid attack moves for a player', () => {
-      const gameState = {
-        adat: [
-          null, // Index 0 unused
-          { arm: 1, dice: 3, size: 5, join: [0, 0, 1, 0, 0, 1] }, // Can attack 2 and 5
-          { arm: 2, dice: 2, size: 4, join: [0, 1, 0, 0, 0] }, // Enemy territory
-          { arm: 1, dice: 1, size: 3, join: [0, 0, 0, 0, 0] }, // Can't attack (only 1 die)
-          { arm: 1, dice: 4, size: 6, join: [0, 0, 0, 0, 1] }, // Can attack 5
-          { arm: 2, dice: 1, size: 2, join: [0, 1, 0, 1, 0] }, // Enemy territory
-          { arm: 0, size: 0, join: [0, 0, 0, 0, 0] }, // Non-existent
-        ],
-        AREA_MAX: 7,
-      };
+    let gameState;
 
+    beforeEach(() => {
+      gameState = {
+        AREA_MAX: 4,
+        adat: {
+          1: { size: 6, arm: 1, dice: 3, join: { 2: 1, 3: 0 } },
+          2: { size: 4, arm: 2, dice: 2, join: { 1: 1, 3: 1 } },
+          3: { size: 5, arm: 1, dice: 1, join: { 1: 0, 2: 1 } },
+        },
+      };
+    });
+
+    it('should generate valid attack moves for a player', () => {
       const moves = generatePossibleMoves(gameState, 1);
 
-      expect(moves).toHaveLength(3); // Territory 1->2, 1->5, 4->5
-      expect(moves).toContainEqual({
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toEqual({
         from: 1,
         to: 2,
         attackerDice: 3,
         defenderDice: 2,
         ratio: 1.5,
       });
-      expect(moves).toContainEqual({
-        from: 1,
-        to: 5,
-        attackerDice: 3,
-        defenderDice: 1,
-        ratio: 3,
-      });
-      expect(moves).toContainEqual({
-        from: 4,
-        to: 5,
-        attackerDice: 4,
-        defenderDice: 1,
-        ratio: 4,
-      });
     });
 
-    it('should return empty array when no valid moves', () => {
-      const gameState = {
-        adat: [
-          null,
-          { arm: 1, dice: 1, size: 5, join: [0, 0, 0, 0, 0] }, // Only 1 die
-          { arm: 2, dice: 3, size: 4, join: [0, 0, 0, 0, 0] }, // Enemy but not adjacent
-        ],
-        AREA_MAX: 3,
-      };
-
+    it('should not generate moves for territories with 1 die', () => {
       const moves = generatePossibleMoves(gameState, 1);
 
-      expect(moves).toHaveLength(0);
+      // Territory 3 has only 1 die, shouldn't be in the moves
+      const movesFromTerritory3 = moves.filter(m => m.from === 3);
+      expect(movesFromTerritory3).toHaveLength(0);
     });
 
     it('should not attack own territories', () => {
-      const gameState = {
-        adat: [
-          null,
-          { arm: 1, dice: 3, size: 5, join: [0, 0, 1, 0, 0] },
-          { arm: 1, dice: 2, size: 4, join: [0, 1, 0, 0, 0] }, // Same player
-        ],
-        AREA_MAX: 3,
-      };
-
       const moves = generatePossibleMoves(gameState, 1);
 
+      // Should not attack territory 3 (also owned by player 1)
+      const movesToOwnTerritory = moves.filter(m => m.to === 3);
+      expect(movesToOwnTerritory).toHaveLength(0);
+    });
+
+    it('should only attack adjacent territories', () => {
+      const moves = generatePossibleMoves(gameState, 1);
+
+      // Territory 1 is not adjacent to territory 3
+      const movesFromTerritory1 = moves.filter(m => m.from === 1);
+      expect(movesFromTerritory1.some(m => m.to === 3)).toBe(false);
+    });
+
+    it('should return empty array when no valid moves exist', () => {
+      // Make territory 2 have only 1 die so it can't attack
+      gameState.adat[2].dice = 1;
+      const moves = generatePossibleMoves(gameState, 2);
       expect(moves).toHaveLength(0);
     });
 
-    it('should handle adjacent territories correctly', () => {
-      const gameState = {
-        adat: [
-          null,
-          { arm: 1, dice: 3, size: 5, join: [0, 0, 1, 1, 0] }, // Adjacent to 2 and 3
-          { arm: 2, dice: 2, size: 4, join: [0, 1, 0, 0, 0] }, // Enemy
-          { arm: 2, dice: 1, size: 3, join: [0, 1, 0, 0, 0] }, // Enemy
-          { arm: 2, dice: 1, size: 2, join: [0, 0, 0, 0, 0] }, // Not adjacent
-        ],
-        AREA_MAX: 5,
-      };
-
+    it('should skip non-existent territories', () => {
+      gameState.adat[1].size = 0; // Non-existent territory
       const moves = generatePossibleMoves(gameState, 1);
-
-      expect(moves).toHaveLength(2);
-      expect(moves.map(m => m.to)).toContain(2);
-      expect(moves.map(m => m.to)).toContain(3);
-      expect(moves.map(m => m.to)).not.toContain(4);
+      expect(moves).toHaveLength(0);
     });
   });
 
   describe('executeAIMove', () => {
-    it('should execute AI function for current player', () => {
-      const mockAI = jest.fn().mockReturnValue(1);
-      const gameState = {
-        ban: 0,
-        jun: [1, 2],
-        ai: [null, mockAI, jest.fn()],
-      };
+    let gameState;
+    let mockAIFunction;
+    let consoleErrorSpy;
+    let consoleLogSpy;
 
+    beforeEach(() => {
+      mockAIFunction = jest.fn().mockReturnValue(1);
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      gameState = {
+        ai: [null, mockAIFunction],
+        jun: [1, 2],
+        ban: 0,
+      };
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should call the correct AI function for the current player', () => {
       const result = executeAIMove(gameState);
 
-      expect(mockAI).toHaveBeenCalledWith(gameState);
+      expect(mockAIFunction).toHaveBeenCalledWith(gameState);
       expect(result).toBe(1);
     });
 
-    it('should handle missing AI function', () => {
-      const gameState = {
-        ban: 0,
-        jun: [1, 2],
-        ai: [null, null, jest.fn()],
-      };
+    it('should handle missing AI function with fallback', () => {
+      gameState.ai[1] = null;
 
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      // Mock the default AI
+      const originalDefault = AI_STRATEGIES.ai_default?.implementation;
+      const mockDefaultAI = jest.fn().mockReturnValue(0);
+      AI_STRATEGIES.ai_default = {
+        ...AI_STRATEGIES.ai_default,
+        implementation: mockDefaultAI,
+      };
 
       const result = executeAIMove(gameState);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('AI function not found for player 1');
+      expect(consoleLogSpy).toHaveBeenCalledWith('Using default AI as fallback');
+      expect(mockDefaultAI).toHaveBeenCalledWith(gameState);
       expect(result).toBe(0);
 
-      consoleErrorSpy.mockRestore();
+      // Restore original
+      if (originalDefault) {
+        AI_STRATEGIES.ai_default.implementation = originalDefault;
+      }
     });
 
-    it('should use fallback AI when available', () => {
-      const mockFallback = jest.fn().mockReturnValue(2);
-      require('../../src/ai/index.js').getAIImplementation.mockReturnValue(mockFallback);
+    it('should handle missing AI function without fallback', () => {
+      gameState.ai[1] = null;
 
-      const gameState = {
-        ban: 0,
-        jun: [1, 2],
-        ai: [null, 'notAFunction', jest.fn()],
+      // Mock the aiHandler module directly to test when ai_default is undefined
+      jest.isolateModules(() => {
+        const mockAIModule = {
+          AI_STRATEGIES: {},
+          createAIFunctionMapping: jest.fn(),
+        };
+
+        jest.doMock('../../src/ai/index.js', () => mockAIModule);
+
+        // Import again in isolated environment
+        const {
+          executeAIMove: isolatedExecuteAIMove,
+        } = require('../../src/mechanics/aiHandler.js');
+
+        const result = isolatedExecuteAIMove(gameState);
+
+        // Should only call console.error once for the missing AI function
+        expect(consoleErrorSpy).toHaveBeenCalledWith('AI function not found for player 1');
+        expect(result).toBe(0);
+      });
+    });
+
+    it('should handle AI function that is not actually a function', () => {
+      gameState.ai[1] = 'not a function';
+
+      // Ensure ai_default exists for fallback
+      const originalDefault = AI_STRATEGIES.ai_default?.implementation;
+      const mockDefaultAI = jest.fn().mockReturnValue(0);
+      AI_STRATEGIES.ai_default = {
+        ...AI_STRATEGIES.ai_default,
+        implementation: mockDefaultAI,
       };
 
       const result = executeAIMove(gameState);
 
-      expect(result).toBe(2);
-      expect(mockFallback).toHaveBeenCalledWith(gameState);
-    });
+      expect(consoleErrorSpy).toHaveBeenCalledWith('AI function not found for player 1');
+      expect(mockDefaultAI).toHaveBeenCalledWith(gameState);
+      expect(result).toBe(0);
 
-    it('should handle AI errors gracefully', () => {
-      const mockAI = jest.fn().mockImplementation(() => {
-        throw new Error('AI Error');
-      });
-
-      const gameState = {
-        ban: 0,
-        jun: [1, 2],
-        ai: [null, mockAI, jest.fn()],
-      };
-
-      expect(() => executeAIMove(gameState)).toThrow('AI Error');
+      // Restore original
+      if (originalDefault) {
+        AI_STRATEGIES.ai_default.implementation = originalDefault;
+      }
     });
   });
 
   describe('configureAI', () => {
-    it('should configure AI with assignments', () => {
-      const mockMapping = [null, jest.fn(), jest.fn(), jest.fn()];
-      require('../../src/ai/index.js').createAIFunctionMapping.mockReturnValue(mockMapping);
+    let gameState;
 
-      const gameState = {
-        ai: new Array(8),
+    beforeEach(() => {
+      gameState = {
+        ai: [null, null, null, null],
       };
 
-      const aiAssignments = ['DEFAULT', 'DEFENSIVE', 'EXAMPLE'];
-
-      const result = configureAI(gameState, aiAssignments);
-
-      expect(require('../../src/ai/index.js').createAIFunctionMapping).toHaveBeenCalledWith(
-        aiAssignments
-      );
-      expect(result.ai[0]).toBe(null);
-      expect(result.ai[1]).toBe(mockMapping[1]);
-      expect(result.ai[2]).toBe(mockMapping[2]);
+      // Clear the mock
+      createAIFunctionMapping.mockClear();
     });
 
-    it('should return original state if no assignments', () => {
-      const gameState = {
-        ai: new Array(8),
-      };
+    it('should configure AI strategies from assignments', async () => {
+      const mockAI1 = jest.fn();
+      const mockAI2 = jest.fn();
+      const mockAIs = [mockAI1, mockAI2];
 
-      const result = configureAI(gameState);
+      // Mock the createAIFunctionMapping to return our mock functions
+      createAIFunctionMapping.mockResolvedValue(mockAIs);
 
-      expect(result).toEqual(gameState);
+      const result = await configureAI(gameState, ['ai_default', 'ai_defensive']);
+
+      expect(createAIFunctionMapping).toHaveBeenCalledWith(['ai_default', 'ai_defensive']);
+      expect(result.ai[0]).toBe(mockAI1);
+      expect(result.ai[1]).toBe(mockAI2);
+      expect(result.ai[2]).toBe(null); // Unchanged
+      expect(result.ai[3]).toBe(null); // Unchanged
     });
 
-    it('should handle non-array assignments', () => {
-      const gameState = {
-        ai: new Array(8),
-      };
+    it('should handle invalid assignments', async () => {
+      const result = await configureAI(gameState, null);
+      expect(result).toBe(gameState);
 
-      const result = configureAI(gameState, 'invalid');
+      const result2 = await configureAI(gameState, undefined);
+      expect(result2).toBe(gameState);
 
-      expect(result).toEqual(gameState);
+      const result3 = await configureAI(gameState, 'not an array');
+      expect(result3).toBe(gameState);
     });
 
-    it('should not mutate original game state', () => {
-      const mockMapping = [null, jest.fn()];
-      require('../../src/ai/index.js').createAIFunctionMapping.mockReturnValue(mockMapping);
+    it('should not mutate original game state', async () => {
+      const originalAI = [...gameState.ai];
+      const mockAIs = [jest.fn(), jest.fn()];
 
-      const gameState = {
-        ai: [null, null],
-      };
+      // Mock the createAIFunctionMapping to return our mock functions
+      createAIFunctionMapping.mockResolvedValue(mockAIs);
 
-      const original = { ...gameState };
-      const result = configureAI(gameState, ['DEFAULT']);
+      const result = await configureAI(gameState, ['ai_default', 'ai_defensive']);
 
-      expect(gameState).toEqual(original);
-      expect(result).not.toBe(gameState);
+      expect(gameState.ai).toEqual(originalAI); // Original unchanged
+      expect(result).not.toBe(gameState); // New object
+      expect(result.ai).not.toBe(gameState.ai); // Different array instance
+    });
+
+    it('should handle empty assignments array', async () => {
+      const mockAIs = [];
+
+      // Mock the createAIFunctionMapping to return empty array
+      createAIFunctionMapping.mockResolvedValue(mockAIs);
+
+      const result = await configureAI(gameState, []);
+
+      expect(createAIFunctionMapping).toHaveBeenCalledWith([]);
+      expect(result.ai).toEqual([null, null, null, null]); // Unchanged
     });
   });
 });
