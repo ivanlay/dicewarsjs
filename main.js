@@ -17,6 +17,12 @@ var game = new Game();
 if (typeof applyGameConfig === 'function') {
     // ES6 modules might not be loaded yet, so we'll apply this later
     window.pendingGameConfig = true;
+    // Apply immediately for environments without ES6 modules
+    try {
+        applyGameConfig(game);
+    } catch (e) {
+        console.warn('applyGameConfig failed during init:', e);
+    }
 }
 
 // Display position and scaling parameters

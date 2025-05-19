@@ -14,6 +14,7 @@
 import './gameUtils.js';
 import './render.js';
 import './sound.js';
+import './ui.js';
 import './ai.js';
 import './Game.js';
 // Import debug tools (conditionally active in development mode)
