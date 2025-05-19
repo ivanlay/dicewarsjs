@@ -1,15 +1,25 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const { ModuleFederationPlugin } = require('webpack').container;
 const commonConfig = require('./webpack.common.js');
 
 module.exports = (env, argv) => {
   const config = commonConfig(env, argv);
   const isProduction = argv.mode === 'production';
+  const role = env && env.role;
+  const isRemote = role === 'remote';
+  const isHost = role === 'host';
+  const remoteUrl = (env && env.remoteUrl) || 'http://localhost:3001';
+  const port = env && env.port ? parseInt(env.port, 10) : 3000;
 
   // Enable output as ES module
   config.output.module = true;
   config.experiments = { outputModule: true };
+
+  if (isRemote || isHost) {
+    config.output.publicPath = 'auto';
+  }
 
   if (isProduction) {
     config.output.filename = '[name].[contenthash].js';
@@ -108,7 +118,7 @@ module.exports = (env, argv) => {
         directory: path.join(__dirname, 'dist'),
       },
       compress: true,
-      port: 3000,
+      port,
       // HMR is not supported for ES module output yet
       hot: false,
       historyApiFallback: true,
@@ -134,6 +144,30 @@ module.exports = (env, argv) => {
         },
       },
     };
+  }
+
+  if (isRemote) {
+    config.plugins.push(
+      new ModuleFederationPlugin({
+        name: 'dicewars',
+        filename: 'remoteEntry.js',
+        exposes: {
+          './AI': './src/ai/index.js',
+          './Game': './src/Game.js',
+        },
+        shared: {},
+      })
+    );
+  } else if (isHost) {
+    config.plugins.push(
+      new ModuleFederationPlugin({
+        name: 'dicewarsHost',
+        remotes: {
+          dicewars: `dicewars@${remoteUrl}/remoteEntry.js`,
+        },
+        shared: {},
+      })
+    );
   }
 
   return config;

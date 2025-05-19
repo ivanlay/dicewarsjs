@@ -296,6 +296,34 @@ Comprehensive documentation is available in the `docs/` directory:
 - [**Code Style Guide**](./docs/CODE_STYLE.md): Coding standards and conventions
 - [**Testing Strategy**](./docs/TESTING.md): Testing approach and implementation
 
+## Module Federation
+
+DiceWarsJS can participate in a module federation setup. It can expose its AI
+modules as a **remote** or consume them as a **host**.
+
+### Run as a remote
+
+Start the development server with the `role` set to `remote` and optionally
+specify a port (defaults to `3000`):
+
+```bash
+npm run dev -- --env role=remote --env port=3001
+```
+
+This generates `remoteEntry.js` and exposes modules like `./AI` and `./Game`.
+
+### Run as a host
+
+To consume modules from another running instance, set the `role` to `host` and
+provide the remote URL:
+
+```bash
+npm run dev -- --env role=host --env remoteUrl=http://localhost:3001
+```
+
+The host application will load the exposed modules from the remote instance at
+the given URL.
+
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
