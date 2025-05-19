@@ -105,21 +105,6 @@ window.getAIFunctionByName = function (aiName) {
 };
 
 // Set up config placeholder
-if (!window.GAME_CONFIG) {
-  window.GAME_CONFIG = {
-    humanPlayerIndex: 0,
-    aiAssignments: [
-      null, // Player 0 (human)
-      'ai_example', // Player 1
-      'ai_defensive', // Player 2
-      'ai_adaptive', // Player 3
-      'ai_default', // Player 4
-      'ai_default', // Player 5
-      'ai_default', // Player 6
-      'ai_default', // Player 7
-    ],
-    spectatorSpeedMultiplier: 2,
-  };
-}
+window.GAME_CONFIG = window.GAME_CONFIG || {};
 
 console.log('Game loader initialized global placeholders');

@@ -13,7 +13,7 @@ var stat=0;               // General state variable used in state machines
 // Main game object - contains all game logic and state
 var game = new Game();
 
-// Apply configuration if available
+// Apply configuration immediately if bridge is available
 if (typeof applyGameConfig === 'function') {
     // ES6 modules might not be loaded yet, so we'll apply this later
     window.pendingGameConfig = true;
@@ -610,21 +610,24 @@ function fake_loading(){
 ////////////////////////////////////////////////////
 
 function start_title(){
-	var i;
-	
-	for( i=0; i<sn_max; i++ ) spr[i].visible = false;
+        var i;
 
-	// Initialize game speed variables and update spectator mode from config
-	var gameSpeedMultiplier = 1;
-	
-	if (GAME_CONFIG?.humanPlayerIndex === null) {
-		spectate_mode = true;
-		
-		// Apply speed multiplier if configured
-		gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier ?? 1;
-	} else {
-		spectate_mode = false;
-	}
+        for( i=0; i<sn_max; i++ ) spr[i].visible = false;
+
+        // Initialize game speed variables and update spectator mode from config
+        var gameSpeedMultiplier = 1;
+        var cfg = typeof getConfig === 'function'
+                ? getConfig()
+                : (typeof GAME_CONFIG !== 'undefined' ? GAME_CONFIG : {});
+
+        if (cfg.humanPlayerIndex === null) {
+                spectate_mode = true;
+
+                // Apply speed multiplier if configured
+                gameSpeedMultiplier = cfg.spectatorSpeedMultiplier ?? 1;
+        } else {
+                spectate_mode = false;
+        }
 	
 	spr[sn_title].visible = true;
 	spr[sn_title].x = 0;
@@ -680,16 +683,18 @@ function click_pmax(){
 
 // Start a normal (human player) game
 function start_normal_game() {
-	// Ensure we're in normal mode, not spectator mode
-	spectate_mode = false;
-	
-	// Update GAME_CONFIG for normal mode (human is player 0)
-	if (typeof GAME_CONFIG !== 'undefined') {
-		GAME_CONFIG.humanPlayerIndex = 0; // Set human player to index 0
-	}
-	
-	// Create a new map
-	make_map();
+        // Ensure we're in normal mode, not spectator mode
+        spectate_mode = false;
+
+        // Update configuration for normal mode (human is player 0)
+        if (typeof updateConfig === 'function') {
+                updateConfig({ humanPlayerIndex: 0 });
+        } else if (typeof GAME_CONFIG !== 'undefined') {
+                GAME_CONFIG.humanPlayerIndex = 0; // Fallback
+        }
+
+        // Create a new map
+        make_map();
 }
 
 ////////////////////////////////////////////////////
@@ -814,36 +819,33 @@ function draw_areadice(sn,area){
 ////////////////////////////////////////////////////
 
 async function start_game(){
-	// Apply any GAME_CONFIG settings before starting the game
-	if (typeof GAME_CONFIG !== 'undefined') {
-		if (GAME_CONFIG.humanPlayerIndex === null) {
-			// Setting for AI vs AI mode
-			game.user = null;
-			spectate_mode = true;
-			
-			// Apply speed multiplier if configured
-			if (typeof GAME_CONFIG.spectatorSpeedMultiplier === 'number') {
-				window.gameSpeedMultiplier = GAME_CONFIG.spectatorSpeedMultiplier;
-			}
-		} else {
-			// Normal mode with human player
-			game.user = GAME_CONFIG.humanPlayerIndex || 0;
-			spectate_mode = false;
-		}
-	} else {
-		// If no GAME_CONFIG exists, ensure we're in normal mode
-		game.user = 0;
-		spectate_mode = false;
-	}
-	
-	// Apply ES6 configuration if available
-	if (window.pendingGameConfig && typeof applyGameConfig === 'function') {
-		try {
-			await applyGameConfig(game);
-		} catch (error) {
-			console.error('Failed to apply game configuration:', error);
-		}
-	}
+        // Apply configuration from modern modules if available
+        if (typeof applyGameConfig === 'function') {
+                try {
+                        await applyGameConfig(game);
+                } catch (error) {
+                        console.error('Failed to apply game configuration:', error);
+                }
+        }
+
+        // Determine active configuration
+        var cfg = typeof getConfig === 'function'
+                ? getConfig()
+                : (typeof GAME_CONFIG !== 'undefined' ? GAME_CONFIG : {});
+
+        if (cfg.humanPlayerIndex === null) {
+                // AI vs AI mode
+                game.user = null;
+                spectate_mode = true;
+
+                if (typeof cfg.spectatorSpeedMultiplier === 'number') {
+                        window.gameSpeedMultiplier = cfg.spectatorSpeedMultiplier;
+                }
+        } else {
+                // Normal mode with human player
+                game.user = cfg.humanPlayerIndex || 0;
+                spectate_mode = false;
+        }
 	
 	game.start_game();
 	start_player();
@@ -1740,26 +1742,41 @@ function toppage(){
 	// Set a default speed multiplier for better experience
 	window.gameSpeedMultiplier = 2;
 	
-	// Create or update GAME_CONFIG for AI vs AI mode
-	window.GAME_CONFIG = GAME_CONFIG ?? {};
-	
-	// Update config properties
-	GAME_CONFIG.humanPlayerIndex = null;
-	GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
-	
-	// Ensure all players have AI assignments in spectator mode
-	if (!GAME_CONFIG.aiAssignments || GAME_CONFIG.aiAssignments.includes(null)) {
-		GAME_CONFIG.aiAssignments = [
-			'ai_default',     // Player 0
-			'ai_defensive',   // Player 1
-			'ai_defensive',   // Player 2
-			'ai_adaptive',    // Player 3
-			'ai_default',     // Player 4
-			'ai_default',     // Player 5
-			'ai_default',     // Player 6
-			'ai_default'      // Player 7
-		];
-	}
+        // Update configuration for AI vs AI mode via the bridge
+        if (typeof updateConfig === 'function') {
+                updateConfig({
+                        humanPlayerIndex: null,
+                        spectatorSpeedMultiplier: window.gameSpeedMultiplier,
+                        aiAssignments: [
+                                'ai_default',     // Player 0
+                                'ai_defensive',   // Player 1
+                                'ai_defensive',   // Player 2
+                                'ai_adaptive',    // Player 3
+                                'ai_default',     // Player 4
+                                'ai_default',     // Player 5
+                                'ai_default',     // Player 6
+                                'ai_default'      // Player 7
+                        ]
+                });
+        } else {
+                // Fallback to legacy global config
+                window.GAME_CONFIG = GAME_CONFIG ?? {};
+                GAME_CONFIG.humanPlayerIndex = null;
+                GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
+
+                if (!GAME_CONFIG.aiAssignments || GAME_CONFIG.aiAssignments.includes(null)) {
+                        GAME_CONFIG.aiAssignments = [
+                                'ai_default',     // Player 0
+                                'ai_defensive',   // Player 1
+                                'ai_defensive',   // Player 2
+                                'ai_adaptive',    // Player 3
+                                'ai_default',     // Player 4
+                                'ai_default',     // Player 5
+                                'ai_default',     // Player 6
+                                'ai_default'      // Player 7
+                        ];
+                }
+        }
 	
 	// Start a new game in spectator mode - use the proper function sequence
 	// First generate the map

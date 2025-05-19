@@ -4,6 +4,7 @@
  * This configuration sets up the game for AI vs AI (spectator) mode
  * where all players are controlled by AI.
  */
+// Legacy configuration file - values will be merged by src/utils/config.js
 window.GAME_CONFIG = {
   // Game rules
   playerCount: 7, // Number of AI players

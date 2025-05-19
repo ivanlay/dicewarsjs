@@ -30,6 +30,9 @@ export const DEFAULT_CONFIG = {
     'ai_default',        // Player 6
     'ai_default'         // Player 7
   ],
+
+  // Spectator mode settings
+  spectatorSpeedMultiplier: 1,
   
   // Display settings
   mapWidth: 28,           // Width of map grid (cells)
@@ -55,6 +58,11 @@ export const DEFAULT_CONFIG = {
  * Current active configuration
  */
 let activeConfig = { ...DEFAULT_CONFIG };
+
+// Merge in any legacy configuration provided before modules loaded
+if (typeof window !== 'undefined' && window.GAME_CONFIG) {
+  activeConfig = { ...activeConfig, ...window.GAME_CONFIG };
+}
 
 /**
  * Get the current game configuration
