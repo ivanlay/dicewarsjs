@@ -338,9 +338,17 @@ Several AI implementations are included to demonstrate different strategies:
 
 Comprehensive documentation is available in the `docs/` directory:
 
+> **Note for Contributors**: When making significant changes to the codebase, please ensure that relevant documentation is updated accordingly. This includes architecture docs, API references, and any affected development guides.
+
 - [**AI Developer Guide**](./docs/ai/DEVELOPER_GUIDE.md): Detailed guide for AI development
 - [**Bridge Architecture**](./docs/BRIDGE_ARCHITECTURE.md): Details on the architectural approach
 - [**Roadmap**](./docs/ROADMAP.md): Future development plans
+
+For AI coding assistants:
+
+- [**CLAUDE.md**](./CLAUDE.md): Guidance for Claude Code
+- [**AGENTS.md**](./AGENTS.md): Guidance for other AI assistants
+  (These files are kept in sync to ensure consistent assistance)
 - [**Code Style Guide**](./docs/CODE_STYLE.md): Coding standards and conventions
 - [**Testing Strategy**](./docs/TESTING.md): Testing approach and implementation
 
@@ -379,8 +387,9 @@ Contributions are welcome! Please follow these steps:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+4. Update relevant documentation for any significant changes (including CLAUDE.md/AGENTS.md if workflow changes)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 If you create a cool new AI strategy, please share it with the community!
 

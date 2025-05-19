@@ -59,7 +59,6 @@ test-results/
 
 # Specific files to ignore
 **/.claude/settings.local.json
-CLAUDE.md
 
 # Don't ignore these files even if they match patterns above
 !.gitkeep
