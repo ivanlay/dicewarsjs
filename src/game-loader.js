@@ -10,6 +10,14 @@
 
 console.log('Initializing game-loader.js...');
 
+/*
+ * Preload the ES module version of Game so legacy code can access it.
+ * Use a relative path to ensure correct resolution
+ */
+import('./Game.js').catch(err => {
+  console.warn('Failed to preload Game module', err);
+});
+
 /**
  * Create placeholder AI functions
  * These will be replaced by the real implementations via the bridge module

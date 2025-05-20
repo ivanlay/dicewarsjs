@@ -137,14 +137,23 @@ function init() {
     // Initialize canvas
     canvas = document.getElementById("myCanvas");
     
-    // Setup event listeners
+    // Get config dimensions
+    const config = loadConfig();
+    const { viewWidth, viewHeight } = config.display;
+    
+    // Set explicit canvas dimensions
+    canvas.width = viewWidth;
+    canvas.height = viewHeight;
+    
+    // Initialize CreateJS stage
+    stage = new createjs.Stage(canvas);
+    
+    // Setup touch support after stage is created
     if (createjs.Touch.isSupported()) {
         createjs.Touch.enable(stage);
         touchdev = true;
     }
     
-    // Initialize CreateJS stage
-    stage = new createjs.Stage(canvas);
     stage.enableMouseOver();
     
     // Set up update tick
@@ -219,15 +228,49 @@ function start_title_screen() {
     click_func = null;
     move_func = null;
     release_func = null;
+    
+    console.log("Creating title screen");
+    
+    // Provide a callback for the start button to initialize the game
+    renderTitleScreen(stage, () => {
+        console.log("Starting game from title screen button");
+        // Start actual game initialization 
+        initialize_game();
+    });
+}
 
-    renderTitleScreen(stage);
+/**
+ * Initialize the actual game after title screen
+ */
+function initialize_game() {
+    // Create game map
+    game.make_map();
+    
+    // Initialize game state, players, etc.
+    game.start_game();
+    
+    // Start the game loop
+    console.log("Game initialized and starting");
+    
+    // Here you would continue with setting up the game state
+    // and transitioning to the main game screen
 }
 
 /**
  * Initialize the game - exported function that serves as the public API
  * This is called by the index.js entry point
  */
-export function initGame() {
+export async function initGame() {
+  console.log("Starting game initialization sequence");
+  
+  // Load configuration first
+  const config = loadConfig();
+  
+  // Apply configuration to game
+  await applyConfigToGame(game, config);
+  
+  // Initialize the game with the applied configuration
+  console.log("Configuration loaded, initializing game");
   init();
 }
 

@@ -69,7 +69,7 @@ interact with the modern ES6 modules:
   bundles.
 - **game-loader.js** defines placeholder AI functions and exposes them globally
   via `AI_REGISTRY`.
-- **game.js**, **main.js**, **mc.js**, **areadice.js**, and the `ai_*.js` files
+- **game.js**, **mc.js**, **areadice.js**, and the `ai_*.js` files
   still declare many global variables and functions.
 - Bridge modules under `src/bridge/` make the new ES6 classes available in the
   global scope.

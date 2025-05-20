@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DiceWars Debug</title>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <style>
+      body {
+        background: #eee;
+        margin: 0;
+        padding: 10px;
+      }
+      #debug {
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+      }
+      canvas {
+        border: 1px solid red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="debug"></div>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+
+    <script>
+      const debugEl = document.getElementById('debug');
+      // Override console.log to also display in debug div
+      const originalLog = console.log;
+      console.log = function (...args) {
+        originalLog.apply(console, args);
+        debugEl.innerHTML += `<div>${args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}</div>`;
+      };
+
+      // Override console.error to display errors prominently
+      const originalError = console.error;
+      console.error = function (...args) {
+        originalError.apply(console, args);
+        debugEl.innerHTML += `<div style="color:red;font-weight:bold">ERROR: ${args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}</div>`;
+      };
+
+      // Test CreateJS initialization
+      try {
+        const canvas = document.getElementById('myCanvas');
+        console.log(`Canvas found: ${canvas !== null}`);
+        console.log(`Canvas dimensions: ${canvas.width}x${canvas.height}`);
+
+        if (typeof createjs !== 'undefined') {
+          console.log('CreateJS loaded');
+
+          // Test stage creation
+          const stage = new createjs.Stage(canvas);
+          console.log('Stage created successfully');
+
+          // Test drawing a simple shape
+          const circle = new createjs.Shape();
+          circle.graphics.beginFill('red').drawCircle(50, 50, 40);
+          stage.addChild(circle);
+          stage.update();
+          console.log('Shape added to stage');
+
+          // Test text creation
+          const text = new createjs.Text('Test Text', '20px Arial', '#000');
+          text.x = 100;
+          text.y = 100;
+          stage.addChild(text);
+          stage.update();
+          console.log('Text added to stage');
+        } else {
+          console.error('CreateJS not loaded');
+        }
+      } catch (e) {
+        console.error('Error during test:', e);
+      }
+    </script>
+  </body>
+</html>

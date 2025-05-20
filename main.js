@@ -1,29 +1,26 @@
-var canvas, stage;        // CreateJS canvas and stage objects
-var builder;              // CreateJS SpriteSheetBuilder for dice graphics
-var touchdev = false;     // Flag indicating touch device detection
+import { Game } from './src/Game-browser.js';
+import { applyConfigToGame, getConfig, updateConfig } from './src/utils/config.js';
+
+let canvas, stage;        // CreateJS canvas and stage objects
+let builder;              // CreateJS SpriteSheetBuilder for dice graphics
+let touchdev = false;     // Flag indicating touch device detection
 
 // Event handler functions - set dynamically based on game state
-var timer_func = new Function();	timer_func = null;    // Called on each tick
-var click_func = new Function();	click_func = null;      // Called on mouse down
-var move_func = new Function();		move_func = null;       // Called on mouse move
-var release_func = new Function();	release_func = null;   // Called on mouse up
-var waitcount=0;          // Counter for timing/animation delays
-var stat=0;               // General state variable used in state machines
+let timer_func = new Function();	timer_func = null;    // Called on each tick
+let click_func = new Function();	click_func = null;      // Called on mouse down
+let move_func = new Function();		move_func = null;       // Called on mouse move
+let release_func = new Function();	release_func = null;   // Called on mouse up
+let waitcount=0;          // Counter for timing/animation delays
+let stat=0;               // General state variable used in state machines
 
 // Main game object - contains all game logic and state
-var game = new Game();
+const game = new Game();
+let gameSpeedMultiplier = 1;
 
-// Apply configuration immediately if bridge is available
-if (typeof applyGameConfig === 'function') {
-    // ES6 modules might not be loaded yet, so we'll apply this later
-    window.pendingGameConfig = true;
-    // Apply immediately for environments without ES6 modules
-    try {
-        applyGameConfig(game);
-    } catch (e) {
-        console.warn('applyGameConfig failed during init:', e);
-    }
-}
+// Apply configuration immediately using the modern utility
+applyConfigToGame(game).catch(e => {
+    console.warn('applyGameConfig failed during init:', e);
+});
 
 // Display position and scaling parameters
 var org = {view_w:840,view_h:840,cel_w:27,cel_h:18,ypos_mes:688,ypos_arm:770};	// Original size configuration
@@ -108,7 +105,9 @@ function resize(n){
 }
 
 // Application initialization on page load
-window.addEventListener("load", init);
+if (typeof window !== 'undefined') {
+        window.addEventListener("load", init);
+}
 function init() {
 	var i,j,c,n;
 
@@ -615,10 +614,8 @@ function start_title(){
         for( i=0; i<sn_max; i++ ) spr[i].visible = false;
 
         // Initialize game speed variables and update spectator mode from config
-        var gameSpeedMultiplier = 1;
-        var cfg = typeof getConfig === 'function'
-                ? getConfig()
-                : (typeof GAME_CONFIG !== 'undefined' ? GAME_CONFIG : {});
+        gameSpeedMultiplier = 1;
+        var cfg = getConfig();
 
         if (cfg.humanPlayerIndex === null) {
                 spectate_mode = true;
@@ -687,11 +684,7 @@ function start_normal_game() {
         spectate_mode = false;
 
         // Update configuration for normal mode (human is player 0)
-        if (typeof updateConfig === 'function') {
-                updateConfig({ humanPlayerIndex: 0 });
-        } else if (typeof GAME_CONFIG !== 'undefined') {
-                GAME_CONFIG.humanPlayerIndex = 0; // Fallback
-        }
+        updateConfig({ humanPlayerIndex: 0 });
 
         // Create a new map
         make_map();
@@ -819,19 +812,14 @@ function draw_areadice(sn,area){
 ////////////////////////////////////////////////////
 
 async function start_game(){
-        // Apply configuration from modern modules if available
-        if (typeof applyGameConfig === 'function') {
-                try {
-                        await applyGameConfig(game);
-                } catch (error) {
-                        console.error('Failed to apply game configuration:', error);
-                }
+        try {
+                await applyConfigToGame(game);
+        } catch (error) {
+                console.error('Failed to apply game configuration:', error);
         }
 
         // Determine active configuration
-        var cfg = typeof getConfig === 'function'
-                ? getConfig()
-                : (typeof GAME_CONFIG !== 'undefined' ? GAME_CONFIG : {});
+        var cfg = getConfig();
 
         if (cfg.humanPlayerIndex === null) {
                 // AI vs AI mode
@@ -839,7 +827,7 @@ async function start_game(){
                 spectate_mode = true;
 
                 if (typeof cfg.spectatorSpeedMultiplier === 'number') {
-                        window.gameSpeedMultiplier = cfg.spectatorSpeedMultiplier;
+                        gameSpeedMultiplier = cfg.spectatorSpeedMultiplier;
                 }
         } else {
                 // Normal mode with human player
@@ -1067,7 +1055,7 @@ function start_com(){
 	stage.update();
 	
 	// Reduce wait time in spectator mode
-	var speedMultiplier = spectate_mode ? (window.gameSpeedMultiplier ?? 1) : 1;
+	var speedMultiplier = spectate_mode ? (gameSpeedMultiplier ?? 1) : 1;
 	waitcount = Math.max(1, Math.floor(5/speedMultiplier));
 	timer_func = com_from;
 	click_func = null;
@@ -1077,7 +1065,7 @@ function start_com(){
 
 function com_from(){
 	// Apply speed multiplier in spectator mode
-	var speedMultiplier = spectate_mode ? (window.gameSpeedMultiplier ?? 1) : 1;
+	var speedMultiplier = spectate_mode ? (gameSpeedMultiplier ?? 1) : 1;
 	waitcount -= speedMultiplier;
 	
 	if( waitcount>0 ) return;
@@ -1103,7 +1091,7 @@ function com_from(){
 
 function com_to(){
 	// Apply speed multiplier in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = (spectate_mode && gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 	waitcount -= speedMultiplier;
 	
 	if( waitcount>0 ) return;
@@ -1144,7 +1132,7 @@ function start_battle(){
 		spr[sn_btn+5].visible = true;
 		
 		// Reduce battle animation length in spectator mode
-		var speedMultiplier = (window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+		var speedMultiplier = (gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 		waitcount = Math.max(1, Math.floor(15/speedMultiplier));
 	}
 
@@ -1217,7 +1205,7 @@ function battle_dice(){
 	var soundflg = false;
 	
 	// Apply speed multiplier in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = (spectate_mode && gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 	
 	// Make sure title button stays visible and properly positioned in spectator mode
 	if (spectate_mode) {
@@ -1286,7 +1274,7 @@ function battle_dice(){
 		bturn++;
 		if( bturn>=2 ){
 			// Reduce wait time in spectator mode
-			var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+			var speedMultiplier = (spectate_mode && gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 			waitcount = Math.max(1, Math.floor(15/speedMultiplier));
 			timer_func = after_battle;
 		}
@@ -1299,7 +1287,7 @@ function battle_dice(){
 
 function after_battle(){
 	// Apply speed multiplier in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = (spectate_mode && gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 	waitcount -= speedMultiplier;
 	
 	if( waitcount>0 ) return;
@@ -1404,7 +1392,7 @@ function start_supply(){
 	stage.update();
 	
 	// Reduce wait time in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = (spectate_mode && gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 	waitcount = Math.max(1, Math.floor(10/speedMultiplier));
 	timer_func = supply_waiting;
 	click_func = null;
@@ -1414,7 +1402,7 @@ function start_supply(){
 
 function supply_waiting(){
 	// Apply speed multiplier in spectator mode
-	var speedMultiplier = (spectate_mode && window.gameSpeedMultiplier) ? window.gameSpeedMultiplier : 1;
+	var speedMultiplier = (spectate_mode && gameSpeedMultiplier) ? gameSpeedMultiplier : 1;
 	waitcount -= speedMultiplier;
 	
 	if( waitcount>0 ) return;
@@ -1740,43 +1728,23 @@ function toppage(){
 	spectate_mode = true;
 	
 	// Set a default speed multiplier for better experience
-	window.gameSpeedMultiplier = 2;
+	gameSpeedMultiplier = 2;
 	
         // Update configuration for AI vs AI mode via the bridge
-        if (typeof updateConfig === 'function') {
-                updateConfig({
-                        humanPlayerIndex: null,
-                        spectatorSpeedMultiplier: window.gameSpeedMultiplier,
-                        aiAssignments: [
-                                'ai_default',     // Player 0
-                                'ai_defensive',   // Player 1
-                                'ai_defensive',   // Player 2
-                                'ai_adaptive',    // Player 3
-                                'ai_default',     // Player 4
-                                'ai_default',     // Player 5
-                                'ai_default',     // Player 6
-                                'ai_default'      // Player 7
-                        ]
-                });
-        } else {
-                // Fallback to legacy global config
-                window.GAME_CONFIG = GAME_CONFIG ?? {};
-                GAME_CONFIG.humanPlayerIndex = null;
-                GAME_CONFIG.spectatorSpeedMultiplier = window.gameSpeedMultiplier;
-
-                if (!GAME_CONFIG.aiAssignments || GAME_CONFIG.aiAssignments.includes(null)) {
-                        GAME_CONFIG.aiAssignments = [
-                                'ai_default',     // Player 0
-                                'ai_defensive',   // Player 1
-                                'ai_defensive',   // Player 2
-                                'ai_adaptive',    // Player 3
-                                'ai_default',     // Player 4
-                                'ai_default',     // Player 5
-                                'ai_default',     // Player 6
-                                'ai_default'      // Player 7
-                        ];
-                }
-        }
+        updateConfig({
+                humanPlayerIndex: null,
+                spectatorSpeedMultiplier: gameSpeedMultiplier,
+                aiAssignments: [
+                        'ai_default',     // Player 0
+                        'ai_defensive',   // Player 1
+                        'ai_defensive',   // Player 2
+                        'ai_adaptive',    // Player 3
+                        'ai_default',     // Player 4
+                        'ai_default',     // Player 5
+                        'ai_default',     // Player 6
+                        'ai_default'      // Player 7
+                ]
+        });
 	
 	// Start a new game in spectator mode - use the proper function sequence
 	// First generate the map
