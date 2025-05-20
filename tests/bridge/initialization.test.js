@@ -154,10 +154,7 @@ describe('Bridge Module Initialization', () => {
       // Get the status
       const status = window.checkBridgeStatus();
 
-      // All modules should be marked as loaded
-      expect(status.gameUtils).toBe('loaded');
-      expect(status.render).toBe('loaded');
-      expect(status.sound).toBe('loaded');
+      // Core modules should be marked as loaded
       expect(status.ai).toBe('loaded');
       expect(status.game).toBe('loaded');
     });
@@ -167,9 +164,6 @@ describe('Bridge Module Initialization', () => {
 
       // Manually set up the bridge status function
       const moduleStatus = {
-        gameUtils: 'loaded',
-        render: 'loaded',
-        sound: 'loaded',
         ai: 'loaded',
         game: 'loaded',
       };
@@ -183,33 +177,33 @@ describe('Bridge Module Initialization', () => {
         const errorString = error.toString ? error.toString() : String(error);
         const stack = error.stack || '';
 
-        // Check if error mentions a specific module
-        if (errorString.includes('gameUtils') || stack.includes('gameUtils')) {
-          moduleStatus.gameUtils = 'failed';
-          return 'gameUtils';
+        if (errorString.includes('ai') || stack.includes('ai')) {
+          moduleStatus.ai = 'failed';
+          return 'ai';
+        }
+        if (errorString.includes('Game') || stack.includes('Game')) {
+          moduleStatus.game = 'failed';
+          return 'game';
         }
         return null;
       };
 
       // Test the function with various errors
-      const gameUtilsError = new Error('Error in gameUtils module');
-      const result = findModuleFromError(gameUtilsError);
+      const aiError = new Error('Error in ai module');
+      const result = findModuleFromError(aiError);
 
       // The function should identify the module
-      expect(result).toBe('gameUtils');
+      expect(result).toBe('ai');
 
-      // The module status should be updated
-      expect(moduleStatus.gameUtils).toBe('failed');
+      expect(moduleStatus.ai).toBe('failed');
     });
 
     test('logs initialization success message', () => {
       // We'll directly test the logging behavior
-      console.log('ES6 utility and AI bridge modules loaded successfully');
+      console.log('ES6 bridge modules loaded successfully');
 
       // We've already spied on console.log in the beforeEach, so we're testing that our manual call worked
-      expect(console.log).toHaveBeenCalledWith(
-        'ES6 utility and AI bridge modules loaded successfully'
-      );
+      expect(console.log).toHaveBeenCalledWith('ES6 bridge modules loaded successfully');
     });
   });
 });

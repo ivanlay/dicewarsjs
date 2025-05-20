@@ -59,7 +59,7 @@ export {
 
 ## Bridge Components
 
-The bridge system is composed of several modules:
+The bridge system is composed of the following modules:
 
 1. **AI Bridge** (`src/bridge/ai.js`)
 
@@ -68,19 +68,10 @@ The bridge system is composed of several modules:
    - Exposes helper functions for AI lookups and player-to-AI mapping
    - Used by the legacy game.js for AI player moves
 
-2. **Game Utils Bridge** (`src/bridge/gameUtils.js`)
+2. **Game Bridge** (`src/bridge/Game.js`)
 
-   - Provides utility functions used throughout the game
-   - Contains helper functions for dice rolling, territory management, etc.
-
-3. **Render Bridge** (`src/bridge/render.js`)
-
-   - Exposes rendering functions to the global scope
-   - Handles drawing game elements
-
-4. **Sound Bridge** (`src/bridge/sound.js`)
-   - Provides sound handling functionality
-   - Manages game audio effects
+   - Exposes the ES6 `Game` class globally so legacy scripts can create the game
+     instance during migration
 
 ## Initialization Timing Issues
 

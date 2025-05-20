@@ -13,17 +13,18 @@ future refactors.
 
 Both of these bridges are still required while the legacy game engine is present.
 
-## Unused Bridges
+## Removed Bridges
 
-The following bridges are loaded via `src/bridge/index.js` but are not referenced
-by the remaining legacy scripts. They exist mainly for test coverage and can be
-deleted once tests and any leftover scripts are updated.
+The following bridge modules were previously kept solely for legacy test coverage
+but have now been removed:
 
 - `gameUtils.js`
 - `render.js`
 - `sound.js`
 - `ui.js`
 - `debugTools.js`
+
+Only `Game.js` and `ai.js` remain until the legacy engine is fully migrated.
 
 ## Removal Plan
 

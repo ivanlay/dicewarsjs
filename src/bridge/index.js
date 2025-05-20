@@ -11,23 +11,16 @@
  */
 
 // Import all bridge modules directly
-import './gameUtils.js';
-import './render.js';
-import './sound.js';
-import './ui.js';
 import './ai.js';
 import './Game.js';
-// Import debug tools (conditionally active in development mode)
-import './debugTools.js';
 // Import mechanics but only re-export non-conflicting parts
 import * as Mechanics from '@mechanics/index.js';
 
 // Export utility modules for ES6 usage
+export * from '@utils/config.js';
 export * from '@utils/gameUtils.js';
 export * from '@utils/render.js';
 export * from '@utils/sound.js';
-export * from '@utils/config.js';
-export * from '@utils/debugTools.js';
 
 // Export core modules for ES6 usage
 export { Game } from '../Game.js';
@@ -47,12 +40,8 @@ export * from '@ai/index.js';
 
 // Track module loading status
 const moduleStatus = {
-  gameUtils: 'loaded',
-  render: 'loaded',
-  sound: 'loaded',
   ai: 'loaded',
   game: 'loaded',
-  debugTools: process.env.NODE_ENV !== 'production' ? 'loaded' : 'not loaded (production)',
 };
 
 // Add a check method to verify all modules are loaded
@@ -78,24 +67,11 @@ function findModuleFromError(error) {
   const errorString = error.toString ? error.toString() : String(error);
   const stack = error.stack || '';
 
-  // Check if error mentions a specific module
-  if (errorString.includes('gameUtils') || stack.includes('gameUtils')) {
-    return 'gameUtils';
-  }
-  if (errorString.includes('render') || stack.includes('render')) {
-    return 'render';
-  }
-  if (errorString.includes('sound') || stack.includes('sound')) {
-    return 'sound';
-  }
   if (errorString.includes('ai') || stack.includes('ai')) {
     return 'ai';
   }
   if (errorString.includes('Game') || stack.includes('Game')) {
     return 'game';
-  }
-  if (errorString.includes('debugTools') || stack.includes('debugTools')) {
-    return 'debugTools';
   }
 
   return null;
@@ -128,4 +104,4 @@ window.verifyES6BridgeStatus = () => {
 };
 
 // Log bridge initialization with timestamp
-console.log(`[${new Date().toISOString()}] ES6 utility and AI bridge modules loaded successfully`);
+console.log(`[${new Date().toISOString()}] ES6 bridge modules loaded successfully`);
