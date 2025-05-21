@@ -78,6 +78,7 @@ interact with the modern ES6 modules:
 
 This inventory will guide the remaining migration effort by showing exactly
 which legacy files still need to be replaced or refactored.
+A key part of this ongoing audit is to determine the full migratability of `game.js` and `main.js`. While `src/Game.js` is the modern ES6 replacement for `game.js`, the extent to which all functionalities from the legacy `game.js` and `main.js` can be migrated versus needing an adapter layer will be continuously assessed.
 
 ### Phase 2: Infrastructure and Environment Setup (1-2 weeks)
 
@@ -106,6 +107,27 @@ Bundle analysis can be generated with `npm run build:analyze`. A helper script `
    - Create tools to verify global scope pollution
    - Build compatibility wrappers
 
+4. **Optimize Asset Handling in Build Process**:
+Review the usage of `CopyWebpackPlugin` in `webpack.common.js`. For modern builds, prioritize bundling of `src` files over direct copying. If direct copying is maintained for legacy compatibility, ensure this is documented and minimized for modern ES module outputs.
+
+*Specific areas of concern*:
+The `CopyWebpackPlugin` configuration currently copies several directories from `src/` (e.g., `src/mechanics`, `src/utils`, `src/models`, `src/state`, `src/ai`) and individual files like `src/Game-browser.js` and `src/gameWrapper.js` into the distribution folder.
+
+*Recommendations for Modern Build (`webpack.modern.js`)*:
+    *   **Investigate Necessity**: Determine if these copied `src/` directories and files are actively used as loose files in the modern build or if they are redundant due_to Webpack's bundling of ES6 imports starting from `src/index.js`.
+    *   **Prioritize Bundling**: For the modern ES6 build, the primary mechanism for including code from `src/` subdirectories should be through ES6 `import` statements that Webpack resolves and bundles. This allows for tree-shaking and optimized chunk generation.
+    *   **Reduce Redundancy**: Aim to remove `CopyWebpackPlugin` patterns for `src/` subdirectories in the modern build configuration if they are indeed bundled effectively. This might involve:
+        *   Ensuring all internal imports use resolvable paths (aliases or relative paths).
+        *   Verifying that no part of the modern application attempts to fetch these as separate files.
+    *   Files like `src/game-loader.js`, `src/Game-browser.js`, or `src/gameWrapper.js` might be exceptions if they serve specific roles as separate scripts even in a modern context, but this should be confirmed.
+
+*Recommendations for Legacy Build (`webpack.legacy.js`)*:
+    *   **Document Dependencies**: If the legacy scripts (e.g., root `game.js`, `main.js`) rely on these copied `src/` files being present at specific paths, this dependency should be clearly documented.
+    *   **Long-Term Elimination**: The ongoing ES6 migration should gradually eliminate the need for these copied raw `src` files, even for the legacy context, as legacy scripts are refactored or replaced by modules that correctly import bundled code.
+
+*Action Item*:
+    *   A developer should review the `CopyWebpackPlugin` setup. Start by trying to remove the concerning copy patterns for a modern build locally and test if the application still works correctly. This will help identify if these copies are truly redundant or if there are hidden dependencies. Document findings and adjust the build process accordingly.
+
 #### Deliverables:
 
 - Comprehensive test suite
@@ -123,19 +145,31 @@ Bundle analysis can be generated with `npm run build:analyze`. A helper script `
    - Add proper undo/redo functionality
    - Implement event system for state changes
    - Create proper game state serialization
+   - Ensure all data structures previously defined globally in `game.js` (like `AreaData`, `PlayerData`, etc.) are fully replaced by their ES6 module counterparts imported via `@models/index.js`.
 
 2. **Migrate Map Generation and Battle Resolution**
 
-   - Convert to ES6 modules with proper exports
-   - Implement TypedArray-based grid representation
-   - Create proper battle history tracking
-   - Optimize territory connectivity algorithms
+   - Fully migrate map generation logic from legacy `game.js` (including `make_map`, `percolate`, `set_area_line`) to ES6 modules under `src/mechanics/` (e.g., `mapGenerator.js`). Ensure functional parity and use of ES6 best practices.
+   - Implement TypedArray-based grid representation (verify relevance, current implementation uses standard arrays).
+   - Create proper battle history tracking.
+   - Fully migrate territory connectivity logic (`set_area_tc`) from legacy `game.js` to an appropriate ES6 module in `src/mechanics/`, ensuring functional parity.
+   - Optimize territory connectivity algorithms (this sub-point can be kept if distinct from the migration of `set_area_tc`).
 
 3. **Migrate Event System**
    - Create ES6 event system
    - Implement pub/sub pattern
    - Create bridge for legacy event handling
    - Add event debugging capabilities
+
+4. **Finalize AI System Migration**
+   - Ensure the AI handling mechanisms in `src/Game.js` (using `executeAIMove` from `aiHandler.js` and the `aiRegistry`) fully replace and provide parity with the legacy `com_thinking` function and AI initialization logic found in `game.js`. This includes ensuring robust error handling or fallback behavior if an AI function is not correctly configured for a player, similar to the legacy system's checks.
+   - Decommission reliance on globally defined AI functions (`window.ai_...`). This will involve removing the parts of `src/bridge/ai.js` that export AI functions to the `window` object, once no legacy component (primarily `game.js`) relies on these global references. The `AI_REGISTRY` in `src/ai/index.js` should become the sole source of truth for AI function mapping.
+   - Consolidate AI configuration management through `src/utils/config.js` and the `Game` instance's `applyConfig` method, phasing out any AI-related settings from the root `config.js` if they are redundant.
+
+5. **Assess and Migrate Legacy `main.js` Logic**
+   - Audit the root `main.js` to identify remaining legacy patterns, direct DOM manipulations, and dependencies on global state or functions from the old `game.js`.
+   - Plan and execute the migration of `main.js` functionalities to ES6 modules, potentially within `src/ui/`, `src/index.js` (for application entry point logic), or new specific modules.
+   - Focus on modernizing UI interaction, event handling, and game setup orchestration.
 
 #### Deliverables:
 
@@ -237,29 +271,34 @@ Bundle analysis can be generated with `npm run build:analyze`. A helper script `
 - Global namespace analysis
 - Test coverage report
 
-### Phase 7: Unmigratable Code Strategy (1 week)
+### Phase 7: Strategy for Difficult-to-Migrate Code (1 week)
 
 #### Tasks:
 
-1. **Identify Legacy Code Boundaries**
+1. **Identify Boundaries for Difficult-to-Migrate Code**
 
-   - Document unmigrateable components
-   - Create stable interfaces
-   - Establish boundary enforcement methods
-   - Define interface contracts
+   - Document components that are deemed too complex, high-risk, or low-benefit to fully rewrite into ES6 modules. Prime examples include parts of `game.js` and `main.js`, and particularly the Flash-generated `mc.js` which will be handled via an adapter.
+   - Create stable interfaces for these components.
+   - Establish boundary enforcement methods.
+   - Define interface contracts.
 
 2. **Create Legacy Adapters**
 
-   - Develop wrapper classes
-   - Implement proxy objects
-   - Document usage patterns
-   - Test adapter effectiveness
+   A key adapter, `src/adapters/MCAdapter.js`, has been created to interface with the Flash-generated `mc.js` (which likely exposes `window.MC`). This adapter is the designated ES6-compliant interface for all interactions with `mc.js`.
+   - **Audit codebase for `mc.js` interactions**: Conduct a thorough search of the entire codebase (especially legacy files like `main.js`, `game.js`, and any rendering-specific scripts) to identify all direct usages of `window.MC` or its associated functions.
+   - **Expand `MCAdapter.js`**: Based on the audit, extend `src/adapters/MCAdapter.js` by adding methods corresponding to all identified `mc.js` functionalities that the application requires. The existing `drawElement` and `addEventListener` methods serve as templates.
+   - **Refactor existing code**: Systematically refactor all parts of the codebase that directly interact with `window.MC` to instead import and use the `MCAdapter`.
+   - **Enforce Adapter Usage**: Ensure all new code requiring `mc.js` functionality uses the `MCAdapter` exclusively.
+   - Develop further wrapper classes for other identified difficult-to-migrate code, ensuring they expose a modern ES6 interface.
+   - Implement proxy objects where appropriate to bridge legacy patterns with modern ones.
+   - Document usage patterns for all adapters.
+   - Test adapter effectiveness in isolating legacy behavior and providing a clean interface.
 
 3. **Isolate Legacy Dependencies**
-   - Minimize dependencies on legacy code
-   - Create clear boundaries
-   - Use dependency injection
-   - Document integration points
+   - Minimize dependencies on any code not migrated to ES6 modules. The `MCAdapter.js` serves as a prime example of isolating the dependencies on the legacy `mc.js` file.
+   - Create clear boundaries between modern ES6 code and any remaining legacy code or adapters.
+   - Use dependency injection where possible to provide modern components to legacy code, rather than relying on global access.
+   - Document all integration points with legacy systems or adapters.
 
 #### Deliverables:
 
@@ -344,8 +383,8 @@ Bundle analysis can be generated with `npm run build:analyze`. A helper script `
 
 The migration will be considered successful when:
 
-1. **Zero global variables** exist except those absolutely required
-2. **100% ES6 module coverage** for all new and migrated code
+1. **Zero global variables** exist except those absolutely required or those isolated behind well-defined adapter modules for difficult-to-migrate legacy code.
+2. **100% ES6 module coverage** for all new and refactored code. Difficult-to-migrate legacy code will be interfaced through ES6 adapter modules.
 3. **Improved bundle size** and loading performance
 4. **Complete test coverage** for all migrated components
 5. **Identical game behavior** before and after migration
