@@ -254,6 +254,7 @@ A primary goal is the complete migration of functionality from the legacy `game.
 For any parts of `game.js`, `main.js`, or `mc.js` (Flash-generated) that are determined to be excessively complex or risky to fully rewrite, a robust adapter pattern will be employed. These adapters will create stable ES6-compliant interfaces, effectively isolating the legacy code and allowing the rest of the application to interact with them using modern JavaScript practices. The `MCAdapter` for `mc.js` is a key example of this approach.
 
 Key aspects of this strategy include:
+
 - **Establish clear boundaries**: Define stable interfaces between legacy and modern code.
 - **Use the adapter pattern**: Build wrapper classes/functions (like `MCAdapter`) around legacy components to expose them as ES6 modules.
 - **Implement proxy objects**: Where direct wrapping is insufficient, proxies can bridge modern ES6 code with legacy systems.

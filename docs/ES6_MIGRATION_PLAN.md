@@ -78,6 +78,7 @@ interact with the modern ES6 modules:
 
 This inventory will guide the remaining migration effort by showing exactly
 which legacy files still need to be replaced or refactored.
+
 A key part of this ongoing audit is to determine the full migratability of `game.js` and `main.js`. While `src/Game.js` is the modern ES6 replacement for `game.js`, the extent to which all functionalities from the legacy `game.js` and `main.js` can be migrated versus needing an adapter layer will be continuously assessed.
 
 ### Phase 2: Infrastructure and Environment Setup (1-2 weeks)
@@ -103,30 +104,35 @@ A key part of this ongoing audit is to determine the full migratability of `game
 Bundle analysis can be generated with `npm run build:analyze`. A helper script `npm run perf:check` verifies that the total bundle size remains under 250KB.
 
 3. **Create Migration Utilities**
+
    - Develop helper functions for common migration patterns
    - Create tools to verify global scope pollution
    - Build compatibility wrappers
 
 4. **Optimize Asset Handling in Build Process**:
-Review the usage of `CopyWebpackPlugin` in `webpack.common.js`. For modern builds, prioritize bundling of `src` files over direct copying. If direct copying is maintained for legacy compatibility, ensure this is documented and minimized for modern ES module outputs.
+   Review the usage of `CopyWebpackPlugin` in `webpack.common.js`. For modern builds, prioritize bundling of `src` files over direct copying. If direct copying is maintained for legacy compatibility, ensure this is documented and minimized for modern ES module outputs.
 
-*Specific areas of concern*:
+**Specific areas of concern**:
+
 The `CopyWebpackPlugin` configuration currently copies several directories from `src/` (e.g., `src/mechanics`, `src/utils`, `src/models`, `src/state`, `src/ai`) and individual files like `src/Game-browser.js` and `src/gameWrapper.js` into the distribution folder.
 
-*Recommendations for Modern Build (`webpack.modern.js`)*:
-    *   **Investigate Necessity**: Determine if these copied `src/` directories and files are actively used as loose files in the modern build or if they are redundant due_to Webpack's bundling of ES6 imports starting from `src/index.js`.
-    *   **Prioritize Bundling**: For the modern ES6 build, the primary mechanism for including code from `src/` subdirectories should be through ES6 `import` statements that Webpack resolves and bundles. This allows for tree-shaking and optimized chunk generation.
-    *   **Reduce Redundancy**: Aim to remove `CopyWebpackPlugin` patterns for `src/` subdirectories in the modern build configuration if they are indeed bundled effectively. This might involve:
-        *   Ensuring all internal imports use resolvable paths (aliases or relative paths).
-        *   Verifying that no part of the modern application attempts to fetch these as separate files.
-    *   Files like `src/game-loader.js`, `src/Game-browser.js`, or `src/gameWrapper.js` might be exceptions if they serve specific roles as separate scripts even in a modern context, but this should be confirmed.
+**Recommendations for Modern Build (`webpack.modern.js`)**:
 
-*Recommendations for Legacy Build (`webpack.legacy.js`)*:
-    *   **Document Dependencies**: If the legacy scripts (e.g., root `game.js`, `main.js`) rely on these copied `src/` files being present at specific paths, this dependency should be clearly documented.
-    *   **Long-Term Elimination**: The ongoing ES6 migration should gradually eliminate the need for these copied raw `src` files, even for the legacy context, as legacy scripts are refactored or replaced by modules that correctly import bundled code.
+- **Investigate Necessity**: Determine if these copied `src/` directories and files are actively used as loose files in the modern build or if they are redundant due to Webpack's bundling of ES6 imports starting from `src/index.js`.
+- **Prioritize Bundling**: For the modern ES6 build, the primary mechanism for including code from `src/` subdirectories should be through ES6 `import` statements that Webpack resolves and bundles. This allows for tree-shaking and optimized chunk generation.
+- **Reduce Redundancy**: Aim to remove `CopyWebpackPlugin` patterns for `src/` subdirectories in the modern build configuration if they are indeed bundled effectively. This might involve:
+  - Ensuring all internal imports use resolvable paths (aliases or relative paths).
+  - Verifying that no part of the modern application attempts to fetch these as separate files.
+- Files like `src/game-loader.js`, `src/Game-browser.js`, or `src/gameWrapper.js` might be exceptions if they serve specific roles as separate scripts even in a modern context, but this should be confirmed.
 
-*Action Item*:
-    *   A developer should review the `CopyWebpackPlugin` setup. Start by trying to remove the concerning copy patterns for a modern build locally and test if the application still works correctly. This will help identify if these copies are truly redundant or if there are hidden dependencies. Document findings and adjust the build process accordingly.
+**Recommendations for Legacy Build (`webpack.legacy.js`)**:
+
+- **Document Dependencies**: If the legacy scripts (e.g., root `game.js`, `main.js`) rely on these copied `src/` files being present at specific paths, this dependency should be clearly documented.
+- **Long-Term Elimination**: The ongoing ES6 migration should gradually eliminate the need for these copied raw `src` files, even for the legacy context, as legacy scripts are refactored or replaced by modules that correctly import bundled code.
+
+**Action Item**:
+
+- A developer should review the `CopyWebpackPlugin` setup. Start by trying to remove the concerning copy patterns for a modern build locally and test if the application still works correctly. This will help identify if these copies are truly redundant or if there are hidden dependencies. Document findings and adjust the build process accordingly.
 
 #### Deliverables:
 
@@ -150,18 +156,21 @@ The `CopyWebpackPlugin` configuration currently copies several directories from 
 2. **Migrate Map Generation and Battle Resolution**
 
    - Fully migrate map generation logic from legacy `game.js` (including `make_map`, `percolate`, `set_area_line`) to ES6 modules under `src/mechanics/` (e.g., `mapGenerator.js`). Ensure functional parity and use of ES6 best practices.
-   - Implement TypedArray-based grid representation (verify relevance, current implementation uses standard arrays).
-   - Create proper battle history tracking.
-   - Fully migrate territory connectivity logic (`set_area_tc`) from legacy `game.js` to an appropriate ES6 module in `src/mechanics/`, ensuring functional parity.
-   - Optimize territory connectivity algorithms (this sub-point can be kept if distinct from the migration of `set_area_tc`).
+
+- Implement TypedArray-based grid representation (verify relevance, current implementation uses standard arrays).
+- Create proper battle history tracking.
+- Fully migrate territory connectivity logic (`set_area_tc`) from legacy `game.js` to an appropriate ES6 module in `src/mechanics/`, ensuring functional parity.
+- Optimize territory connectivity algorithms (this sub-point can be kept if distinct from the migration of `set_area_tc`).
 
 3. **Migrate Event System**
+
    - Create ES6 event system
    - Implement pub/sub pattern
    - Create bridge for legacy event handling
    - Add event debugging capabilities
 
 4. **Finalize AI System Migration**
+
    - Ensure the AI handling mechanisms in `src/Game.js` (using `executeAIMove` from `aiHandler.js` and the `aiRegistry`) fully replace and provide parity with the legacy `com_thinking` function and AI initialization logic found in `game.js`. This includes ensuring robust error handling or fallback behavior if an AI function is not correctly configured for a player, similar to the legacy system's checks.
    - Decommission reliance on globally defined AI functions (`window.ai_...`). This will involve removing the parts of `src/bridge/ai.js` that export AI functions to the `window` object, once no legacy component (primarily `game.js`) relies on these global references. The `AI_REGISTRY` in `src/ai/index.js` should become the sole source of truth for AI function mapping.
    - Consolidate AI configuration management through `src/utils/config.js` and the `Game` instance's `applyConfig` method, phasing out any AI-related settings from the root `config.js` if they are redundant.
@@ -285,6 +294,7 @@ The `CopyWebpackPlugin` configuration currently copies several directories from 
 2. **Create Legacy Adapters**
 
    A key adapter, `src/adapters/MCAdapter.js`, has been created to interface with the Flash-generated `mc.js` (which likely exposes `window.MC`). This adapter is the designated ES6-compliant interface for all interactions with `mc.js`.
+
    - **Audit codebase for `mc.js` interactions**: Conduct a thorough search of the entire codebase (especially legacy files like `main.js`, `game.js`, and any rendering-specific scripts) to identify all direct usages of `window.MC` or its associated functions.
    - **Expand `MCAdapter.js`**: Based on the audit, extend `src/adapters/MCAdapter.js` by adding methods corresponding to all identified `mc.js` functionalities that the application requires. The existing `drawElement` and `addEventListener` methods serve as templates.
    - **Refactor existing code**: Systematically refactor all parts of the codebase that directly interact with `window.MC` to instead import and use the `MCAdapter`.
@@ -454,7 +464,7 @@ export class DeferredComponent {
 ## References
 
 - [Bridge Architecture](./BRIDGE_ARCHITECTURE.md)
-- [Project Roadmap](./roadmap.md)
+- [Project Roadmap](./ROADMAP.md)
 - [ES6 Improvements](./es6-improvements/)
   - [Immutable Patterns](./es6-improvements/immutable-patterns.md)
   - [Map Data Structures](./es6-improvements/map-data-structures.md)
