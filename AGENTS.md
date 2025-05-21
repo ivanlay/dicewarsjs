@@ -4,6 +4,8 @@ This file provides guidance to AI coding assistants when working with code in th
 
 > **Note**: This file mirrors CLAUDE.md to ensure all AI agents work from the same best practices and have consistent understanding of the project.
 
+**Important Project Status Update:** The project's ES6 migration plan and roadmap have been recently updated (see `docs/ES6_MIGRATION_PLAN.md` and `docs/ROADMAP.md`). Please refer to these documents for the latest architectural goals and migration strategies when assisting with code changes.
+
 ## Git Workflow Preferences
 
 When working with git:

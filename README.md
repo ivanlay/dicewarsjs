@@ -15,6 +15,8 @@ This fork significantly extends the project with:
 - Comprehensive documentation for players and developers
 - Developer tooling and quality assurance
 
+The project is currently undergoing a significant modernization effort, migrating to ES6+ modules and practices. See our [ES6 Migration Plan](docs/ES6_MIGRATION_PLAN.md) and [Project Roadmap](docs/ROADMAP.md) for more details.
+
 ## Features
 
 - Multiple AI players with different strategies
@@ -193,23 +195,31 @@ export const GAME_CONFIG = {
 
 ## Project Architecture
 
-This project uses a modern architecture that bridges legacy code with new ES6+ practices:
+This project is transitioning to a modern architecture. The `src/` directory contains all modern ES6+ code and represents the future direction of the codebase. Legacy scripts located in the root directory (e.g., `game.js`, `main.js`, `areadice.js`, `mc.js`) are being progressively migrated into the `src/` structure or replaced by ES6 modules.
 
 ```
 dicewarsjs/
-├── src/                     # Source files (modern ES6 code)
+├── src/                     # Source files (modern ES6 code - the future!)
 │   ├── ai/                  # AI implementations
-│   ├── components/          # UI components
+│   ├── adapters/            # Adapters for difficult-to-migrate legacy code (e.g., MCAdapter.js)
+│   ├── bridge/              # Bridge modules (temporary, for legacy compatibility)
+│   ├── mechanics/           # Core game mechanics (e.g., map generation, battle logic)
+│   ├── models/              # Data structures
+│   ├── state/               # Game state management
+│   ├── ui/                  # UI components and logic
 │   ├── utils/               # Utility functions
-│   ├── game.js              # Game logic
-│   └── index.js             # Entry point
+│   ├── Game.js              # Modern main game class
+│   └── index.js             # Main entry point for the modern application
+├── game.js                  # Legacy game logic (being migrated to src/Game.js and src/mechanics/)
+├── main.js                  # Legacy main script (being migrated to src/ui/ and src/index.js)
+├── mc.js                    # Legacy Flash-generated graphics library (interfaced via MCAdapter.js)
+├── areadice.js              # Legacy utility (being migrated)
 ├── dist/                    # Production build output
-├── public/                  # Static assets
 ├── docs/                    # Documentation
 │   ├── ai-strategies/       # AI strategy documentation
 │   └── ...                  # Other documentation
 ├── webpack.common.js        # Shared webpack configuration
-├── webpack.legacy.js        # Legacy build config (defer scripts)
+├── webpack.legacy.js        # Legacy build config
 ├── webpack.modern.js        # Modern ES module build config
 ├── .eslintrc.js             # ESLint configuration
 └── package.json             # Dependencies and scripts
@@ -217,13 +227,13 @@ dicewarsjs/
 
 ### Bridge Architecture
 
-The project uses a bridge pattern to transition from legacy code to modern JavaScript:
+The project currently uses a bridge pattern to transition from legacy JavaScript to modern ES6 modules. This allows new code to be written using modern practices while maintaining compatibility with older parts of the system.
 
-1. **Modern Code**: New code is written using ES6 modules and modern practices
-2. **Legacy Compatibility**: Bridge modules expose newer code to legacy code
-3. **Incremental Migration**: Allows gradual modernization without breaking changes
+1.  **Modern Code**: New features and refactored components are developed as ES6 modules within the `src/` directory.
+2.  **Legacy Compatibility**: Specific bridge modules (primarily under `src/bridge/`) expose functionalities from the modern ES6 modules to the global scope, making them accessible to legacy scripts that expect global variables and functions.
+3.  **Incremental Migration**: This setup allows for a gradual modernization process. Components are migrated one by one, minimizing disruption and ensuring the game remains functional throughout the transition.
 
-For more details, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md).
+For more details, see [BRIDGE_ARCHITECTURE.md](./docs/BRIDGE_ARCHITECTURE.md). This bridge is a temporary measure to facilitate the migration. Our goal is to eventually have a fully ES6-module-based codebase or use adapters for any truly unmigratable legacy parts, as detailed in the ES6 Migration Plan.
 
 ## Development Workflow
 

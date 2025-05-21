@@ -71,6 +71,8 @@ This document outlines the current development status, immediate next steps, and
 
 ### Phase 3: Core Components Migration
 
+A primary goal is the complete migration of functionality from the legacy `game.js` and `main.js` files into the modern `src/Game.js` ES6 module and its supporting modular utilities. This includes game state management, map generation, battle resolution, and UI interaction logic.
+
 1. **Complete Game State Management**
 
    - Finish implementation of immutable state patterns
@@ -127,7 +129,7 @@ This document outlines the current development status, immediate next steps, and
    - Update code to use ES6 module exports directly
    - Clean up global namespace gradually
 
-### Phase 7: Unmigratable Code Strategy
+### Phase 7: Strategy for Difficult-to-Migrate Code
 
 1. **Identify Legacy Code Boundaries**
 
@@ -247,23 +249,26 @@ This document outlines the current development status, immediate next steps, and
 
 ## Long-Term Vision
 
-### 1. Strategy for Unmigratable Legacy Code
+### 1. Strategy for Difficult-to-Migrate Legacy Code
 
-Some files in the codebase (like mc.js) may never be fully migrateable to ES6 modules since they were originally generated from Adobe Flash. To handle this reality:
+For any parts of `game.js`, `main.js`, or `mc.js` (Flash-generated) that are determined to be excessively complex or risky to fully rewrite, a robust adapter pattern will be employed. These adapters will create stable ES6-compliant interfaces, effectively isolating the legacy code and allowing the rest of the application to interact with them using modern JavaScript practices. The `MCAdapter` for `mc.js` is a key example of this approach.
 
-- **Establish clear boundaries**: Create stable interfaces between legacy and modern code
-- **Use the adapter pattern**: Build wrapper classes/functions around legacy components
-- **Implement proxy objects**: Modern ES6 code that communicates with legacy systems
-- **Dependency injection**: Pass modern components into legacy code rather than direct access
-- **Documentation**: Clearly mark which files must remain as legacy code
+Key aspects of this strategy include:
+
+- **Establish clear boundaries**: Define stable interfaces between legacy and modern code.
+- **Use the adapter pattern**: Build wrapper classes/functions (like `MCAdapter`) around legacy components to expose them as ES6 modules.
+- **Implement proxy objects**: Where direct wrapping is insufficient, proxies can bridge modern ES6 code with legacy systems.
+- **Dependency injection**: Pass modern components into legacy code rather than allowing direct global access, where feasible.
+- **Documentation**: Clearly mark which files or parts of files are treated as legacy and interfaced via adapters.
 
 ```javascript
 // Example of an adapter for mc.js (Flash-generated code)
+// The MCAdapter serves as a blueprint for handling difficult-to-migrate code.
 export class MCAdapter {
   constructor() {
-    // Ensure MC is available globally
+    // Ensure MC is available globally or loaded appropriately
     if (!window.MC) {
-      throw new Error('MC not initialized');
+      throw new Error('MC (legacy component) not initialized');
     }
     this.mc = window.MC;
   }
@@ -271,17 +276,26 @@ export class MCAdapter {
   // Modern ES6 methods that wrap legacy functionality
   drawElement(element, properties) {
     // Call legacy methods with appropriate parameters
+    // This demonstrates a direct pass-through, but could include transformation logic
     this.mc.drawElement(element, properties);
-    return this;
+    return this; // Allow chaining if appropriate
   }
 
-  // Event system to bridge between legacy and modern code
-  addEventListener(event, callback) {
-    // Set up legacy event handler that calls modern callback
-    this.mc.setEventHandler(event, (...args) => {
-      callback(...args);
-    });
+  // Example of bridging an event system or callback mechanism
+  addEventListener(eventName, modernCallback) {
+    // Adapt to the legacy event subscription model
+    // This is a hypothetical example; actual implementation depends on mc.js
+    if (this.mc.setEventHandler) {
+      this.mc.setEventHandler(eventName, (...legacyArgs) => {
+        // Potentially transform legacyArgs before passing to modernCallback
+        modernCallback(...legacyArgs);
+      });
+    } else {
+      console.warn('Legacy component does not support setEventHandler');
+    }
   }
+
+  // Add other methods as needed to interface with mc.js features
 }
 ```
 

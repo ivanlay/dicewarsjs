@@ -178,6 +178,8 @@ Long-term steps:
 3. Remove global exports from bridge modules
 4. Eventually remove bridge modules entirely
 
+This bridge architecture is a critical transitional tool. For the detailed strategy on phasing out legacy code, reducing reliance on the bridge, and the eventual goal of a fully modernized codebase (either pure ES6 or ES6 with adapters for difficult-to-migrate code), please refer to the [ES6 Migration Plan](./ES6_MIGRATION_PLAN.md) and the [Project Roadmap](./ROADMAP.md).
+
 ## Recent Fixes
 
 We recently fixed an issue where the Game object was trying to access AI functions before they were available in the global scope:
