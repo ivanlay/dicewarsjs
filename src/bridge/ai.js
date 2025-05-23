@@ -5,6 +5,9 @@
  * for compatibility with the legacy code while enabling the incremental transition to ES6.
  */
 
+// Import initialization system
+import { initCallbacks } from './initialization.js';
+
 // Import ES6 module implementations and configuration
 import {
   AI_STRATEGIES,
@@ -25,76 +28,70 @@ export {
   DEFAULT_AI_ASSIGNMENTS,
 };
 
-// Create fallback AI function that returns random valid moves
-const fallbackAI = (game, playerIndex) => {
-  console.error('Using fallback AI function');
-  // Simple fallback that attempts to return a basic move
-  if (!game?.areas?.length) {
-    console.error('Invalid game state provided to fallback AI');
-    return null;
-  }
-
-  // Find territories owned by this player
-  const playerTerritories = game.areas
-    .map((area, index) => ({ index, area }))
-    .filter(({ area }) => area.owner === playerIndex);
-
-  if (playerTerritories.length === 0) {
-    return null; // No territories left
-  }
-
-  // Return a random territory index as a basic move
-  return playerTerritories[Math.floor(Math.random() * playerTerritories.length)].index;
+// Create fallback AI function that returns 0 (end turn)
+const fallbackAI = game => {
+  console.warn('Using fallback AI function - ending turn');
+  // Legacy AI functions return 0 to end their turn
+  return 0;
 };
 
-// Create fallback AI wrappers
-const fallbacks = {
-  ai_default: (game, playerIndex) => {
-    console.error('ai_default not found in AI module, using fallback');
-    return fallbackAI(game, playerIndex);
-  },
-  ai_defensive: (game, playerIndex) => {
-    console.error('ai_defensive not found in AI module, using fallback');
-    return fallbackAI(game, playerIndex);
-  },
-  ai_example: (game, playerIndex) => {
-    console.error('ai_example not found in AI module, using fallback');
-    return fallbackAI(game, playerIndex);
-  },
-  ai_adaptive: (game, playerIndex) => {
-    console.error('ai_adaptive not found in AI module, using fallback');
-    return fallbackAI(game, playerIndex);
-  },
+// Create placeholder AI functions that will be replaced
+const createPlaceholder = name => {
+  const placeholder = function (game) {
+    console.warn(`${name} called before initialization - using fallback`);
+    return fallbackAI(game);
+  };
+  // Mark as placeholder for detection
+  placeholder.isPlaceholder = true;
+  placeholder.aiName = name;
+  return placeholder;
 };
 
-// Export all AI functions to the global scope for legacy code compatibility
+// Initialize placeholders immediately (synchronous)
+window.AI_REGISTRY = window.AI_REGISTRY || {};
+window.ai_default = createPlaceholder('ai_default');
+window.ai_defensive = createPlaceholder('ai_defensive');
+window.ai_example = createPlaceholder('ai_example');
+window.ai_adaptive = createPlaceholder('ai_adaptive');
+
+// Also add to registry
+window.AI_REGISTRY.ai_default = window.ai_default;
+window.AI_REGISTRY.ai_defensive = window.ai_defensive;
+window.AI_REGISTRY.ai_example = window.ai_example;
+window.AI_REGISTRY.ai_adaptive = window.ai_adaptive;
+
+console.log('[AI Bridge] Placeholders installed');
+
+// Load actual AI implementations asynchronously
 (async () => {
   try {
-    // Initialize the AI registry if it doesn't exist
-    if (!window.AI_REGISTRY) {
-      window.AI_REGISTRY = {};
-      console.log('Created global AI_REGISTRY');
-    }
+    const loadedAIs = {};
+    const aiNames = ['ai_default', 'ai_defensive', 'ai_example', 'ai_adaptive'];
 
-    const exposeAI = async key => {
+    // Load all AI strategies
+    const loadPromises = aiNames.map(async key => {
       try {
-        const fn = await AI_STRATEGIES[key].loader();
-        window[key] = fn;
-        window.AI_REGISTRY[key] = fn;
-        console.log(`ES6 ${key} loaded successfully`);
-      } catch {
-        console.warn(`ES6 ${key} not found, using fallback`);
-        window[key] = fallbacks[key];
-        window.AI_REGISTRY[key] = fallbacks[key];
+        if (AI_STRATEGIES[key] && AI_STRATEGIES[key].loader) {
+          const fn = await AI_STRATEGIES[key].loader();
+          loadedAIs[key] = fn;
+          console.log(`[AI Bridge] Loaded ${key}`);
+        } else {
+          console.warn(`[AI Bridge] No loader for ${key}`);
+          loadedAIs[key] = fallbackAI;
+        }
+      } catch (error) {
+        console.error(`[AI Bridge] Failed to load ${key}:`, error);
+        loadedAIs[key] = fallbackAI;
       }
-    };
+    });
 
-    await Promise.all([
-      exposeAI('ai_default'),
-      exposeAI('ai_defensive'),
-      exposeAI('ai_example'),
-      exposeAI('ai_adaptive'),
-    ]);
+    await Promise.all(loadPromises);
+
+    // Replace placeholders with actual implementations
+    Object.entries(loadedAIs).forEach(([key, fn]) => {
+      window[key] = fn;
+      window.AI_REGISTRY[key] = fn;
+    });
 
     // Expose the configuration utility functions
     window.AI_STRATEGIES = AI_STRATEGIES;
@@ -104,30 +101,41 @@ const fallbacks = {
     window.getAllAIStrategies = getAllAIStrategies;
     window.createAIFunctionMapping = createAIFunctionMapping;
 
-    console.log('AI bridge module initialized successfully with configuration utilities');
+    // Helper function to get AI by name (for legacy compatibility)
+    window.getAIFunctionByName = name => {
+      if (window.AI_REGISTRY[name]) {
+        return window.AI_REGISTRY[name];
+      }
+      console.warn(`AI function ${name} not found, using default`);
+      return window.AI_REGISTRY.ai_default || fallbackAI;
+    };
+
+    console.log('[AI Bridge] All AI functions loaded successfully');
+
+    // Signal that AI module is ready
+    initCallbacks.aiReady();
   } catch (error) {
-    console.error('Failed to initialize AI bridge module:', error);
+    console.error('[AI Bridge] Critical error during initialization:', error);
 
-    if (!window.AI_REGISTRY) {
-      window.AI_REGISTRY = {};
-      console.log('Created global AI_REGISTRY in error handler');
-    }
+    // Ensure fallbacks are in place
+    const aiNames = ['ai_default', 'ai_defensive', 'ai_example', 'ai_adaptive'];
+    aiNames.forEach(key => {
+      if (!window[key] || window[key].isPlaceholder) {
+        window[key] = fallbackAI;
+        window.AI_REGISTRY[key] = fallbackAI;
+      }
+    });
 
-    window.ai_default = fallbacks.ai_default;
-    window.ai_defensive = fallbacks.ai_defensive;
-    window.ai_example = fallbacks.ai_example;
-    window.ai_adaptive = fallbacks.ai_adaptive;
-
-    window.AI_REGISTRY.ai_default = fallbacks.ai_default;
-    window.AI_REGISTRY.ai_defensive = fallbacks.ai_defensive;
-    window.AI_REGISTRY.ai_example = fallbacks.ai_example;
-    window.AI_REGISTRY.ai_adaptive = fallbacks.ai_adaptive;
-
+    // Set up minimal utility functions
     window.AI_STRATEGIES = {};
     window.DEFAULT_AI_ASSIGNMENTS = [];
-    window.getAIById = fallbacks.ai_default;
-    window.getAIImplementation = fallbacks.ai_default;
+    window.getAIById = () => fallbackAI;
+    window.getAIImplementation = () => fallbackAI;
     window.getAllAIStrategies = () => [];
-    window.createAIFunctionMapping = () => [];
+    window.createAIFunctionMapping = () => ({});
+    window.getAIFunctionByName = () => fallbackAI;
+
+    // Signal error
+    initCallbacks.aiReady(error);
   }
 })();

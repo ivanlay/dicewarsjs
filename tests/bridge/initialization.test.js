@@ -93,7 +93,7 @@ describe('Bridge Module Initialization', () => {
 
       // Check that success message was logged
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('AI bridge module initialized successfully')
+        expect.stringContaining('[AI Bridge] All AI functions loaded successfully')
       );
     });
 
@@ -155,8 +155,8 @@ describe('Bridge Module Initialization', () => {
       const status = window.checkBridgeStatus();
 
       // Core modules should be marked as loaded
-      expect(status.ai).toBe('loaded');
-      expect(status.game).toBe('loaded');
+      expect(status.ai).toEqual({ initialized: true, error: null });
+      expect(status.game).toEqual({ initialized: true, error: null });
     });
 
     test('handles errors in findModuleFromError function', () => {

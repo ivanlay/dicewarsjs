@@ -2,7 +2,32 @@
 
 This document outlines the current development status, immediate next steps, and long-term vision for the DiceWarsJS project.
 
-## Recent Accomplishments
+## Recent Accomplishments (Updated)
+
+### ES6 Migration Foundation
+
+1. **Legacy Code Audit Completed**
+
+   - Comprehensive analysis of game.js, main.js, mc.js, areadice.js
+   - Identified migration boundaries and difficulty levels
+   - Created detailed migration strategies for each file
+   - Documented in `docs/LEGACY_CODE_AUDIT.md`
+
+2. **Webpack Configuration Optimized**
+
+   - Fixed CopyWebpackPlugin redundancy in modern builds
+   - Reduced dist folder by ~84KB of unnecessary files
+   - Split configuration into common, legacy, and modern builds
+   - Documented in `docs/fixes/WEBPACK_COPYWEBPACKPLUGIN_FIX.md`
+
+3. **Robust Bridge Initialization Pattern**
+   - Created initialization system preventing timing issues
+   - Implemented promise-based coordination
+   - Added immediate placeholders for AI functions
+   - Includes timeout protection and graceful degradation
+   - Documented in `docs/BRIDGE_INITIALIZATION_PATTERN.md`
+
+### Previous Accomplishments
 
 1. **Fixed Development Environment Configuration**
 
@@ -19,310 +44,226 @@ This document outlines the current development status, immediate next steps, and
    - Fixed "AI function not found" warnings
    - Implemented proper AI configuration in both legacy and modern systems
 
-3. **Webpack Configuration Split**
-
-   - Replaced the single `webpack.config.js` with `webpack.common.js`,
-     `webpack.legacy.js` and `webpack.modern.js`
-   - Added npm scripts for modern and legacy builds and `build:all`
-
-4. **Sound System Enhancement**
-
+3. **Sound System Enhancement**
    - Added event listener to initialize AudioContext on user gesture
    - Implemented proper sound system initialization sequence
    - Changed dynamic imports to direct file paths
    - Added explicit file type indication for CreateJS Sound API
 
-5. **Phase 1 Code Audit Completed**
-   - Documented remaining legacy scripts and global variables
-   - Mapped bridge modules that expose ES6 modules globally
-   - Recorded ES6 counterparts for all legacy files
+## Immediate Next Steps (Priority Order)
+
+### 1. Expand Adapter Pattern Documentation (Medium Priority)
+
+- Create comprehensive guide with multiple examples beyond MCAdapter
+- Document patterns for:
+  - UI component adapters
+  - Event system adapters
+  - State management adapters
+- Include best practices and anti-patterns
+
+### 2. Establish Performance Benchmarks (Medium Priority)
+
+- Measure current game performance metrics
+- Create automated performance testing suite
+- Document baseline metrics for:
+  - Initial load time
+  - Map generation speed
+  - AI decision time
+  - Rendering performance
+
+### 3. Create Component Migration Checklist (Medium Priority)
+
+- Develop standardized checklist template
+- Include pre-migration requirements
+- Add testing requirements
+- Create post-migration validation steps
+
+### 4. Increase Bridge Test Coverage (Medium Priority)
+
+- Expand test suite for bridge components
+- Add integration tests for timing scenarios
+- Create tests for error conditions
+- Implement regression test suite
+
+### 5. Document Global Variable Dependencies (Low Priority)
+
+- Create comprehensive list of all global variables
+- Map dependencies between globals
+- Plan systematic removal strategy
+- Create migration priority list
 
 ## Comprehensive ES6 Migration Plan
 
-### Phase 1: Assessment and Planning
+### Phase 1: Assessment and Planning ✓ COMPLETED
 
-1. **Complete Code Audit**
+- ✓ Complete code audit of legacy files
+- ✓ Map global variables and functions
+- ✓ Document bridge pattern usage
+- ✓ Create migration strategies
 
-   - Map all remaining global variables and functions that need migration
-   - Identify interdependencies between legacy and modern code
-   - Document which files are using the bridge pattern and their current state
-   - Create a dependency graph to visualize the migration path
+### Phase 2: Infrastructure and Environment Setup (IN PROGRESS)
 
-2. **Establish Migration Priorities**
-   - Prioritize components based on complexity, dependencies, and strategic value
-   - Create a detailed component-by-component migration schedule
-   - Define success criteria for each migration phase
-   - Establish measurable goals and performance benchmarks
+1. **Testing Infrastructure** (Next Focus)
 
-### Phase 2: Infrastructure and Environment Setup
+   - Create comprehensive tests for bridge components
+   - Implement integration tests for bridge functionality
+   - Set up automated backwards compatibility tests
+   - See [PHASE2_TESTING_PLAN.md](./PHASE2_TESTING_PLAN.md)
 
-1. **Enhance Testing Infrastructure**
-
-   - Create comprehensive tests for all bridge components
-   - Implement integration tests to verify bridge functionality
-   - Set up automated tests to verify backwards compatibility
-   - See [PHASE2_TESTING_PLAN.md](./PHASE2_TESTING_PLAN.md) for the detailed testing roadmap
-
-2. **Refine Build Pipeline**
-   - Optimize webpack configuration for faster development builds
-   - Configure distinct development and production builds
-   - Implement proper source maps for debugging (development and production)
-   - Set up bundle size analysis with size limits (`npm run build:analyze` and `npm run perf:check`)
+2. **Build Pipeline Refinement** ✓ PARTIALLY COMPLETE
+   - ✓ Optimize webpack configuration
+   - ✓ Configure development and production builds
+   - ✓ Implement source maps
+   - ✓ Set up bundle analysis
+   - TODO: Implement stricter size limits
 
 ### Phase 3: Core Components Migration
 
-A primary goal is the complete migration of functionality from the legacy `game.js` and `main.js` files into the modern `src/Game.js` ES6 module and its supporting modular utilities. This includes game state management, map generation, battle resolution, and UI interaction logic.
+Based on the legacy code audit, the migration priority is:
 
-1. **Complete Game State Management**
+1. **Game State Management** (game.js - Moderate Difficulty)
 
-   - Finish implementation of immutable state patterns
-   - Add proper undo/redo functionality
-   - Implement event system for state changes
+   - Extract data models (AreaData, PlayerData, etc.)
+   - Implement immutable state patterns
+   - Create event system for state changes
+   - Add undo/redo functionality
 
-2. **Migrate Map Generation and Battle Resolution**
+2. **Pure Game Logic** (game.js - Easy to Moderate)
 
-   - Convert to ES6 modules with proper exports
-   - Implement TypedArray-based grid representation
-   - Create proper battle history tracking
+   - Map generation algorithm (`make_map`, `percolate`)
+   - Territory connectivity (`set_area_tc`)
+   - Battle calculations
+   - History system
 
-3. **Migrate Event System**
-   - Create ES6 event system to replace direct function calls
-   - Implement pub/sub pattern for game events
-   - Create bridge for legacy event handling
+3. **Game Flow Control** (main.js - Hard, Use Adapters)
+   - Extract state machine logic
+   - Create GameStateManager
+   - Separate from CreateJS dependencies
+   - Use adapter pattern for UI
 
 ### Phase 4: UI and Interaction Migration
 
-1. **Modernize Rendering Pipeline**
+1. **Create UI Adapters** (main.js - Hard)
 
-   - Complete transition from global render functions to module-based
-   - Implement canvas abstraction layer
-   - Separate render logic from game state
+   - MainAdapter for CreateJS functionality
+   - Wrap sprite management
+   - Abstract animation sequences
+   - Bridge event systems
 
-2. **Update Input Handling and UI Components**
-   - Replace direct DOM event handlers with proper event system
-   - Convert hardcoded UI to component-based approach
-   - Implement proper UI state management
+2. **Extract Non-Visual Logic** (main.js - Moderate)
+   - Input validation
+   - Score calculation
+   - Configuration management
+   - Game flow logic
 
 ### Phase 5: Error Handling and Optimization
 
 1. **Implement Error Boundaries**
 
-   - Create proper error handling system
-   - Add graceful degradation for critical components
-   - Implement logging and error reporting
+   - Use custom error classes from mechanics/errors/
+   - Add graceful degradation
+   - Implement comprehensive logging
 
 2. **Performance Optimization**
-   - Apply TypedArrays for performance-critical operations
-   - Implement Map and Set data structures where appropriate
-   - Optimize rendering loop and memory management
+   - Apply findings from performance benchmarks
+   - Implement TypedArrays for grid operations
+   - Use Map/Set for O(1) lookups
+   - Optimize rendering pipeline
 
 ### Phase 6: Bridge Reduction
 
-1. **Identify Safe Bridge Removals**
+1. **Safe Bridge Removals** (After Testing)
 
-   - Analyze bridge component usage
-   - Create a list of safe bridge removals
-   - Document impact and risks
+   - Analyze bridge usage patterns
+   - Identify unused bridge exports
+   - Remove redundant bridge code
+   - Update direct imports
 
-2. **Implement Direct Module References**
-   - Replace bridge imports with direct module imports
-   - Update code to use ES6 module exports directly
-   - Clean up global namespace gradually
+2. **Direct Module References**
+   - Replace bridge imports gradually
+   - Update to use ES6 exports directly
+   - Clean global namespace systematically
 
-### Phase 7: Strategy for Difficult-to-Migrate Code
+### Phase 7: Legacy Code Isolation
 
-1. **Identify Legacy Code Boundaries**
+Based on audit findings:
 
-   - Document which components must remain as legacy code
-   - Create stable interfaces for these components
-   - Implement proper adapter pattern
+1. **Permanent Legacy Components**
 
-2. **Create Legacy Adapters**
-   - Develop wrapper classes for legacy components
-   - Implement proxy objects for legacy interfaces
-   - Isolate legacy dependencies
+   - mc.js - Keep MCAdapter pattern
+   - areadice.js - Access through adapter
+   - CreateJS rendering in main.js
+
+2. **Adapter Implementation**
+   - Expand MCAdapter pattern
+   - Create RenderAdapter for CreateJS
+   - Implement EventAdapter for input
+   - Document adapter interfaces
 
 ### Phase 8: Documentation and Cleanup
 
-1. **Update Development Documentation**
+1. **Architecture Documentation**
 
-   - Create detailed architecture documents
-   - Update API references
-   - Provide migration notes for remaining tasks
+   - Update with final module structure
+   - Document adapter patterns
+   - Create migration guide
 
-2. **Code Cleanup**
+2. **Code Standardization**
+   - Apply consistent naming
    - Remove dead code
-   - Standardize naming conventions
-   - Apply consistent formatting
+   - Format with Prettier
 
-### Phase 9: Final Bridge Removal
+### Phase 9: Final Migration
 
-1. **Remove Bridge Components**
-
-   - Once direct module imports are used consistently, remove bridge modules
-   - Update any remaining references
-   - Test extensively
-
-2. **Update Entry Points**
-   - Update HTML to use bundled module
-   - Remove legacy script loading
-   - Finalize webpack configuration
+1. **Remove Legacy Dependencies**
+   - Phase out game.js (after full migration)
+   - Minimize main.js to adapter only
+   - Remove bridge modules
+   - Update entry points
 
 ## Success Metrics
 
-1. **Zero global variables** except those absolutely required
-2. **100% ES6 module coverage** for all new and migrated code
-3. **Improved bundle size** and loading performance
-4. **Complete test coverage** for all migrated components
-5. **Identical game behavior** before and after migration
-6. **Simplified dependency graph** with clear module boundaries
+1. **Zero unnecessary global variables** (only CreateJS and required legacy)
+2. **100% ES6 module coverage** for business logic
+3. **<500KB initial bundle size**
+4. **>80% test coverage** for migrated components
+5. **Identical game behavior** verified by regression tests
+6. **Clear module boundaries** with dependency graph
 
-## Medium-Term Goals
+## Migration Complexity Summary
 
-### 1. Complete the Modularization Process
+Based on the audit:
 
-1. Convert main game components to modules:
-
-   - Move game.js functionality to ES6 module (in progress with /src/Game.js)
-   - Refactor rendering logic into separate modules
-   - Create dedicated modules for game state management
-
-2. Convert AI implementations:
-
-   - Finish migrating AI logic to ES6 modules (in progress with /src/ai/ directory)
-   - Standardize AI interface
-   - Create a registry for AI strategies
-
-3. Implement utility modules:
-   - Create utility modules for common functions
-   - Implement proper configuration management (started with /src/utils/config.js)
-   - Add sound management module
-
-### 2. Modernize the Code
-
-1. Update syntax:
-
-   - Replace var with const/let
-   - Convert functions to arrow functions where appropriate
-   - Use template literals instead of string concatenation
-   - Implement classes for game entities
-
-2. Use modern JavaScript features:
-
-   - Implement destructuring assignments
-   - Use spread/rest operators
-   - Add default parameters
-   - Utilize array/object methods like map, filter, reduce
-
-3. Improve data structures:
-   - Replace simple arrays with Maps or Sets where appropriate
-   - Consider typed arrays for performance optimization
-   - Use proper encapsulation with classes
-
-### 3. Create a Proper Build Pipeline
-
-1. Set up asset management:
-
-   - Configure loaders for images, sounds, etc.
-   - Implement proper asset optimization
-
-2. Add code optimization:
-   - Set up minification for production builds
-   - Configure tree-shaking to eliminate unused code
-   - Implement code splitting if necessary
-
-### 4. Update Game Infrastructure
-
-1. Implement proper game loop:
-
-   - Refactor from CreateJS timer to requestAnimationFrame
-   - Separate render and update loops
-
-2. Modernize rendering:
-
-   - Consider canvas API abstractions
-   - Implement proper rendering pipeline
-
-3. Add proper event handling:
-   - Replace direct DOM event handling with a more structured approach
-   - Implement an event bus if needed
+| Component     | Complexity     | Strategy                             |
+| ------------- | -------------- | ------------------------------------ |
+| game.js logic | Moderate       | Phased extraction to ES6             |
+| main.js logic | Hard           | Adapter pattern + gradual extraction |
+| mc.js         | Do Not Migrate | MCAdapter (complete)                 |
+| areadice.js   | Do Not Migrate | Access via adapter                   |
+| State models  | Easy           | Direct ES6 conversion                |
+| AI system     | Complete       | Already migrated                     |
 
 ## Long-Term Vision
 
-### 1. Strategy for Difficult-to-Migrate Legacy Code
+### 1. Modern Architecture
 
-For any parts of `game.js`, `main.js`, or `mc.js` (Flash-generated) that are determined to be excessively complex or risky to fully rewrite, a robust adapter pattern will be employed. These adapters will create stable ES6-compliant interfaces, effectively isolating the legacy code and allowing the rest of the application to interact with them using modern JavaScript practices. The `MCAdapter` for `mc.js` is a key example of this approach.
+- Pure ES6 modules for all business logic
+- Adapter pattern for legacy graphics
+- Event-driven architecture
+- Immutable state management
 
-Key aspects of this strategy include:
+### 2. Enhanced Features
 
-- **Establish clear boundaries**: Define stable interfaces between legacy and modern code.
-- **Use the adapter pattern**: Build wrapper classes/functions (like `MCAdapter`) around legacy components to expose them as ES6 modules.
-- **Implement proxy objects**: Where direct wrapping is insufficient, proxies can bridge modern ES6 code with legacy systems.
-- **Dependency injection**: Pass modern components into legacy code rather than allowing direct global access, where feasible.
-- **Documentation**: Clearly mark which files or parts of files are treated as legacy and interfaced via adapters.
+- AI championship mode
+- Replay system with save/load
+- Multiplayer capabilities
+- Advanced AI strategies
 
-```javascript
-// Example of an adapter for mc.js (Flash-generated code)
-// The MCAdapter serves as a blueprint for handling difficult-to-migrate code.
-export class MCAdapter {
-  constructor() {
-    // Ensure MC is available globally or loaded appropriately
-    if (!window.MC) {
-      throw new Error('MC (legacy component) not initialized');
-    }
-    this.mc = window.MC;
-  }
+### 3. Technical Improvements
 
-  // Modern ES6 methods that wrap legacy functionality
-  drawElement(element, properties) {
-    // Call legacy methods with appropriate parameters
-    // This demonstrates a direct pass-through, but could include transformation logic
-    this.mc.drawElement(element, properties);
-    return this; // Allow chaining if appropriate
-  }
+- WebGL rendering option
+- Progressive Web App
+- WebAssembly for performance
+- Real-time multiplayer
 
-  // Example of bridging an event system or callback mechanism
-  addEventListener(eventName, modernCallback) {
-    // Adapt to the legacy event subscription model
-    // This is a hypothetical example; actual implementation depends on mc.js
-    if (this.mc.setEventHandler) {
-      this.mc.setEventHandler(eventName, (...legacyArgs) => {
-        // Potentially transform legacyArgs before passing to modernCallback
-        modernCallback(...legacyArgs);
-      });
-    } else {
-      console.warn('Legacy component does not support setEventHandler');
-    }
-  }
-
-  // Add other methods as needed to interface with mc.js features
-}
-```
-
-### 2. Complete Transformation and New Features
-
-- Complete transition to modern ES6 modules where possible
-- Establish stable interfaces for unmigrateable legacy code
-- Remove dependency on global variables where possible
-- Improve code organization with proper separation of concerns
-- Enhance AI strategies with more sophisticated algorithms
-- Consider implementing multiplayer capabilities
-- Add AI championship mode for comparing strategy performance
-- Create a version of the game that automatically plays AI against each other for statistical analysis
-- Add replay and game state saving functionality
-
-### 3. Final Migration Steps
-
-1. Remove legacy files:
-
-   - Once modules are fully implemented, remove old versions
-   - Update import references
-
-2. Update index.html:
-
-   - Replace individual script tags with bundled output
-   - Add proper meta tags for modern web
-
-3. Clean up transitional code:
-   - Remove bridge implementations (where possible)
-   - Finalize module interfaces
+The roadmap prioritizes stability and maintainability while gradually modernizing the codebase. The adapter pattern ensures we can deliver value continuously without breaking changes.

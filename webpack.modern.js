@@ -125,6 +125,11 @@ module.exports = (env, argv) => {
             ignored: /node_modules/,
           },
         },
+        {
+          directory: path.join(__dirname, 'src'),
+          publicPath: '/src',
+          watch: true,
+        },
       ],
       compress: true,
       port,
@@ -134,6 +139,13 @@ module.exports = (env, argv) => {
       devMiddleware: {
         publicPath: '/',
         writeToDisk: true,
+      },
+      setupMiddlewares: (middlewares, devServer) => {
+        // Handle game-loader.js specifically
+        devServer.app.get('/game-loader.js', (req, res) => {
+          res.sendFile(path.join(__dirname, 'src', 'game-loader.js'));
+        });
+        return middlewares;
       },
     };
 

@@ -10,6 +10,9 @@
  * 3. Test new ES6 modules without disrupting the game
  */
 
+// Import initialization system first
+import { BridgeInitializer, initCallbacks } from './initialization.js';
+
 // Import all bridge modules directly
 import './ai.js';
 import './Game.js';
@@ -38,70 +41,74 @@ export const {
 // Export AI modules for ES6 usage
 export * from '@ai/index.js';
 
-// Track module loading status
-const moduleStatus = {
-  ai: 'loaded',
-  game: 'loaded',
-};
+// Export initialization system
+export { BridgeInitializer, initCallbacks };
 
-// Add a check method to verify all modules are loaded
+// Mark config as ready (it's synchronous)
+initCallbacks.configReady();
+
+// Mark game as ready (currently synchronous)
+initCallbacks.gameReady();
+
+// Mark mechanics as ready (currently synchronous)
+initCallbacks.mechanicsReady();
+
+// Add legacy compatibility layer for checking bridge status
 window.checkBridgeStatus = () => {
-  console.log('Bridge module status:', moduleStatus);
-  return moduleStatus;
+  const status = BridgeInitializer.getStatus();
+  console.log('Bridge module status:', status);
+  return status;
 };
 
-// Set up error handlers for each module
-window.addEventListener('error', event => {
-  // Extract module name from error message or stack trace
-  const errorModule = findModuleFromError(event.error || event.message);
-  if (errorModule) {
-    moduleStatus[errorModule] = 'failed';
-    console.error(`Error in bridge module ${errorModule}:`, event.error || event.message);
-  }
-});
-
-// Utility function to determine the module from an error
-function findModuleFromError(error) {
-  if (!error) return null;
-
-  const errorString = error.toString ? error.toString() : String(error);
-  const stack = error.stack || '';
-
-  if (errorString.includes('ai') || stack.includes('ai')) {
-    return 'ai';
-  }
-  if (errorString.includes('Game') || stack.includes('Game')) {
-    return 'game';
-  }
-
-  return null;
-}
+// Add legacy game initialization hook
+window.waitForBridge = async () => {
+  console.log('[Bridge] Legacy code waiting for bridge initialization...');
+  const result = await BridgeInitializer.whenReady();
+  console.log('[Bridge] Bridge ready:', result);
+  return result;
+};
 
 // Add a global verification that can be called to check if ES6 modules loaded properly
 window.ES6_LOADED = true;
 window.verifyES6BridgeStatus = () => {
+  const status = BridgeInitializer.getStatus();
+  const ready = BridgeInitializer.isReady();
+
   console.log('Checking ES6 Bridge Status:');
-  console.log('- Global ES6_LOADED flag:', window.ES6_LOADED);
-  console.log('- Module status:', moduleStatus);
+  console.log('- Bridge ready:', ready);
+  console.log('- Module status:', status);
 
-  // Check each AI function to see if it's the fallback or ES6 version
-  const aiDefault = window.ai_default?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
-  const aiDefensive = window.ai_defensive?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
-  const aiExample = window.ai_example?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
-  const aiAdaptive = window.ai_adaptive?.toString().includes('placeholder') ? 'Fallback' : 'ES6';
+  // Check each AI function to see if it's the placeholder or ES6 version
+  const aiStatus = {};
+  ['ai_default', 'ai_defensive', 'ai_example', 'ai_adaptive'].forEach(name => {
+    const fn = window[name];
+    if (!fn) {
+      aiStatus[name] = 'Missing';
+    } else if (fn.isPlaceholder) {
+      aiStatus[name] = 'Placeholder';
+    } else {
+      aiStatus[name] = 'Loaded';
+    }
+  });
 
-  console.log('- AI Functions:');
-  console.log('  - ai_default:', aiDefault);
-  console.log('  - ai_defensive:', aiDefensive);
-  console.log('  - ai_example:', aiExample);
-  console.log('  - ai_adaptive:', aiAdaptive);
+  console.log('- AI Functions:', aiStatus);
 
   return {
-    loaded: window.ES6_LOADED,
-    moduleStatus,
-    aiStatus: { aiDefault, aiDefensive, aiExample, aiAdaptive },
+    ready,
+    moduleStatus: status,
+    aiStatus,
   };
 };
 
 // Log bridge initialization with timestamp
-console.log(`[${new Date().toISOString()}] ES6 bridge modules loaded successfully`);
+console.log(`[${new Date().toISOString()}] ES6 bridge initialization started`);
+
+// For backward compatibility, dispatch event when ready
+BridgeInitializer.whenReady().then(() => {
+  console.log(`[${new Date().toISOString()}] ES6 bridge fully initialized`);
+
+  // Dispatch legacy event for compatibility
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('es6ModulesLoaded'));
+  }
+});

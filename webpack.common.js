@@ -80,19 +80,23 @@ module.exports = (env, argv) => {
       }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: '*.js', to: '[name][ext]', globOptions: { ignore: ['webpack.config.js'] } },
-          { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
-          { from: 'sound', to: 'sound' },
+          // Legacy JavaScript files needed for backward compatibility
+          { from: 'game.js', to: '[name][ext]' },
+          { from: 'main.js', to: '[name][ext]' },
+          { from: 'mc.js', to: '[name][ext]' },
+          { from: 'areadice.js', to: '[name][ext]' },
+          { from: 'config.js', to: '[name][ext]', noErrorOnMissing: true },
+          { from: 'config-ai-vs-ai.js', to: '[name][ext]', noErrorOnMissing: true },
+
+          // Bridge loader for legacy compatibility
           { from: 'src/game-loader.js', to: 'game-loader.js' },
           { from: 'src/gameWrapper.js', to: 'src/gameWrapper.js' },
-          // Ensure browser-compatible Game module is included in the build
-          { from: 'src/Game-browser.js', to: 'src/Game-browser.js' },
-          // Copy supporting ES6 modules for browser use
-          { from: 'src/mechanics', to: 'src/mechanics' },
-          { from: 'src/utils', to: 'src/utils' },
-          { from: 'src/models', to: 'src/models' },
-          { from: 'src/state', to: 'src/state' },
-          { from: 'src/ai', to: 'src/ai' },
+
+          // CSS files
+          { from: '*.css', to: '[name][ext]', noErrorOnMissing: true },
+
+          // Sound assets
+          { from: 'sound', to: 'sound' },
         ],
       }),
       new CleanWebpackPlugin(),
