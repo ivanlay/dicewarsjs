@@ -76,8 +76,8 @@ describe('Bridge Module Integration', () => {
 
       expect(status).toHaveProperty('ai');
       expect(status).toHaveProperty('game');
-      expect(status.ai).toBe('loaded');
-      expect(status.game).toBe('loaded');
+      expect(status.ai).toEqual({ initialized: true, error: null });
+      expect(status.game).toEqual({ initialized: true, error: null });
     });
   });
 });
